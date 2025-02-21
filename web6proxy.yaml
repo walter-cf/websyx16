@@ -1,0 +1,137 @@
+logLevel: Debug
+proxy:
+  # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
+  hostName: 192.168.10.6
+  serverPort: 3301
+
+mail:
+  server: localhost
+  sender: web6proxy-alert@ledsound.hu
+  operator: web6proxy-operator@ledsound.hu
+
+unas:
+  # Lehet .hu es .eu is
+  apiUrl: https://api.unas.eu/shop
+  feedbackUrl: "'http://' + hostName + ':' + str(serverPort) + '/fbunas'"
+  # a WewbShopban kell generalni a hozzaferesi kulcsot
+  apiKey: 28ff288a0d7b3bee7c65dd4ac7e974feddd3ebdf
+  # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
+  webcategory:
+    # id: 880790
+    name: Webáruházba
+  # technikai, nekem kellett, Amikor mexaladt a prg es kitiltottam magamat, akkor default ertekeket adtam vissza magamnak az UNAS hivasokkor(HA ez TRUE)
+  ignoreBlockedClient: false
+  cacheForceReload: 10000 # force cahce reload after this period
+  #
+  #
+  customerPaymentMode: "Szerződés szerint"
+  priceRules:
+    transportModes:
+      - ["Helyszíni"        ,"Személyes átvétel a bemutatótermünkben"]
+      - ["MPL Futár"        ,"MPL Futárral"]
+      - ["Gyűjtőzendő"      ,"Ne küldjétek még! Várjon még másik megrendelésre!"]
+    paymentMethods: [
+        [ "Utánvét"         , "Utánvéttel"      ],
+        [ "Bankkártya"      , "Bankkártyával a helyszínen"   ],
+        [ "Előre utalás"    , "Előre utalással" ],
+        [ specialFunction01 , "Szerződött fizetési mód" ]   ## Ide tettem, hogy helyen legyen a program kezelem `specialFuncion01` kifejezest, ha azt kapom
+      ]
+
+  order:
+    # Unas paarmeterk: symbolId
+    # Unit => seconds
+    # getInterval: 1180 NOT USED most mar status szerint szed le 
+    vouchersequencecode: "B2B"
+    symbolOrderPrefix: H24
+    symbolOrderStatusNew: 1
+    # Order params - statuses
+    status:
+        new:      5702269 # Feldolgozasra var
+        accepted: 5702274 # Visszaigazolva
+        prepared: 5702279 # Keszletezes alatt
+        shipping: 9999999 # Kiszallitas
+        closed:   5702289 # Lezarva
+        returned: 0       # NU. in UNAS (yet)
+        cancel:   0       # NU. in UNAS (yet)
+
+  customer:
+    # Unas paarmeterek: symbolId, symbolCode
+    categoryName: HU / Channel / Haffner24 UNAS
+    getInterval: 99999999
+    bulk: False
+    ignoreCyclicInterval: 1
+    cerateMissingCustomer: True
+    forceNewState: True
+    handleCustomerAddress: True
+    countries:
+      at:  'Ausztria'
+      uk:  'Egyesült Királyság'
+      gr:  'Görögország'
+      hu:  'Magyarország'
+      de:  'Németország'
+      pt:  'Portugália'
+      ro:  'Románia'
+      se:  'Svédország'
+    codePrefix:
+      default: UCO
+      unregistered: UCU
+      address: UCA # plus sorszam 1-99
+      pattern: '%s-%i'
+      patternAddr: '%s-%i-%i'
+
+  inventory:
+    warehouses: [ -1, 999999, 999998 ]
+
+  product:
+    # Unas paarmeterk: symbolId, symbolCode??, EAN, Gyarto, VTSZ
+    getInterval: 600
+    getproductLimit: 200 # a 6000 tetel lekerdezese egyszerre sok lett, dartabolni kell
+    bulk: False
+    overwriteName: False
+    pricecat:
+      # Symbol arkategoria ID. Ha tobb van, akkor ezeket - sorrendben - elonyben reszesiti; egyebkent a listaban az utolso ar lesz(vagy lehet, az elso)
+      base: 18
+      fallback1: -9999999
+      fallback2: -9999999
+
+########################################################################
+mysql:
+  dbFile: web6proxy
+  dbHost: localhost
+  dbUser: w6pusr
+  dbPass: w6p-Abc+123
+
+firebird:
+  dbRoot: /opt/firebird/data
+  dbFile: default_d.database
+  dbHost: localhost
+  dbUser: SYSDBA
+  dbPass: Bertalan11
+
+
+########################################################################
+#
+# Batch
+batch:
+  granularity: 10
+  processes:
+    - orderStatus:
+        startDelay: 10                     # initial delay after start BatchScheduler
+        interval:   60                     # Batch thread raise/trigger interval
+        name: Rendeles Statusz - UNAS      # Batch threadName
+        method: orderStatusUnas            # called Entry point
+        orderStatusCheckInterval: 186400    # RovModified > NOW -orderStatusCheckInterval(seconds)
+        checkVoucherSequence: 42           # UNAS order type identifier
+        statuses:
+          - [ closed, "Megrendelés lezárva"]            # CustmerOrder.Closed = 1
+          - [ manuallyClosed, "Megrendelés lezárva"]    # CustmerOrder.ClosedManually = 1
+          - [ canceled, "Megrendelés lezárva"]          # CustmerOrder.Cancelled = 1
+          - [ 1, "Feldolgozásra vár"]                   #   == 1, 2, 3 ...
+          - [ 2, "Visszaigazolva"]                      # 
+          - [ 3, "Készletezés alatt"]                   # 
+
+# technikai, nekem kellett
+prghelper:
+  xmltag: <?xml version="1.0" encoding="UTF-8" ?>
+  xmltag16: <?xml version="1.0" encoding="UTF-16" ?>
+  extendedProductAttributes: False
