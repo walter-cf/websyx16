@@ -57,7 +57,7 @@ unas:
   customer:
     # Unas paarmeterek: symbolId, symbolCode
     categoryName: HU / Channel / Haffner24 UNAS
-    getInterval: 99999999
+    getInterval: 1800
     bulk: False
     ignoreCyclicInterval: 1
     cerateMissingCustomer: True

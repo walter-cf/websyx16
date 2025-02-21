@@ -89,7 +89,7 @@ class CustomerAddress:
         self.state = ''
         self.idx = idx
 
-    def initAddr(self, tag, state=CAstate_unasOnly, deleted:int=0):
+    def initAddr_w_HouseNumber(self, tag, state=CAstate_unasOnly, deleted:int=0):
         self.Name         = tag.Name
         self.Country      = tag.Country
         self.Region       = tag.County
@@ -97,6 +97,18 @@ class CustomerAddress:
         self.City         = tag.City
         self.Street       = str(tag.Street if not tag.find('StreetName') else tag.StreetName) + str( '' if not tag.find('StreetType') else (' ' + tag.StreetType ))
         self.HouseNumber  = None if not tag.find('StreetNumber') else tag.StreetNumber # type: ignore
+        # self.ContactName  = tag.find('Name')
+        self.Deleted      = deleted
+        self.state        = state
+        
+    def initAddr(self, tag, state=CAstate_unasOnly, deleted:int=0):
+        self.Name         = tag.Name
+        self.Country      = tag.Country
+        self.Region       = tag.County
+        self.Zip          = tag.ZIP
+        self.City         = tag.City
+        self.Street       = tag.Street
+        self.HouseNumber  = None
         # self.ContactName  = tag.find('Name')
         self.Deleted      = deleted
         self.state        = state
