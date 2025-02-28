@@ -22,10 +22,11 @@ class UnasCustomerCache:
     taxNumber: str
     state: str
     lastmod: int
+    authorized: bool
     unasAddrObj = List[CustomerAddress]
     unasAddrXml = List[_Element]
 
-    def __init__(self, unasid:int=None, emil:str=None, taxNo:str=None, code:str=None, sid:int = 0, state:str = 'live'): # type: ignore
+    def __init__(self, unasid:int=None, emil:str=None, taxNo:str=None, code:str=None, sid:int = 0, state:str = 'live', authed: bool = False): # type: ignore
         self.unasId = unasid
         self.symbolId = sid
         self.email = '' if emil is None else str(emil).strip()
@@ -41,10 +42,20 @@ class UnasCustomerCache:
         self.lastmod = MU.UtcNow(1 + MU.GETCUSTOMER_INTERVAL * 2)
         self.unasAddrObj = []
         self.unasAddrXml = []
+        self.authorized = authed
 
     def toStr(self):
         return '{ "unasId":%s, "symbolId":%s, "lastmod":(%i)[%s], "code":"%s", "custAzon":"%s", "email":"%s", "taxNumber":"%s", "state":"%s" }' % (
                             self.unasId, self.symbolId, self.lastmod, MU.tsToDateStr(self.lastmod), self.code, self.custAzon, self.email, self.taxNumber, self.state)
+
+    def fromXml(self, xml):
+        self.symbolId = 0
+        self.code = MU.mkCustomerCode(self)
+        self.state = 'pending'
+        self.lastmod = MU.UtcNow(1 + MU.GETCUSTOMER_INTERVAL * 2)
+        self.unasAddrObj = xml.Addresses
+        # self.unasAddrXml = []
+        self.authorized = 'yes' == MU.nullSafeStru( xml, [ 'Authorize', 'Admin' ], '-' )
 
     VARIABLES = ["unasId","symbolId", "lastmod", "code", "custAzon", "email", "taxNumber", "state"]
     def toXml(self):

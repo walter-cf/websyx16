@@ -258,7 +258,7 @@ class MyServer(BaseHTTPRequestHandler):
         elif (pPath[1] == "emag"):
           retData = PPE.doEmagRequest(self.path, 'DummyData')
           retMessage = 'OK'
-        elif (pPath[1] == "symbol-synclog"):
+        elif (pPath[1] == "synclog"):
           #logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n"
           #      ,str(self.path), str(self.headers), post_data.decode('utf-8'))
           postParams = post_data.decode('utf-8')
@@ -287,7 +287,7 @@ class MyServer(BaseHTTPRequestHandler):
     self.send_response(200)
     # logging.error("retMessage type:%s", type(retMessage))
     retMsg = 'OK' if retMessage is None else retMessage
-    if retMsg != 'OK' and len(retMsg) > 0:
+    if retMsg != 'OK' and False if retMsg is None else len(retMsg) > 0:
        if (retMsg.startswith("OKJ:")):
           self.send_header("Content-Type", "application/json")
           self.end_headers()
@@ -303,7 +303,7 @@ class MyServer(BaseHTTPRequestHandler):
           self.end_headers()
           self.flush_headers()
           self.wfile.write(bytes(retMsg, "utf-8"))
-    elif retMsg == 'OK' or len('' if retMsg is None else retMsg) == 0:
+    elif retMsg == 'OK' or True if retMsg is None else len(retMsg.strip()) == 0:
       if len(GBL_ErrorMessages) > 0:
         self.send_header("Content-type", "text/plain")
         self.end_headers()
@@ -313,8 +313,13 @@ class MyServer(BaseHTTPRequestHandler):
           self.wfile.write(bytes(str(errItm), "utf-8"))
         self.wfile.write(bytes(str('</Errors>'), "utf-8"))
         GBL_ErrorMessages.clear()
+      elif len('' if retMsg is None else retMsg) >0:
+        self.end_headers()
+        self.flush_headers()
+        self.wfile.write(bytes(retMsg, "utf-8"))
       else:
-        self.wfile.write(bytes("OK", "utf-8"))
+        self.end_headers()
+        self.flush_headers()
     self.wfile.flush()
     # self.wfile.write(bytes("<html><head><title>https://testserver.com</title></head>", "utf-8"))
     # self.wfile.write(bytes("<p>POST Request: %s</p>" % self.path, "utf-8"))
@@ -372,7 +377,7 @@ if __name__ == "__main__":
   else:
       logLevel = logging.DEBUG
       
-  logging.basicConfig(filename='syxProxy.log',level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
+  logging.basicConfig(filename='syxProxy%s.log' % '' if MU.serverPort == 3301 else str(MU.serverPort),level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
   logger=logging.getLogger(__name__)
 
   logger.info( 'Test FB connect; Customer table rowCount: %s' % FBU.testDbConnect() )

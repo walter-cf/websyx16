@@ -7,6 +7,7 @@
         <xsl:variable name="FeedbackUrl"><xsl:value-of select="unasFeedbackURL" /></xsl:variable>
         <customerorders>
         <xsl:for-each select="Order">
+        <xsl:if test="not(SkipThisOrderItem)" >
             <customerorder>
                 <date><xsl:value-of select="Date" /></date>
                 <!-- <expirationdays>10</expirationdays>< ! - - Lejárat napok száma (üresen is hagyható) -->
@@ -96,6 +97,7 @@
                 <feedbackurl><xsl:value-of select="$FeedbackUrl"/>/oke/order?id=<xsl:value-of select="Id" /><xsl:text>&amp;</xsl:text>orderkey=<xsl:value-of select="Key" /><xsl:text>&amp;</xsl:text>ipaddr=<xsl:value-of select="Others/Ip" />&amp;symbolid=</feedbackurl>
                 <errorurl><xsl:value-of select="$FeedbackUrl"/>/err/order?id=<xsl:value-of select="Id" /><xsl:text>&amp;</xsl:text>orderkey=<xsl:value-of select="Key" />&amp;errormsg=</errorurl>
             </customerorder>
+        </xsl:if>
         </xsl:for-each>
         </customerorders>
     </xsl:template>

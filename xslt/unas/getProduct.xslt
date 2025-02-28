@@ -9,15 +9,13 @@
                 <!--
                     <sid>9999100<xsl:value-of select="Id" /></sid>
                     <NumExA><xsl:value-of select="Id" /></NumExA>
-                    <id><xsl:value-of select="Id" /></id>
+                    <UnasId><xsl:value-of select="Id" /></UnasId>
                 -->
                 <xsl:if test="symbolId"><xsl:if test="symbolId &gt; 0">
-                    <sid><xsl:value-of select="symbolId" /></sid>
-                    <code><xsl:value-of select="Sku" /></code>
+                    <id><xsl:value-of select="symbolId" /></id>
                 </xsl:if></xsl:if>
-
-                <sid><xsl:value-of select="Id" /></sid>
                 <name><xsl:value-of select="Name" /></name>
+                <code><xsl:value-of select="Sku" /></code>
 
                 <!--
                 *** Kiirtva, Peti szerint nem kell @2024.03.01
@@ -30,8 +28,8 @@
                     
                 -->
                 <!-- Web SID-->
-                <feedbackurl><xsl:value-of select="$FeedbackUrl"/>/oke/product/<xsl:value-of select="Id" />?symbolid=</feedbackurl>
-                <errorurl><xsl:value-of select="$FeedbackUrl"/>/err/product/<xsl:value-of select="Id" />?errormsg=</errorurl>
+                <feedbackurl><xsl:value-of select="$FeedbackUrl"/>/oke/product?id=<xsl:value-of select="Id" /><xsl:text>&amp;</xsl:text>prodname=<xsl:value-of select="Name" /><xsl:text>&amp;</xsl:text>symbolid=</feedbackurl>
+                <errorurl><xsl:value-of select="$FeedbackUrl"/>/err/product?id=<xsl:value-of select="Id" /><xsl:text>&amp;</xsl:text>errormsg=</errorurl>
             </Product>
         </xsl:for-each>
         </ProductsDown>

@@ -6,13 +6,13 @@
     <xsl:template match="Customers">
         <xsl:variable name="FeedbackUrl"><xsl:value-of select="unasFeedbackURL" /></xsl:variable>
         <Customers>
-            
             <xsl:if test="UnregisteredCustomers">
                 <xsl:value-of select="UnregisteredCustomers" disable-output-escaping="yes" />
             </xsl:if>
             
             <xsl:for-each select="Customer">
-                <Customer>
+            <xsl:if test="not(SkipThisCustomerItem)">
+            <Customer>
                 <xsl:variable name="UnasCustomerID"><xsl:value-of select="Id" /></xsl:variable>
                 <xsl:variable name="SymbolCustomerID"><xsl:value-of select="Params/Param[contains('symbolId',Name)]/Value" /></xsl:variable>
                 
@@ -123,6 +123,7 @@
                 </customercontacts>
                 -->
             </Customer>
+            </xsl:if>
         </xsl:for-each>
         </Customers>
     </xsl:template>

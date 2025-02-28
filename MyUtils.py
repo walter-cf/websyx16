@@ -9,7 +9,7 @@ import logging
 #
 
 import MyBatch
-import UnasProductCache as UPC
+from UnasProductCache import UnasProductCache as UPC
 import UnasCustomerCache as UCC
 import UnasConnectHelper as UCH
 import UnasOrderCache as UOC
@@ -47,6 +47,15 @@ def itemValDef(tag, key, defa):
 
 def nullSafe(tag, field, defa):
     return defa if field not in tag.keys() else tag[ field ]
+
+def nullSafeStru(obj, tagList:List,  defa):
+    item = obj
+    for f in tagList:
+        if item.find(f) is None:
+            return defa
+        else:
+            item = item[f]
+    return defa if item is None else item
 
 def setConstants(cfg):
 	global BATCH_PROCESSES, BATCH_GRANULARITY
@@ -131,7 +140,12 @@ def setConstants(cfg):
 	ORDER_STATUS_CLOSE    = cfg["unas"]["order"]["status"]['closed']
 	ORDER_STATUS_RETURN   = cfg["unas"]["order"]["status"]['returned']
 	ORDER_STATUS_CANCEL   = cfg["unas"]["order"]["status"]['cancel']
-	ORDER_STATUS_CANCEL   = cfg["unas"]["order"]["status"]['cancel']
+
+	# Order FLOW Control
+	global 	ORDER_HandleUnregistered, ORDER_getMissingCust, ORDER_autoAcknowledge
+	ORDER_HandleUnregistered  = cfg["unas"]["order"]["flow"]['getUnregistered'] # Leszedjem az Order elott a hianyzo Customereket? most ki lesz kapcsolva
+	ORDER_getMissingCust      = cfg["unas"]["order"]["flow"]['getMissingCust']
+	ORDER_autoAcknowledge     = cfg["unas"]["order"]['autoAcknowledge']
 
 	global PRICERULE_TRANSPORTMODES, PRICERULE_PAYMENTMETHODS
 	PRICERULE_TRANSPORTMODES = cfg["unas"]["priceRules"]['transportModes']
@@ -162,7 +176,6 @@ def addCountryCode(country, code):
 
 def collectCustItems(xml):
     global UnasCustomerList
-    UnasCustomerList.clear()
     root=ET.fromstring(xml,None)
     for prod in root.getchildren():
         custId    = prod.find('Id').text
@@ -222,14 +235,13 @@ def putOrderXmlIntoCache(orderKey, xml) ->  UOC.UnasOrderCache:
     return None # type: ignore
 
 def collectOrderItems(xml) -> Dict[str, UOC.UnasOrderCache ] :
-    UnasOrderList = dict({})
+    global UnasOrderList
     bajtz = bytes(xml, 'utf-8')
     #utf8_parser = ET.XMLParser(encoding='utf-8')    
     #prodObj = objectify.fromstring(bajtz,parser= utf8_parser)
     prodObj = objectify.fromstring(bajtz, None)
     for px in prodObj.getchildren():
         # TODO: undeveloped part. Not ready Yet!
-        raise Exception("TODO: undeveloped part. Not ready Yet!")
         # Ez Mi  F*? putOrderXmlIntoCache(orderKey, px)
         orderKey = px.find('Key').text
         oo = UOC.UnasOrderCache(orderKey)
@@ -238,59 +250,63 @@ def collectOrderItems(xml) -> Dict[str, UOC.UnasOrderCache ] :
     return UnasOrderList
 
 def collectProdItems(xml):
-    UnasProductList = dict({})
-    # # #prodObj = objectify.fromstring(xml,None)
-    # # #for px in prodObj.getchildren():
-    # # #    if 'live' == px.State:
-    # # #        productId = None
-    # # #        productSku = None
-    # # #        productVat = 27
-    # # #        productState = None
-    # # #        qty = 0
-    # # #        sid = 0
-    # # #        pVat = 27
-    # # #        if hasattr(px, 'Params'):
-    # # #            for pxp in px.Params.Param:
-    # # #                if (pxp.Name == 'symbolId'):
-    # # #                    sid = pxp.Value.text
-    # # #            pVat = px.Prices.Vat.text  if hasattr(px, 'Prices') and hasattr(px.Prices, 'Vat') else '27'
-    # # #        if hasattr(px, 'Stocks'):
-    # # #            if hasattr(px, 'Stocks.Stock'):
-    # # #                for pxp in px.Stocks.Stock:
-    # # #                    if (pxp.Name == 'Qty'):
-    # # #                        qty = pxp.Qty.text
-    # # #            pVat = px.Prices.Vat.text  if hasattr(px, 'Prices') and hasattr(px.Prices, 'Vat') else '27'
-    # # #        logging.debug("Id:%s, Sku:%s, Vat:%s, SID:%s, Qty:%s, State:%s", px.Id.text, px.Sku.text, pVat , sid, qty, px.State.text)
+    pList = {}
     root=ET.fromstring(xml,None)
     for prod in root.getchildren():
-        productId = prod.find('Id').text
-        productSku = prod.find('Sku').text
-        productVat = '27' if not(hasattr(prod, 'Prices') and hasattr(prod.Prices, 'Vat')) else prod.find('Prices/Vat').text
-        productState = prod.find('State').text
-        symbolId = '0'
-        productStatus = 2
-        qty = 0
-        pVat = 27
-        if len(prod.findall('Statuses'))>0:
-            for ppp in prod.find('Statuses'):
-                if (ppp.find('Type').text == 'base'):
-                    productStatus = int(ppp.find('Value').text)
-        if len(prod.findall('Params'))>0:
-            for ppp in prod.find('Params'):
-                if (ppp.find('Name').text == 'symbolId'):
-                    symbolId = ppp.find('Value').text
-        if len(prod.findall('Stocks'))>0:
-            for ppp in prod.find('Stocks'):
-                if (ppp.tag == 'Stock'):
-                    qty = ppp.find('Qty').text
-        if productId is not None :
-            if productVat.rstrip().endswith('%'):
-                pVat = float(productVat.rstrip()[0:-1])
-            else:
-                pVat = float(productVat)
-            UnasProductList[productSku] = UPC.UnasProductCache(int(productId), productSku, int(symbolId), float(qty), pVat, productState, productStatus) #    def __init__(self, wid, sku, sid = 0, qty = 0, vat = 27, state = 'live'):
-        #
-    return UnasProductList
+        item = createProdItem(prod)
+        if (item.unasId > 0 and item.sku is not None):
+            pList[item.sku] = item
+    return pList
+
+
+def createProdItem(prod) -> UPC:
+        productId = int(findTagVal(prod, 'Id', 0))
+        productSku = findTagVal(prod, 'Sku')
+        productState = findTagVal(prod, 'State', UPC.ProductState_PENDING)
+        productStatus = int(find3rdTagV2(prod, 'Statuses', 'Type', 'base', 'Value', UPC.ProductStatus_INACTIVE))
+        symbolId = int(find3rdTagV2(prod, 'Params', 'Name', 'symbolId', 'Value', 0))
+        qty = float(find3rdTag(prod, 'Stocks', 'Stock', 'Qty', 0))
+        pVat = 27.0
+        productVat = find2ndTag( prod, 'Prices', 'Vat', defa = '27')
+        if productVat.rstrip().endswith('%'):
+            pVat = float(productVat.rstrip()[0:-1])
+        else:
+            pVat = float(productVat)
+            # __init__(self, unasid, sku, sid = 0, q = 0.0,  vat = 27.0, state = ProductState_LIVE, status = ProductStatus_NEW, sts = ({ -1, 0 })):
+        item = UPC(productId, productSku, symbolId, qty, pVat, productState, productStatus)
+        return item
+
+def findTagVal(xml, tag, defa=None):
+    return  defa if xml.find(tag) is None else xml.find(tag).text
+    
+def find2ndTag( prod, tag1, tag2, defa = None):
+    if len(prod.findall(tag1))>0:
+        for ppp in prod.find(tag1):
+            xTag = ppp.find(tag2)
+            return defa if xTag is None else xTag.text
+    return defa
+
+def find3rdTag( prod, tag1, tag2, tag3 = 'Value', defa = None):
+    if len(prod.findall(tag1))>0:
+        for ppp in prod.find(tag1):
+            if (ppp.tag ==  tag2):
+                return ppp.find(tag3).text
+    return defa
+
+def find3rdTagV2( prod, tag1, tag2, tag2Value, tag3 = 'Value', defa = None):
+    if len(prod.findall(tag1))>0:
+        for ppp in prod.find(tag1):
+            if ppp.find(tag2) is not None:
+                if (ppp.find(tag2).text == tag2Value):
+                    return ppp.find(tag3).text
+    return defa
+
+def refreshProductItem(prod:UPC):
+    # Get Product from UNAS by ID
+    retV = UCH.unasGetProductByAzon('Id', prod.unasId)
+    pList = collectProdItems(retV)
+    UnasProductList.update(pList)
+    raise ValueError("Not yet developed")
 
 LastCacheUpdated : int = 0
 def reinitCacheState():
@@ -305,12 +321,14 @@ def checkCacheState(force: bool = False):
         force = True
     minimunDelayed = (UtcNow() - LastCacheUpdated) > 1500 # Ha ures a cache akkor 25 percenkent force megnezem, van-e uj adat
     if force or (minimunDelayed and (len(UnasCustomerList) < 1)):
+        UnasCustomerList.clear()
         retV = UCH.unasGetActiveCustomers()
         UnasCustomerList = collectCustItems(retV)
         LastCacheUpdated = UtcNow()
     if force or (minimunDelayed and (len(UnasProductList) < 1)):
         retrivedProductCount = 1
         limitStart = 0
+        UnasProductList.clear()
         while retrivedProductCount > 0:
             retV = UCH.unasGetActiveProducts(PRODUCTCNT_CACHE_GETLIMIT, limitStart)
             retrivedProductCount = -1
@@ -323,7 +341,8 @@ def checkCacheState(force: bool = False):
                     UnasProductList.update(pList)
                     limitStart += retrivedProductCount
         LastCacheUpdated = UtcNow()
-    if force or (minimunDelayed and (len(UnasOrderList) < 1)): # Rendelesnek nem kelle a minunimum delay, az lehet ures
+    if force or minimunDelayed: # Rendelesnek nem kelle a minunimum delay, az lehet ures
+        UnasOrderList.clear()
         retV = UCH.unasGetActiveOrders()
         UnasOrderList = collectOrderItems(retV)
         LastCacheUpdated = UtcNow()
@@ -386,10 +405,10 @@ def mkCustomerCode( ucc : UCC.UnasCustomerCache, prefix : str = 'unregistered'):
     return f"{prfx}-{ucc.unasId}"
 
 #				
-def getCustomerFormCache(email, taxnumber, id ) -> UCC.UnasCustomerCache:
+def getCustomerFormCache(email, taxnumber, unasId ) -> UCC.UnasCustomerCache:
     ucc = UnasCustomerList.get( UCC.buildAzonData( email, taxnumber ))
     if ucc is None:
-        ucc = UnasCustomerList.get( UCC.buildCustAzonById(id))
+        ucc = UnasCustomerList.get( UCC.buildCustAzonById(unasId))
     if ucc is not None:
         if ucc.symbolId is None:
             ucc.symbolId = 0
@@ -423,7 +442,7 @@ UNASACTION_modify  = "modify"
 UNASACTION_delete  = "delete"
 #
 # CACHE
-UnasProductList = dict({})
+UnasProductList : Dict[str, UPC] = dict({})
 UnasCustomerList = dict({})
 #UnasOrderList    = dict({})
 UnasOrderList : Dict[str, UOC.UnasOrderCache] = dict({})
@@ -494,6 +513,10 @@ ORDER_STATUS_SHIP     = 0
 ORDER_STATUS_CLOSE    = 0
 ORDER_STATUS_RETURN   = 0
 ORDER_STATUS_CANCEL   = 0
+
+ORDER_HandleUnregistered  = False
+ORDER_getMissingCust      = False
+ORDER_autoAcknowledge     = False
 
 PRICERULE_TRANSPORTMODES = None
 PRICERULE_PAYMENTMETHODS = None

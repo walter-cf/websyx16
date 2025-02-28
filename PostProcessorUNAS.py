@@ -6,7 +6,7 @@ import tempfile
 import UnasAuth
 import MyUtils as MU
 import FdbUtils as FBU
-import UnasProductCache as UPC
+from UnasProductCache import UnasProductCache as UPC
 import UnasCustomerCache as UCC
 import UnasConnectHelper as UCH
 import MySmtpClient as SM
@@ -52,22 +52,28 @@ def unasCustomer_Direct(xml, token):
 def unasPricerule(xml, token):
     return '<pRicErUlez>Not Used Yet</pRicErUlez>'
 
+def isCustomerTypeChecked(cust):
+    # TODO MyUTils CONTSTANT kent kezelni felteteles ellenorzeskent
+    return cust.customerstatus == 1 and cust.supplierstatus == 0 and cust.code.text.startswith(MU.CUSTOMER_CODE_PREFIXES["default"])
+
 #TRANSFORMERS
 def transformUnasRequestObject(root, xsltFilename):
     if   xsltFilename == 'Product':
         for prod in root.getchildren():
             if MU.isLogLevelTrace:
                 print(prod.code)
-            if prod.webdisplay == 1:
-                upc = MU.UnasProductList.get(str(prod.code))
+            upc = MU.UnasProductList.get(str(prod.code))
+            if upc is not None and upc.state == UPC.ProductState_PENDING:
+                upc = MU.refreshProductItem(upc)
+            if prod.webdisplay == 1 or ((UPC.ProductStatus_INACTIVE  if upc is None else upc.status) != UPC.ProductStatus_INACTIVE):
                 #if upc:
                 #    postDiffTime = MU.getCurrTime() - upc.lastmod
                 #    logging.error("p-Product:%s, diff:%i %s", upc.sku, postDiffTime, 'CYCLIC!!!' if postDiffTime < 2*MU.GETPRODUCT_INTERVAL else '')
                 if upc == None: # UNAS-bol hianyzik
                     if (prod.deleted == 0):
                         prod.unasProductAction = 'add'
-                        prod.unasProductStatus = 0 if prod.webdisplay == 0 else 2 # Active+ New
-                        MU.UnasProductList[prod.code] = UPC.UnasProductCache(0, prod.code, prod.id, 0, 27, 'bulk')
+                        prod.unasProductStatus = UPC.ProductStatus_INACTIVE if prod.webdisplay == 0 else UPC.ProductStatus_NEW # Active+ New
+                        MU.UnasProductList[prod.code] = UPC(0, prod.code, prod.id, 0.0, 27, UPC.ProductState_LIVE)
                     else:
                         prod.SkipThisItem = '1'
                         #return None # Nem viszem fel, ha mar ugyis deleted a symbolban
@@ -79,13 +85,14 @@ def transformUnasRequestObject(root, xsltFilename):
                     logging.warning(_m )
                 else:  # UNAS-ban azonositottam SKU alapjan es LIVE
                     prod.unasProductId = upc.unasId
+                    upc.state = UPC.ProductState_PENDING
                     if prod.deleted == 1:
                         prod.unasProductAction = 'delete'
-                        prod.unasProductStatus = 0
+                        prod.unasProductStatus = UPC.ProductStatus_INACTIVE
                     else:
                         prod.unasProductAction = 'modify'
                         if prod.webdisplay == 0:
-                            prod.unasProductStatus = 0 # Ha webDisplay, akkor remelem bele sem teszi a TAGet
+                            prod.unasProductStatus = UPC.ProductStatus_INACTIVE
                 #
                 # GuaranteeMonths, Attributes, TargetCategory (symbolId, Gyarto, VTSZ, EAN)
                 attribs = ''
@@ -177,7 +184,7 @@ def transformUnasRequestObject(root, xsltFilename):
 
     elif xsltFilename == 'Customer':
         for cust in root.getchildren():
-            if cust.id > 0 and cust.code.text.startswith('UCO'):
+            if cust.id > 0 and isCustomerTypeChecked(cust):
                 try:
                     # Cache ??
                     ucc = MU.getCustomerFormCache(cust.email, cust.taxnumber, cust.id )
@@ -219,6 +226,7 @@ def transformUnasRequestObject(root, xsltFilename):
                     #
                     # Cimek - hibajavitas:
                     if MU.HANDLE_CUSTOMERADDRESS and cust.find('SkipThisItem') is None:
+                        cust.handleCustomerAddresses = 1
                         prepareCustomerAddresses(cust)
                     else:
                         pass
@@ -227,6 +235,7 @@ def transformUnasRequestObject(root, xsltFilename):
                     cust.SkipThisItem = '1'
             # end try
             else:
+                ucc = None
                 logging.debug(f"Customer skipped while ID < 0:{cust.id}")
                 cust.SkipThisItem = '1' 
             if MU.isLogLevelTrace():
@@ -304,6 +313,8 @@ def transformUnasRequestObject(root, xsltFilename):
                             for addr in cust.customeraddresses.getchildren():
                                 if addr.deleted == 1:
                                     addr.SkipThisItem = 1
+                                elif isEmptyCA(addr):
+                                    addr.SkipThisItem = 1
                                 else:
                                     if addr.preferred == 1:
                                         # copyAddrTag(addr, ShippingAddress)
@@ -357,6 +368,13 @@ def transformUnasRequestObject(root, xsltFilename):
     # print(type(obj_xml))
     return str(obj_xml, encoding='utf-8').replace('<?xml version="1.0"?>',"")
 
+def isEmptyCA(ca) :
+    # ca.zip is None
+    return True  if not isXmlTagNotEmpty(ca.zip) else int(ca.zip.text) < 1
+
+def isXmlTagNotEmpty(s):
+    return len('' if s is None else '' if s.text is None else s.text.strip()) > 0
+
 def prepareCustomerAddresses(cust):
     # invoice cimek defa/hianyzo values???
     cust.invoicestreet = addressDefaValue(cust.invoicestreet, 'HIANYZO ADAT **')
@@ -366,6 +384,8 @@ def prepareCustomerAddresses(cust):
     if len(cust.findall('customeraddresses')) > 0:
         for addr in cust.customeraddresses.getchildren():
             if addr.deleted == 1:
+                addr.SkipThisItem = 1
+            elif isEmptyCA(addr):
                 addr.SkipThisItem = 1
             else:
                 addr.unasCountryCode = MU.getCountryCode(cust.invoicecountry if addr.country.text is None else addr.country.text)
@@ -623,20 +643,19 @@ def preProcessUnasPostRequest(action, xml, ts ):
     return xml
 
 # @request Processor
-def doUnasRequest(action, postData, pathParam3 = None, errors = None):
+def doUnasRequest(action, postData, pathParam3 = None, errors = []):
     # reInit errors holder
-    if errors is not None:
-        GBL_ErrorMessages.clear()
-        for errItm in errors:
-            GBL_ErrorMessages.append(errItm)
+    GBL_ErrorMessages.clear()
     # print(postData)
     token = UnasAuth.doAuth() # '7526191af38b98c0ce0334b0325a6be92adb7df3'
     ts = MU.getCurrTime()
+    GBL_ErrorMessages.append("Test POST errMsg:%d" % ts)
     logging.info("unasPost-path:%s", action)
     logging.debug("token:%s, xml:%s", token, postData)
     MU.checkCacheState()
     unasResp ='OK'
     if (action == 'product'):
+        unasResp = "???"
         logging.debug("Product")
         if MU.isLogLevelDebug():
             print(postData)
@@ -653,6 +672,7 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = None):
         # return "OK"
     elif action == 'inventory':
         logging.debug("Inventory")
+        unasResp = "???"
         xmlReq_0 = preProcessUnasPostRequest(action, postData, ts)
         xmlReq = prepareUnasReply(xmlReq_0, "ProductQuantity", ts )
         # Ha nem csinaltam UNAS requestet vmilyen feltetel teljesulese miatt!
@@ -668,6 +688,7 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = None):
         # return "OK"
     elif action == 'price':
         logging.debug("Price")
+        unasResp = "???"
         #
         xmlReq_0 = preProcessUnasPostRequest(action, postData, ts)
         xmlReq = prepareUnasReply(xmlReq_0, "ProductPrice", ts )
@@ -702,8 +723,9 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = None):
         # xmlReq = prepareUnasReply(xmlReq_0, "Category", ts )
         # xmlResp = unasCats( xmlReq, token )
         # unasResp = postProcessUnasPostRequest(action, xmlResp, ts)
-        # return "OK"
+        unasResp = "OK"
     elif action == 'customer':
+        unasResp = "???"
         logging.debug("Customer")
         postData = postData.replace('&amp;#', '&#')
         xmlReq_0 = preProcessUnasPostRequest(action, postData, ts)
@@ -759,29 +781,25 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = None):
         #  ????? preProcessUnasPostRequest ???  transformResponse(xmlResp, 'Finalize')
         unasResp = postProcessUnasPostRequest(action, xmlResp, ts)
         #return "OK"
-    elif action =='ilogger':
-        logging.error('Logger POST called PostPrm:%s', postData)
-        xmlReq = preProcessUnasPostRequest(action, postData, ts)
-        return 'OK'
-        # raise ValueError("Logger POST Not Implmented Yet!")
     elif action.startswith('returnOK'):
-        # logging.error("synclog NOT IMPLEMENTED")
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
         logging.debug(xmlReq)
-        # print(xmlReq)
-        return "OK"
+        unasResp = "OK"
     elif action.startswith('synclog'):
         # logging.error("synclog NOT IMPLEMENTED")
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
         logging.debug(xmlReq)
         # print(xmlReq)
-        return "OK"
+        unasResp = ''
     elif action =='proxycontrol':
         return doProxyControlUnas(pathParam3, postData )
     elif action.startswith('TEST'):
         return doJoetest(pathParam3, postData, ts )
 
     logging.info("PostReq:%s handled in:%i" , action, MU.getCurrTime() - ts)
+    if len(GBL_ErrorMessages) > 0:
+        for errItm in GBL_ErrorMessages:
+            errors.append(errItm)
     return unasResp
 
 def doProxyControl(postData, pPath = []):
@@ -893,8 +911,8 @@ def getErrorTextCustomer(act, xmlResp, ts) -> str:
             # unasId = cust.find('Id').text
             email = cust.find('Email').text
             status = cust.find('Status').text
-            action = cust.find('Action')
-            unasId = cust.find('Id')
+            action = None if cust.find('Action') is None else cust.find('Action').text 
+            unasId = 0 if cust.find('Id') is None else int(cust.find('Id').text)
             if status.lower() ==  'ok':
                 # find by ID
                 # ucc = next((x for x in  MU.UnasCustomerList.values() if x.unasId == 176553135), None )
@@ -902,14 +920,14 @@ def getErrorTextCustomer(act, xmlResp, ts) -> str:
                 if ucc:
                     ucc.lastmod = ts # MU.UtcNow()
                     logging.info("%s-ok:%s lastMod:%i,%s",
-                            'NoneAction' if action is None else action.text,
+                            'NoneAction' if action is None else action,
                             ucc.custAzon,
                             ucc.lastmod,
                             MU.tsToDateStr(ucc.lastmod))
                 else:
                     logging.info("%s-ok:%s ",'NoneAction' if action is None else action.text, email)
             else:
-                errMsg = cust.find('Error').text
+                errMsg = "[uid:%d, emil:%s, trIdL%d]::%s" % (unasId, email, ts, cust.find('Error').text)
                 GBL_ErrorMessages.append(errMsg)
                 logging.error( "%s-ERR:%s", 'NoneAction' if action is None else action, xmlResp)
                 errorMessage = errMsg if errorMessage is None else  errorMessage + ' | ' + errMsg
@@ -949,6 +967,10 @@ def postProcessUnasPostRequest(action, xmlResp, ts) -> str:
         logging.debug(root.tag)
         return 'OK'
     elif action == 'customer':
+        root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
+        logging.debug(root.tag)
+        return getErrorTextCustomer(action, xmlResp, ts)
+    elif action == 'customerby':
         root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
         logging.debug(root.tag)
         return getErrorTextCustomer(action, xmlResp, ts)

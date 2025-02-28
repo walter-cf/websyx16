@@ -265,8 +265,8 @@ def updateOrderStatus(symbolId, status:int = 1):
     CON.commit() # type: ignore
     cur.close()
 
-def updateProductName(symbolId, prodName):
-    cur = doSql( 'update "Product" set "Name" = ? where "Id" = ?', ( prodName, symbolId ))
+def updateProductName(symbolId, prodName): # Name Varchar(100)
+    cur = doSql( 'update "Product" set "Name" = ? where "Id" = ?', ( prodName[:100], symbolId ))
     CON.commit() # type: ignore
     cur.close()
 
@@ -361,26 +361,19 @@ def getModTime( id, tableName = "Customer"):
     return None if row == None else row[0]
 
 def createCustomerIfNotExists(id:int = -2, xmlCode:str = None, xmlEmail:str = None, xmlTaxno:str = None): # type: ignore
-    cid = 0 if  id is None else id
-    if cid > 0:
-        cur = doSql('select "Id" from "Customer" where "Id" = ?', cid)
-        rex = cur.fetchone()
-        if rex is None or len(rex) < 1:
-            cur = execSql( 'insert into "Customer" ("Id", "Code", "Name", "Email", "TaxNumber") values(?,?,?, ?, ?)' ,
-                                            (cid,'' if xmlCode is None else xmlCode,
-                                             'Missed from symbolDB',
-                                            '' if xmlEmail is None else xmlEmail,
-                                            '' if xmlTaxno is None else xmlTaxno  ))
-            return cid
-        else:
-            return rex[0]
-    else:
+    cid = 0 if id is None else id
+    cid = 0 if cid < 1 else id
+    cur = doSql('select "Id" from "Customer" where "Id" = ? or "Code" = ?', (cid, 'xWqaS385qqQw' if xmlCode is None else xmlCode ))
+    rex = cur.fetchone()
+    if rex is None or len(rex) < 1:
         newCustomerId = insSql('Customer', ' "Code", "Name", "Email", "TaxNumber" ', ' ?, ?, ?, ? ', ( 
                             ('' if xmlCode is None else xmlCode, 'Missed from symbolDB',
                             '' if xmlEmail is None else xmlEmail,
                             '' if xmlTaxno is None else xmlTaxno  ))
                             )
         return newCustomerId
+    else:
+        return rex[0]
 
 
 def insertDummyCustomer():

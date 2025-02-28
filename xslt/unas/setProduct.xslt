@@ -52,28 +52,28 @@
                         </Param>
                     </xsl:if>
                     <xsl:if test="unasExtendedAttributes = 1">
-                    <xsl:if test="productcategory">
-                        <Param>
-                            <Type>string</Type>
-                            <Name>TargetCategory</Name>
-                            <Value><xsl:value-of select="productcategory" /></Value>
-                        </Param>
-                    </xsl:if>
-                    <xsl:if test="Attributes">
-                        <Param>
-                            <Type>string</Type>
-                            <Name>Attributes</Name>
-                            <Value><xsl:value-of select="Attributes" /></Value>
-                        </Param>
-                    </xsl:if>
-                    <xsl:if test="guaranteemonths">
-                        <Param>
-                            <Type>string</Type>
-                            <Name>GuaranteeMonths</Name> 
-                            <Value><xsl:value-of select="guaranteemonths" /></Value>
-                        </Param>
-                    </xsl:if>
-                    </xsl:if>
+                        <xsl:if test="productcategory">
+                            <Param>
+                                <Type>string</Type>
+                                <Name>TargetCategory</Name>
+                                <Value><xsl:value-of select="productcategory" /></Value>
+                            </Param>
+                        </xsl:if>
+                        <xsl:if test="Attributes">
+                            <Param>
+                                <Type>string</Type>
+                                <Name>Attributes</Name>
+                                <Value><xsl:value-of select="Attributes" /></Value>
+                            </Param>
+                        </xsl:if>
+                        <xsl:if test="guaranteemonths">
+                            <Param>
+                                <Type>string</Type>
+                                <Name>GuaranteeMonths</Name> 
+                                <Value><xsl:value-of select="guaranteemonths" /></Value>
+                            </Param>
+                        </xsl:if>
+                    </xsl:if>             <!--  unasExtendedAttributes -->
                 </Params>
                 <xsl:if test="unasProductStatus">
                 <Statuses>

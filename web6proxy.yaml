@@ -1,4 +1,4 @@
-logLevel: Debug
+logLevel: Trace
 proxy:
   # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
   hostName: 192.168.10.6
@@ -49,10 +49,14 @@ unas:
         new:      5702269 # Feldolgozasra var
         accepted: 5702274 # Visszaigazolva
         prepared: 5702279 # Keszletezes alatt
-        shipping: 9999999 # Kiszallitas
+        shipping: 0       # NU.? 
         closed:   5702289 # Lezarva
         returned: 0       # NU. in UNAS (yet)
         cancel:   0       # NU. in UNAS (yet)
+    autoAcknowledge: True
+    flow:
+      getUnregistered: False
+      getMissingCust: False
 
   customer:
     # Unas paarmeterek: symbolId, symbolCode
@@ -60,9 +64,9 @@ unas:
     getInterval: 1800
     bulk: False
     ignoreCyclicInterval: 1
-    cerateMissingCustomer: True
+    cerateMissingCustomer: False
     forceNewState: True
-    handleCustomerAddress: True
+    handleCustomerAddress: False
     countries:
       at:  'Ausztria'
       uk:  'Egyesült Királyság'
@@ -107,7 +111,6 @@ firebird:
   dbHost: localhost
   dbUser: SYSDBA
   dbPass: Bertalan11
-
 
 ########################################################################
 #

@@ -1,23 +1,8 @@
 from typing  import Any, List, Dict, Union
 import MyUtils as MU
 import FdbUtils as FBU
+# import numpy as np
 # from datetime import datetime as DT
-
-
-#
-# Constants 
-#
-CAstate_unasOnly = "unasOnly"
-CAstate_symbolOnly = "symbolOnly"
-CAstate_dummy = "dummy"
-CAstate_duplicate = "duplicate"
-CAstate_assigned = "assigned"
-CAstate_check = "check"
-CAstate_X = "x"
-CAtype_shipping = "shipping"
-CAtype_dummy    = "dummy"
-CAtype_other    = "other"
-CAtype_invoice  = "invoice"
 
 
 class CustomerAddress:
@@ -65,6 +50,23 @@ class CustomerAddress:
     state : str # new , dele, paired
     idx   : int
     
+    #
+    # Constants 
+    #
+    CAstate_unasOnly = "unasOnly"
+    CAstate_symbolOnly = "symbolOnly"
+    CAstate_dummy = "dummy"
+    CAstate_duplicate = "duplicate"
+    CAstate_assigned = "assigned"
+    CAstate_check = "check"
+    CAstate_paired = "paired"
+    CAstate_X = "x"
+    CAtype_shipping = "shipping"
+    CAtype_dummy    = "dummy"
+    CAtype_other    = "other"
+    CAtype_invoice  = "invoice"
+    
+    
     def presetCode(self, unasid:int, idx:int):
             self.Code     = MU.CUSTOMER_CODE_PREFIXES["patternAddr"] % (MU.CUSTOMER_CODE_PREFIXES["address"], unasid, idx)
             if MU.isLogLevelDebug:
@@ -108,10 +110,11 @@ class CustomerAddress:
         self.Zip          = tag.ZIP
         self.City         = tag.City
         self.Street       = tag.Street
-        self.HouseNumber  = None
+        self.HouseNumber  = None              # type: ignore
         # self.ContactName  = tag.find('Name')
         self.Deleted      = deleted
         self.state        = state
+        return self
 
 #
 # SQL consts
@@ -179,6 +182,8 @@ class CustomerAddressHelper:
 
     def compareCA( self, a : CustomerAddress, b : CustomerAddress ) -> bool:
         #E = a.Customer == b.Customer
+        if a.state == CustomerAddress.CAstate_duplicate or b.state == CustomerAddress.CAstate_duplicate:
+            return False
         #
         E =       self.strCmp(a.Name        , b.Name        )
         E = E and self.strCmp(a.Country     , b.Country     )
@@ -243,35 +248,55 @@ class CustomerAddressHelper:
                 )
                 ca.Code = r[  cols.index("Code") ]
                 ca.idx = 0 if ca.Code is None else self.toInt(ca.Code.split('-')[2]) # Ezt azert meg kellene nezni!
-                ca.state = CAstate_symbolOnly
+                ca.state = CustomerAddress.CAstate_symbolOnly
                 self.symbAddresses.append(ca)
         return self.symbAddresses
 
     def rebuildCAlist(self, customerId:int):
         for ss in self.symbAddresses:
-            if ss.state == CAstate_symbolOnly:
+            if ss.state == CustomerAddress.CAstate_symbolOnly:
                 FBU.setDeletedAddrById(ss.Id)
         for uu in self.unasAddresses:
-            if uu.state == CAstate_unasOnly:
+            if uu.state == CustomerAddress.CAstate_unasOnly:
                 uu.Id = FBU.addCustAddr(custSymbolId= -2 if self.customerid < 1 else self.customerid,
                         unasId=self.unasid , addressIdx=uu.idx,
                         name=uu.Name, city=uu.City, zip=uu.Zip, region=uu.Region, country=uu.Country,
                         street=uu.Street, house=uu.HouseNumber )
 
+    # NumPy ## def findDuplicate_NP( self ):
+    # NumPy ##     uU, cU = np.unique(self.unasAddresses, return_counts=True) # type: ignore
+    # NumPy ##     dupUnas = uU[cU > 1]
+    # NumPy ##     for itm in self.unasAddresses:
+    # NumPy ##         if dupUnas.get(itm, 0) > 0:
+    # NumPy ##             pass
+    # NumPy ##     uS, cS = np.unique(self.symbAddresses, return_counts=True) # type: ignore
+    # NumPy ##     dupSymb = uS[cS > 1]
+
+    def findDuplicate( self, arr ):
+        # any(x.name == "t2" for x in arr)
+        uniqes = []
+        for itm in arr:
+            if any(self.compareCA(itm, x) for x in uniqes): # next((True for x in uniqes if self.compareCA(itm, x)), False):
+                itm.state = CustomerAddress.CAstate_duplicate
+            else:
+                uniqes.append(itm)
+
     def analyzeCAlist( self ):
+        self.findDuplicate(self.unasAddresses)
+        self.findDuplicate(self.symbAddresses)
         self.analyzeCA(self.unasAddresses, self.symbAddresses )
         
     def analyzeCA( self, al : List[CustomerAddress], bl : List[CustomerAddress]):
         for uu in al:
             for ss in bl:
                 if self.compareCA(uu, ss):
-                    uu.state = 'paired'
-                    ss.state = 'paired'
+                    uu.state = CustomerAddress.CAstate_paired
+                    ss.state = CustomerAddress.CAstate_paired
 
     def identfyCA( self, uca : CustomerAddress) -> CustomerAddress:
         for ss in self.symbAddresses:
             if self.compareCA(uca, ss):
-                ss.state =  'paired'
+                ss.state =  CustomerAddress.CAstate_paired
                 return ss
         return None # type: ignore
 

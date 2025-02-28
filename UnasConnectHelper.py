@@ -71,11 +71,12 @@ def unasSetOrderStatus( orderKey, status, symbolId, statusEmail = False, statusM
     xmlParam = MU.XMLTAG + '''<Orders><Order>
         <Action>modify</Action>
         <Key>%s</Key>
-        <Status>%s</Status>%s
+        %s
         <StatusEmail>%s</StatusEmail>
         <Params><Param><Name>symbolId</Name><Value>%i</Value></Param></Params>
         </Order></Orders>
-    ''' % (orderKey, status, statusMessageStr , "Yes" if statusEmail else "No", symbolId)
+    ''' % (orderKey, "" if status is None else "<Status>%s</Status><StatusDetail>%s</StatusDetail>" % (status,statusMessage),
+                            "Yes" if statusEmail else "No", symbolId)
     #
     x = requests.post(  MU.UNASAPI_URL + '/setOrder', data=xmlParam.encode('utf-8'), headers={ "Authorization" : "Bearer " + token } )
     if MU.isLogLevelTrace():
@@ -314,8 +315,7 @@ def unasFreeXml(action, xmlTag):
     return x.text
 #
 # Posts-End
-#
-UNAS_SETSYMBOLID_XML = """<CustomersUp>
+UNAS_SETSYMBOLID_XML = """<Customers>
     <Customer>
         <Action>modify</Action>
         <Id>%i</Id>
@@ -330,9 +330,38 @@ UNAS_SETSYMBOLID_XML = """<CustomersUp>
             </Param>
         </Params>
     </Customer>
-</CustomersUp>
+</Customers>
 """
-def updateSymbolId(unasId, symbolId, symbolCode):
+UNAS_SETPRODUCTSYMBOLID_XML = """<Products>
+    <Product>
+        <Action>modify</Action>
+        <Id>%i</Id>
+        <Sku>%s</Sku>
+        <Params>
+            <Param>
+                <Name>symbolId</Name>
+                <Value>%s</Value>
+            </Param>
+            <Param>
+                <Name>VTSZ</Name>
+                <Value>%s</Value>
+            </Param>
+        </Params>
+    </Product>
+</Products>
+"""
+def updateProductSymbolId(unasId, symbolId, sku):
+    token = UnasAuth.doAuth()
+    xmlParam = UNAS_SETPRODUCTSYMBOLID_XML % (unasId, sku, str(symbolId), sku)
+    x = requests.post(MU.UNASAPI_URL + '/setProduct', data=xmlParam.encode('utf-8'), headers={ "Authorization" : "Bearer " + str(token) })
+    if MU.isLogLevelTrace():
+        print(MU.UNASAPI_URL + '/setProduct')
+        print(x.status_code)
+        print(xmlParam)
+        print(x.text)
+    return x.text
+
+def updateCustomerSymbolId(unasId, symbolId, symbolCode):
     token = UnasAuth.doAuth()
     xmlParam = UNAS_SETSYMBOLID_XML % (unasId, str(symbolId), symbolCode)
     x = requests.post(MU.UNASAPI_URL + '/setCustomer', data=xmlParam.encode('utf-8'), headers={ "Authorization" : "Bearer " + str(token) })
@@ -342,6 +371,7 @@ def updateSymbolId(unasId, symbolId, symbolCode):
         print(xmlParam)
         print(x.text)
     return x.text
+
 
 def updateCustomer(xmlPart):
     token = UnasAuth.doAuth()

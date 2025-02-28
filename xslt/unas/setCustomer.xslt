@@ -101,8 +101,8 @@
 								</CountryCode>
 								<TaxNumber><xsl:value-of select="companytaxnumber" /></TaxNumber>
 								<xsl:choose>
-									<xsl:when test="iscompany > 0" ><CustomerType>private</CustomerType></xsl:when>
-									<xsl:otherwise><CustomerType>company</CustomerType></xsl:otherwise>
+									<xsl:when test="iscompany = 1" ><CustomerType>company</CustomerType></xsl:when>
+									<xsl:otherwise><CustomerType>private</CustomerType></xsl:otherwise>
 								</xsl:choose>
 					</Shipping>
 					</xsl:for-each>
