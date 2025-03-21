@@ -47,8 +47,7 @@
             
                 </xsl:for-each>
                 <transportmode><xsl:value-of select="Shipping/Name"/></transportmode><!-- szállítási mód (TransportMode.Name) -->
-                <paymentmethod><xsl:value-of select="paymentMethodName"/></paymentmethod><!-- fizetési mód (PaymentMethod.Name) -->
-                <paymentmethodtolerance><xsl:value-of select="paymentMethodTolerance"/></paymentmethodtolerance><!-- fizetési mód (PaymentMethod.ToleranceDay) -->
+                <paymentmethod><xsl:value-of select="Payment/Name"/></paymentmethod><!-- fizetési mód (PaymentMethod.Name) -->
                 <comment><xsl:value-of select="Comments/Comment/Text"/></comment><!-- Rendelés megjegyzése (CustomerOrder.Comment) -->
                 <!--
                     <transporttargetid>589830</transporttargetid><! - - Postapont száma

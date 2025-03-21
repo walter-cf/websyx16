@@ -6,6 +6,7 @@ import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, unquote, parse_qs
 import MyUtils as MU
+import MyBatch as MB
 import MySmtpClient as SM
 import FdbUtils as FBU
 import MySqlService as sqlSrv
@@ -69,7 +70,9 @@ class MyServer(BaseHTTPRequestHandler):
           # end try
         elif (pPath[1] == "batch"):
           #logging.warning('Batch ccommad:%s not implementes YET! path:%s', pPath[2], pPath)
-          pass
+          if pPath[2] == "orderStatusUnas":
+            retv = MB.orderStatusUnas(MU.BATCH_PROCESSES[0]['orderStatus'])
+            retData = "OK"
         elif (pPath[1] == "sql"):
           srv = sqlSrv.MySqlService()
           try:
@@ -226,16 +229,18 @@ class MyServer(BaseHTTPRequestHandler):
             elif pPath[2] == 'bulkupload':
               # UPLOAD valtozoba mentett BULK Products and Customers
               retMessage = PPU.unasBulkUpload()
+            elif pPath[2] == 'xmlfile':
+              retMessage = PPU.unasFreeXmlData(pPath[3], pPath[4], postParams)
             elif pPath[2] == 'freexml':
               retMessage = PPU.unasFreeXml(pPath[3], postParams)
             elif pPath[2] == 'symbolxml':
               retMessage = PPU.unasSymbolXml(pPath[3], postParams)
-            elif len(parsedFields) == 0:
-              retMessage = 'OK'
             elif postParams[0] == '\ufeff' and postParams[1:7] == '<?xml ':
               retMessage = PPU.doUnasRequest(pPath[2],postParams[1:] , errors=GBL_ErrorMessages )
             elif postParams.startswith('<?xml '):
               retMessage = PPU.doUnasRequest(pPath[2],postParams, None if len(pPath) < 4 else pPath[3], errors=GBL_ErrorMessages)
+            elif len(parsedFields) == 0:
+              retMessage = 'OK'
             elif 'xmldata' == list(parsedFields.keys())[0]: # type: ignore
               xmlData = parsedFields['xmldata'][0]
               retMessage = PPU.doUnasRequest(pPath[2], xmlData, 17, errors=GBL_ErrorMessages)
@@ -377,7 +382,7 @@ if __name__ == "__main__":
   else:
       logLevel = logging.DEBUG
       
-  logging.basicConfig(filename='syxProxy%s.log' % '' if MU.serverPort == 3301 else str(MU.serverPort),level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
+  logging.basicConfig(filename='syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '-'+str(MU.serverPort)),level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
   logger=logging.getLogger(__name__)
 
   logger.info( 'Test FB connect; Customer table rowCount: %s' % FBU.testDbConnect() )

@@ -124,7 +124,7 @@
                 -->
             </Customer>
             </xsl:if>
-        </xsl:for-each>
+            </xsl:for-each>
         </Customers>
     </xsl:template>
 </xsl:stylesheet>

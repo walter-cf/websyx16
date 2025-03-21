@@ -346,10 +346,25 @@ def getOrdersByStatusCode(idList : str) -> List:
         resp.append(row)
     return resp
 
+def getPaymentMethodByCustomerId(custId:int):
+    if custId < 1:
+        return None
+
+    sql = 'select PM."Name", PM."ToleranceDay" from "PaymentMethod" PM join "Customer" CU on PM."Id" = CU."PaymentMethod" and CU."Id" = ?'
+    cur = doSql(sql,  custId )
+    row = cur.fetchone()
+    return None if row == None else row
+
+def getPaymentMethodByCustomerCode(custCode:str):
+    sql = 'select PM."Name", PM."ToleranceDay" from "PaymentMethod" PM join "Customer" CU on PM."Id" = CU."PaymentMethod" and CU."Code" like ?'
+    cur = doSql(sql,  custCode )
+    row = cur.fetchone()
+    return None if row == None else row
+
 def getOrderById(id:int):
     if id < 1:
         return None
-    cur = doSql('select * from "CustomerOrder" where "Id" = ?' %  id )
+    cur = doSql('select Name from "PaymentCustomerOrder" where "Id" = ?' %  id )
     row = cur.fetchone()
     return None if row == None else row[0]
     

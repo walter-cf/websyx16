@@ -44,6 +44,7 @@
                             <Value><xsl:value-of select="manufacturer" /></Value>
                         </Param>
                     </xsl:if>
+                    <!--  Jelen pillanatban NotUsed!
                     <xsl:if test="customstariffnumber">
                         <Param>
                             <Type>string</Type>
@@ -51,6 +52,7 @@
                             <Value><xsl:value-of select="customstariffnumber" /></Value>
                         </Param>
                     </xsl:if>
+                    -->
                     <xsl:if test="unasExtendedAttributes = 1">
                         <xsl:if test="productcategory">
                             <Param>
@@ -75,7 +77,7 @@
                         </xsl:if>
                     </xsl:if>             <!--  unasExtendedAttributes -->
                 </Params>
-                <xsl:if test="unasProductStatus">
+
                 <Statuses>
                     <Status>
                         <Type>base</Type>
@@ -94,20 +96,20 @@
                         </Category>
                     </Categories>
                 </xsl:if>
-                </xsl:if>
+
             </xsl:if>  <!-- action ADD -->
             <xsl:if test="not(unasProductAction = 'add')">
                 <Prices>
                     <Vat><xsl:value-of select="vat"/></Vat>
                 </Prices>
-                <xsl:if test="unasProductStatus">
+
                 <Statuses>
                     <Status>
                         <Type>base</Type>
                         <Value><xsl:value-of select="unasProductStatus"/></Value>
                     </Status>
                 </Statuses>
-                </xsl:if>
+
                 <Params>
                     <Param>
                         <Type>num</Type>
@@ -129,6 +131,7 @@
                             <Value><xsl:value-of select="manufacturer" /></Value>
                         </Param>
                     </xsl:if>
+                    <!--  Jelen pillanatban NotUsed!
                     <xsl:if test="customstariffnumber">
                         <Param>
                             <Type>num</Type>
@@ -136,6 +139,7 @@
                             <Value><xsl:value-of select="customstariffnumber" /></Value>
                         </Param>
                     </xsl:if>
+                     -->
                 </Params>
             </xsl:if> <!-- action MODIFY  -->
             <!--  Felteteles ADD ended -->

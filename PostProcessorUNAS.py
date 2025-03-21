@@ -5,6 +5,7 @@ import tempfile
 
 import UnasAuth
 import MyUtils as MU
+from  MyUtilsTypes import UnasTransactionType as UTSTYPE
 import FdbUtils as FBU
 from UnasProductCache import UnasProductCache as UPC
 import UnasCustomerCache as UCC
@@ -93,6 +94,8 @@ def transformUnasRequestObject(root, xsltFilename):
                         prod.unasProductAction = 'modify'
                         if prod.webdisplay == 0:
                             prod.unasProductStatus = UPC.ProductStatus_INACTIVE
+                        if prod.webdisplay == 1:
+                            prod.unasProductStatus = UPC.ProductStatus_ACTIVE
                 #
                 # GuaranteeMonths, Attributes, TargetCategory (symbolId, Gyarto, VTSZ, EAN)
                 attribs = ''
@@ -656,7 +659,8 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
     unasResp ='OK'
     if (action == 'product'):
         unasResp = "???"
-        logging.debug("Product")
+        uts = MU.createTransactionId( UTSTYPE.PRODUCT )
+        logging.debug("setProduct-TS:%d" % uts)
         if MU.isLogLevelDebug():
             print(postData)
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
@@ -671,7 +675,8 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
                 MU.LastActivity = MU.UtcNow(0)
         # return "OK"
     elif action == 'inventory':
-        logging.debug("Inventory")
+        uts = MU.createTransactionId( UTSTYPE.INVENTORY )
+        logging.debug("setInventory-TS:%d" % uts)
         unasResp = "???"
         xmlReq_0 = preProcessUnasPostRequest(action, postData, ts)
         xmlReq = prepareUnasReply(xmlReq_0, "ProductQuantity", ts )
@@ -687,7 +692,8 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
                 MU.LastActivity = MU.UtcNow(0)
         # return "OK"
     elif action == 'price':
-        logging.debug("Price")
+        uts = MU.createTransactionId( UTSTYPE.PRICE )
+        logging.debug("setPrice-TS:%d" % uts)
         unasResp = "???"
         #
         xmlReq_0 = preProcessUnasPostRequest(action, postData, ts)
@@ -703,21 +709,27 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
                 MU.LastActivity = MU.UtcNow(0)
         # return "OK"
     elif action == 'doc':
-        logging.debug("Documents")
+        uts = MU.createTransactionId( UTSTYPE.DOC )
+        logging.debug("setDocuments-TS:%d" % uts)
+
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
         # ????? preProcessUnasPostRequest ??? transformResponse(xmlResp, 'Document')
         xmlResp = unasDocuments( xmlReq, token )
         unasResp = postProcessUnasPostRequest(action, xmlResp, ts)
         # return "OK"
     elif action == 'pic':
-        logging.debug("Pictures")
+        uts = MU.createTransactionId( UTSTYPE.PIC )
+        logging.debug("setPictures-TS:%d" % uts)
+
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
         xmlResp = unasPics( xmlReq, token )
         #  ????? preProcessUnasPostRequest ??? transformResponse(xmlResp, 'Picture')
         unasResp = postProcessUnasPostRequest(action, xmlResp, ts)
         # return "OK"
     elif action == 'cat':
-        logging.debug("Category")
+        uts = MU.createTransactionId( UTSTYPE.CAT )
+        logging.debug("setCategory-TS:%d" % uts)
+
         xmlReq_0 = preProcessUnasPostRequest(action, postData, ts)
         # Egyelore nincs megvalositva
         # xmlReq = prepareUnasReply(xmlReq_0, "Category", ts )
@@ -726,7 +738,9 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         unasResp = "OK"
     elif action == 'customer':
         unasResp = "???"
-        logging.debug("Customer")
+        uts = MU.createTransactionId( UTSTYPE.CUSTOMER )
+        logging.debug("setCustomer-TS:%d" % uts)
+
         postData = postData.replace('&amp;#', '&#')
         xmlReq_0 = preProcessUnasPostRequest(action, postData, ts)
         xmlReq = prepareUnasReply(xmlReq_0, "Customer", ts)
@@ -741,7 +755,9 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
                 MU.LastActivity = MU.UtcNow(0)
         # return "OK"
     elif action == 'pricerule':
-        logging.debug("Pricerule")
+        uts = MU.createTransactionId( UTSTYPE.PRICERULE )
+        logging.debug("Pricerule-TS:%d" % uts)
+
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
         xmlResp = '<PriRulz>'
         xml = prepareUnasReply(xmlReq, "PriceruleMethod", ts )
@@ -764,7 +780,8 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         unasResp = postProcessUnasPostRequest(action, xmlResp, ts)
         #return "OK"
     elif action == 'billed':
-        logging.debug("Order - szamlazva")
+        uts = MU.createTransactionId( UTSTYPE.BILLED )
+        logging.debug("Order - szamlazva-TS:%d" % uts)
         if MU.isLogLevelDebug():
             print(postData)
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
@@ -775,25 +792,34 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
             unasResp = postProcessUnasPostRequest(action, xmlResp, ts)
         # return "OK"
     elif action == 'bulkupload':
-        logging.debug("Bulk Upload")
+        uts = MU.createTransactionId( UTSTYPE.BLKUPLOAD )
+        logging.debug("Bulk Upload-TS:%d" % uts)
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
         xmlResp = unasBulkUpload()
         #  ????? preProcessUnasPostRequest ???  transformResponse(xmlResp, 'Finalize')
         unasResp = postProcessUnasPostRequest(action, xmlResp, ts)
         #return "OK"
     elif action.startswith('returnOK'):
+        uts = MU.createTransactionId( UTSTYPE.RETURNOK )
+        logging.debug("returnOK-TS:%d" % uts)
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
         logging.debug(xmlReq)
         unasResp = "OK"
     elif action.startswith('synclog'):
         # logging.error("synclog NOT IMPLEMENTED")
         xmlReq = preProcessUnasPostRequest(action, postData, ts)
+        uts = MU.createTransactionId( UTSTYPE.SYNCLOG )
+        logging.debug("syncLog-TS:%d" % uts)
         logging.debug(xmlReq)
         # print(xmlReq)
         unasResp = ''
     elif action =='proxycontrol':
-        return doProxyControlUnas(pathParam3, postData )
+        uts = MU.createTransactionId( UTSTYPE.PROXYCONTROL )
+        logging.debug("setProduct-TS:%d" % uts)
+        return doProxyControl(pathParam3, postData )
     elif action.startswith('TEST'):
+        uts = MU.createTransactionId( UTSTYPE.TESTPOST )
+        logging.debug("setProduct-TS:%d" % uts)
         return doJoetest(pathParam3, postData, ts )
 
     logging.info("PostReq:%s handled in:%i" , action, MU.getCurrTime() - ts)
@@ -812,7 +838,7 @@ def doProxyControl(postData, pPath = []):
         action = pPath[1]
         if 'unasDirectAction' == pPath[0]:
             xmlReq = prepareUnasReply(postData, action, ts)
-            xxx = 'OK' if xmlReq is None or len(xmlReq) < 1 else UCH.unasDirectXml(pPath[1], xmlReq, None if len(pPath) < 3 else pPath[2])
+            return 'OK' if xmlReq is None or len(xmlReq) < 1 else UCH.unasDirectXml(pPath[1], xmlReq, None if len(pPath) < 3 else pPath[2])
         elif 'customer' == pPath[0]:
             if 'create199' == pPath[1]:
                 jsObj = json.loads(postData)
@@ -841,13 +867,6 @@ def doProxyControl(postData, pPath = []):
         logging.error("Bad POST-ProxyControl request: %s" % " , ".join(pPath))
         return None
 
-def doProxyControlUnas(xsltAction, postData):
-    ts = MU.UtcNow()
-    postData = postData.replace('&amp;#', '&#')
-    #xmlReq_0 = preProcessUnasPostRequest(action, postData, ts)
-    #
-    xmlReq = prepareUnasReply(postData, xsltAction, ts)
-    return 'OK' if xmlReq is None else xmlReq
     
 def doJoetest(action, postData, ts):
     postData = postData.replace('&amp;#', '&#')
@@ -1001,6 +1020,9 @@ MU.UnasPriceSetPricesXmlPart = ''
 
 def unasFreeXml(action, xmlTag):
     return UCH.unasFreeXml(action, xmlTag)
+
+def unasFreeXmlData(action, xmlTag, xmlData):
+    return UCH.unasFreeXmlData(action, xmlTag, xmlData)
     
 def unasSymbolXml(action, xmlTag):
     xmlData = xmlTag
@@ -1034,7 +1056,7 @@ def unasBulkUpload():
         ts = MU.getCurrTime()
         if MU.UnasSetProductsXmlPart:
             logging.debug("Bulk Upload starting PRODUCTS")
-            xmlResp = UCH.UploadProductsXml(MU.UnasSetProductsXmlPart)
+            xmlResp = UCH.unasProduct_Direct(MU.UnasSetProductsXmlPart)
             response = postProcessUnasPostRequest( 'product', xmlResp, ts)
             if response is None or 'OK' == response:
                 response = ''

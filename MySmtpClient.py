@@ -8,6 +8,11 @@ from email.message import EmailMessage
 # https://docs.python.org/3/library/email.examples.html
 #
 def sendAlertMail(message:str, subject :str = 'alert from WebSyx-Proxy'):
+    actionType = MU.getActionTypeFromTS()                         # Ez itt nagyon kulon van a levelkuldestol
+    unasCtx = MU.getUnasContext()
+    if unasCtx.lastAlertMailSent.get(actionType) == 0:
+        unasCtx.lastAlertMailSent[actionType] = MU.getCurrTime()
+
     # Create a text/plain message
     msg = EmailMessage()
     msg.set_content( message )

@@ -3,7 +3,6 @@
     <xsl:output method="xml" indent="no" />
     <xsl:template match="Customers">
         <xsl:for-each select="Customer">
-
         <Customer>
             <Action>modify</Action>
 			<xsl:if test="unasId">
@@ -23,7 +22,6 @@
                 </Param>
             </Params>
         </Customer>
-
         </xsl:for-each>
     </xsl:template>
 </xsl:stylesheet>

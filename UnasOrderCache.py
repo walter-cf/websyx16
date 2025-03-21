@@ -35,7 +35,7 @@ class UnasOrderCache:
         self.unasId = self.toInt(self.findItem(["Id"]))
         #
         if oo.find("Params") is not None:
-            for p in oo.find("Params"):
+            for p in oo.find("Params").getchildren():
                 if "symbolId" == p.find("Name"):
                     self.symbolId =  self.toInt(p.find("Value"))
                 if "symbolCustomerId" == p.find("Name"):

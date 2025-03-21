@@ -14,7 +14,7 @@ unas:
   apiUrl: https://api.unas.eu/shop
   feedbackUrl: "'http://' + hostName + ':' + str(serverPort) + '/fbunas'"
   # a WewbShopban kell generalni a hozzaferesi kulcsot
-  apiKey: 28ff288a0d7b3bee7c65dd4ac7e974feddd3ebdf
+  apiKey: aaf1b4abc70f36851959d1d7a527b31fef07d2d6 
   # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
   webcategory:
     # id: 880790
@@ -23,18 +23,25 @@ unas:
   ignoreBlockedClient: false
   cacheForceReload: 10000 # force cahce reload after this period
   #
+  # Comm stat:
+  commstat:
+    maxerrorcnt: 3 # continous tries
+    maxloginerr: 3 # Not Used Yet - a Login es a POST - kulon kezelem , hatha kulon kell nezni az errorCnt is - de MOST NU.!
+    blockedTimeMax: 600 # after 10 minutes will retry again - error counters will reset + SendMail -again
+    sendPacketThreshold: 1900 # hourly max packet MySQL-ben tartom, es onnan is kerdezm le
+  #
   #
   customerPaymentMode: "Szerződés szerint"
   priceRules:
     transportModes:
       - ["Helyszíni"        ,"Személyes átvétel a bemutatótermünkben"]
-      - ["MPL Futár"        ,"MPL Futárral"]
+      - ["MPL Futár"        ,"MPL futárral"]
       - ["Gyűjtőzendő"      ,"Ne küldjétek még! Várjon még másik megrendelésre!"]
     paymentMethods: [
         [ "Utánvét"         , "Utánvéttel"      ],
         [ "Bankkártya"      , "Bankkártyával a helyszínen"   ],
         [ "Előre utalás"    , "Előre utalással" ],
-        [ specialFunction01 , "Szerződött fizetési mód" ]   ## Ide tettem, hogy helyen legyen a program kezelem `specialFuncion01` kifejezest, ha azt kapom
+        [ specialFunction01 , "Szerződött fizetési mód " ]   ## Ide tettem, hogy helyen legyen a program kezelem `specialFuncion01` kifejezest, ha azt kapom
       ]
 
   order:
@@ -46,14 +53,14 @@ unas:
     symbolOrderStatusNew: 1
     # Order params - statuses
     status:
-        new:      5702269 # Feldolgozasra var
-        accepted: 5702274 # Visszaigazolva
-        prepared: 5702279 # Keszletezes alatt
+        new:      5741085 # Feldolgozasra var
+        accepted: 5741090 # Visszaigazolva
+        prepared: 5741095 # Keszletezes alatt
         shipping: 0       # NU.? 
-        closed:   5702289 # Lezarva
+        closed:   5741105 # Lezarva
         returned: 0       # NU. in UNAS (yet)
         cancel:   0       # NU. in UNAS (yet)
-    autoAcknowledge: True
+    autoAcknowledge: False
     flow:
       getUnregistered: False
       getMissingCust: False
@@ -61,7 +68,7 @@ unas:
   customer:
     # Unas paarmeterek: symbolId, symbolCode
     categoryName: HU / Channel / Haffner24 UNAS
-    getInterval: 1800
+    getInterval: 999999999
     bulk: False
     ignoreCyclicInterval: 1
     cerateMissingCustomer: False
@@ -116,22 +123,29 @@ firebird:
 #
 # Batch
 batch:
-  granularity: 10
+  granularity: 5
   processes:
     - orderStatus:
         startDelay: 10                     # initial delay after start BatchScheduler
-        interval:   60                     # Batch thread raise/trigger interval
+        frequency: 120                     # Batch thread raise/trigger interval
         name: Rendeles Statusz - UNAS      # Batch threadName
         method: orderStatusUnas            # called Entry point
         orderStatusCheckInterval: 186400    # RovModified > NOW -orderStatusCheckInterval(seconds)
         checkVoucherSequence: 42           # UNAS order type identifier
         statuses:
           - [ closed, "Megrendelés lezárva"]            # CustmerOrder.Closed = 1
-          - [ manuallyClosed, "Megrendelés lezárva"]    # CustmerOrder.ClosedManually = 1
+          - [ manuallyClosed, "Megrendelés törölve"]    # CustmerOrder.ClosedManually = 1
           - [ canceled, "Megrendelés lezárva"]          # CustmerOrder.Cancelled = 1
           - [ 1, "Feldolgozásra vár"]                   #   == 1, 2, 3 ...
           - [ 2, "Visszaigazolva"]                      # 
           - [ 3, "Készletezés alatt"]                   # 
+          # -[ 4, "Visszaküldve"]                         # Back Order
+
+    #  - prc1:
+    #      startDelay: 5
+    #      frequency:  11
+    #      name: Process Egy
+    #      method: startProcess1
 
 # technikai, nekem kellett
 prghelper:

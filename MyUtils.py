@@ -8,12 +8,14 @@ import json
 import logging
 #
 
+import MyUtilsTypes
 import MyBatch
 from UnasProductCache import UnasProductCache as UPC
 import UnasCustomerCache as UCC
 import UnasConnectHelper as UCH
 import UnasOrderCache as UOC
 import FdbUtils as FBU
+import MySqlUtils as MyDB
 # import xml.etree.ElementTree as ET
 from lxml import etree as ET
 from lxml import objectify
@@ -74,7 +76,6 @@ def setConstants(cfg):
 	MYSQL_USER              = valDef(cfg["mysql"]["dbUser"], MYSQL_USER       )
 	MYSQL_PASSWORD          = valDef(cfg["mysql"]["dbPass"], MYSQL_PASSWORD   )
 	MYSQL_DB                = valDef(cfg["mysql"]["dbFile"], MYSQL_DB         )
-
      
 	global UnasCustomerCategoryName, UnasProductWebCategoryId, UnasProductWebCategoryName, IGNORE_BLOCKED_UNAS, UNASAPI_URL, API_KEY, UNAS_FEEDBACK_URL
 	IGNORE_BLOCKED_UNAS = cfg["unas"]["ignoreBlockedClient"]
@@ -97,7 +98,7 @@ def setConstants(cfg):
 	LOGLEVEL = cfg["logLevel"]
 	PRODUCT_EXTATTRIBS = cfg["prghelper"]["extendedProductAttributes"]
   
-	CurrentLogLevel = LogLvl.getLevelFromStr(LOGLEVEL)
+	CurrentLogLevel = MyUtilsTypes.LogLvl.getLevelFromStr(LOGLEVEL)
 	CACHE_FORCE_RELOAD_PERIOD = cfg["unas"]["cacheForceReload"]
 
 	global PRODUCT_PRICECAT_BASE, PRODUCT_PRICECAT_FALLBACK, PRODUCT_PRICECAT_FALLBACK2, PRODUCT_BULK, PRODUCTNAME_OVERWRITE, PRODUCTCNT_CACHE_GETLIMIT
@@ -156,6 +157,16 @@ def setConstants(cfg):
 	MAIL_ME        = cfg["mail"]["sender"]
 	MAIL_OPERATOR  = cfg["mail"]["operator"]
 
+	# Comm Stats
+	global UNASCOMM_MAXERRCNT, UNASCOMM_MAXLOGINERRCNT, UNASCOMM_BLOCKEDTIME, UNASCOMM_SENDPACKETMAX 
+	UNASCOMM_MAXERRCNT      = cfg["unas"]["commstat"]["maxerrorcnt"]
+	UNASCOMM_MAXLOGINERRCNT = cfg["unas"]["commstat"]["maxloginerr"]
+	UNASCOMM_BLOCKEDTIME    = cfg["unas"]["commstat"]["blockedTimeMax"]
+	UNASCOMM_SENDPACKETMAX  = cfg["unas"]["commstat"]["sendPacketThreshold"]
+
+#
+# Utilz
+#
 
 def getCountryCode(country, raisError = True):
     if country is None:
@@ -304,9 +315,9 @@ def find3rdTagV2( prod, tag1, tag2, tag2Value, tag3 = 'Value', defa = None):
 def refreshProductItem(prod:UPC):
     # Get Product from UNAS by ID
     retV = UCH.unasGetProductByAzon('Id', prod.unasId)
-    pList = collectProdItems(retV)
+    pList = collectProdItems(bytes(retV, 'utf-8'))
     UnasProductList.update(pList)
-    raise ValueError("Not yet developed")
+    return pList.get(prod.sku)
 
 LastCacheUpdated : int = 0
 def reinitCacheState():
@@ -341,7 +352,7 @@ def checkCacheState(force: bool = False):
                     UnasProductList.update(pList)
                     limitStart += retrivedProductCount
         LastCacheUpdated = UtcNow()
-    if force or minimunDelayed: # Rendelesnek nem kelle a minunimum delay, az lehet ures
+    if force or minimunDelayed: # Rendelesnek nem kell a minimum delay, az lehet ures
         UnasOrderList.clear()
         retV = UCH.unasGetActiveOrders()
         UnasOrderList = collectOrderItems(retV)
@@ -388,6 +399,10 @@ def tsToDateStr(ts) -> str:
     dt = datetime.fromtimestamp(ts)
     return "%i/%i/%i-%i:%i:%i" % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
 
+def tsToDateSql(ts) -> str:
+    dt = datetime.fromtimestamp(ts)
+    return "%i-%i-%i %i:%i:%i" % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+
 def dateStrToTs(date):  # '2024.03.04 12:51:08'
     return int(datetime.strptime(date, '%Y.%m.%d %H:%M:%S').timestamp())
 
@@ -426,7 +441,7 @@ def putCustomerIntoCache(ucc : UCC.UnasCustomerCache, cc:str):
         ucc.custAzon = azon
         UnasCustomerList[azon] = ucc
     else:
-        raise ValueError( '[putCustomerIntoCache]:Duplicate item:' + u.toStr + ' :*-*: '+ ucc.toStr() )
+        raise ValueError( '[putCustomerIntoCache]:Duplicate item:' + u.toStr() + ' :*-*: '+ ucc.toStr() )
     
     
 #
@@ -1431,37 +1446,128 @@ CUSTOMER_TESTDATA_NANO = """<Customers>
 #  Cégjegyzékszám #  01-03-021683
 #  Adószám#  28072049-1-41
 
-from enum import IntEnum
-class LogLvl(IntEnum):
-    ERROR   = 1
-    WARNING = 2
-    INFO    = 3
-    DEBUG   = 4
-    TRACE   = 5
-
-    @classmethod
-    def getLevelFromStr(cls, lvl:str):
-        ch = lvl[0].upper()
-        if ch == 'T':
-            return LogLvl.TRACE
-        if ch == 'W':
-            return LogLvl.WARNING
-        if ch == 'E':
-            return LogLvl.ERROR
-        if ch == 'D':
-            return LogLvl.DEBUG
-        return LogLvl.INFO
 
 
 def isLogLevelTrace():
-    return isLogLevel(LogLvl.TRACE)
+    return isLogLevel(MyUtilsTypes.LogLvl.TRACE)
 def isLogLevelDebug():
-    return isLogLevel(LogLvl.DEBUG)
+    return isLogLevel(MyUtilsTypes.LogLvl.DEBUG)
 def isLogLevelInfo():
-    return isLogLevel(LogLvl.INFO)
+    return isLogLevel(MyUtilsTypes.LogLvl.INFO)
 def isLogLevelWarn():
-    return isLogLevel(LogLvl.WARNING)
+    return isLogLevel(MyUtilsTypes.LogLvl.WARNING)
 
-CurrentLogLevel:LogLvl = LogLvl.INFO
-def isLogLevel(lvl:LogLvl) -> bool: 
+CurrentLogLevel:MyUtilsTypes.LogLvl = MyUtilsTypes.LogLvl.INFO
+def isLogLevel(lvl:MyUtilsTypes.LogLvl) -> bool: 
     return lvl <= CurrentLogLevel
+
+
+# get (new) Transaction ID from Tomestamp + xx as originate from
+unasTransactionId:int = 0
+typeMultiplier = 1000
+def getNowFromTS():
+    global unasTransactionId
+    return int(unasTransactionId // typeMultiplier)
+
+def getActionTypeFromTS():
+    return MyUtilsTypes.UnasTransactionType(int(unasTransactionId % typeMultiplier))
+
+def createTransactionId(tsType:MyUtilsTypes.UnasTransactionType = MyUtilsTypes.UnasTransactionType.CREATENEW):
+    global unasTransactionId
+    unasTransactionId = typeMultiplier * getCurrTime() + tsType
+    return unasTransactionId
+
+def getTS():
+    global unasTransactionId
+    return unasTransactionId
+
+def createStatEntry(action:str, xmlParam:str): # login, getXXX , setXXX, procycontrol, test, TEST ???
+    unasContext.statEntryMySqlId = createStatEntrySql(action, xmlParam, tsId=getTS() )
+    updateStatEntry(action)
+
+def createStatEntryOK(resp:str = ''):
+    updateStatEntryStatus(200, xml=resp, myId=unasContext.statEntryMySqlId, tsId=getTS() )
+    updateStatEntryOK()
+
+def createStatEntryERR(retCode:int, response:str):
+    updateStatEntryStatus(retCode, xml=response, ts=getTS(), myId=unasContext.statEntryMySqlId )
+    updateStatEntryERR(retCode)
+
+unasContext = MyUtilsTypes.UnasContext()
+def getUnasContext() -> MyUtilsTypes.UnasContext: 
+    global unasContext
+    return unasContext
+
+def clearUnasContextCounter() -> MyUtilsTypes.UnasContext: 
+    unasContext.clearCounters()
+    return unasContext
+
+def updateStatEntry(action:str):
+    unasContext.lastAction = action
+    unasContext.commCnt = unasContext.commCnt + 1
+    if action.startswith('get'):
+        unasContext.getcnt = 1 + unasContext.getcnt
+    elif action.startswith('set'):
+        unasContext.setcnt = 1 + unasContext.setcnt
+    elif action.startswith('pppp'):
+        pass
+
+def updateStatEntryOK():
+    unasContext.commOkCnt = 1 + unasContext.commOkCnt
+
+def updateStatEntryERR():
+    unasContext.commErrCnt = 1 + unasContext.commErrCnt
+
+def clearCommError():
+    unasContext.commBlocked = 0
+    unasContext.commErrCnt = 0
+    unasContext.lastAlertMailSent = 0
+
+UNASCOMM_MAXERRCNT = 3
+UNASCOMM_MAXLOGINERRCNT = 3
+UNASCOMM_BLOCKEDTIME = 1800
+UNASCOMM_SENDPACKETMAX = 1900
+
+def checkCommError():
+    if unasContext.commBlocked > 0:
+        if getCurrTime() - unasContext.commBlocked > UNASCOMM_BLOCKEDTIME: # release block
+            clearCommError()
+        else:
+            # set Context State
+            unasContext.lastAction = getActionTypeFromTS().name
+            # send Alert - email + lastAlertEmailType
+            # unasContext.lastAlertMailSent = getCurrTime()
+            raise ValueError("Communication error! action:%s, TS:%d" % (unasContext.lastAction, getTS()) )
+    elif unasContext.commErrCnt > UNASCOMM_MAXERRCNT:
+            unasContext.commBlocked = getCurrTime()
+            raise ValueError("Communication error! action:%s, TS:%d" % (unasContext.lastAction, getTS()) )
+    elif getPacketLastHourCnt() > UNASCOMM_SENDPACKETMAX:
+            unasContext.commBlocked = getCurrTime()
+            raise ValueError("Communication error! action:%s, TS:%d" % (unasContext.lastAction, getTS()) )
+    else:
+        pass
+#
+# MySQL wrapper funtions
+#
+mySqlIntance = MyDB.MySqlWrapper()
+def createStatEntrySql(action, xmlParam, tsId = getTS() ):
+    sql = "INSERT INTO commstats (action, requestXml, transactionId) VALUES (%s, %s, %s)"
+    val = (action, xmlParam, tsId)
+    return mySqlIntance.execSql(sql, val, True )
+
+def updateStatEntryStatus(retCode, xml:str = '', tsId:int =0, myId:int = 0):
+    if myId > 0:
+        sql = "UPDATE commstats set responseCode=%s, responseXml = %s WHERE Id = %s"
+        val = (retCode, xml, myId)
+    else:
+        sql = "UPDATE commstats set responseCode=%s, responseXml = %s WHERE transactionId = %s"
+        val = (retCode, xml, tsId)
+    return mySqlIntance.execSql(sql, val, True )
+
+def getPacketLastHourCnt(fromTime:int=0, toTime:int = 0):
+    result =  mySqlIntance.doSql(
+		    "SELECT count(*) cnt from commstats WHERE createdAt between %s and %s", (
+                tsToDateSql( fromTime if fromTime > 0 else UtcNow(3600)),
+                tsToDateSql( toTime if toTime > 0 else getCurrTime())     ))
+    return result[0]['cnt']
+

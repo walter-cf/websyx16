@@ -3,6 +3,7 @@ import pprint as pp
 import datetime as date
 import urllib.parse as urlParse
 import MyUtils as MU
+from  MyUtilsTypes import UnasTransactionType as UTSTYPE
 import FdbUtils as FBU
 import UnasCustomerCache as UCC
 import UnasOrderCache as UOC
@@ -67,13 +68,13 @@ def transformGetRequestObject(root, action, xmlPart):
             if (MU.PRODUCTNAME_OVERWRITE):
                 if prod.find('Name') and prod.Name.text:
                     prod.NameEncoded =  urlParse.quote(prod.Name.text)
-    elif action == 'Order':
+    elif action == 'Order' or action == 'OrderBy' :
         for ord in root.getchildren():
             if MU.isLogLevelTrace():
                 print(ord)
             email = ord.Customer.Email
             custTaxNo = ord.Customer.Addresses.Invoice.TaxNumber
-            ucc = MU.getCustomerFormCache(email, custTaxNo, ord.Customer.Id)
+            ucc = MU.getCustomerFormCache(email, custTaxNo, ord.Customer.find('Id'))
             unasCustXmlItem = ord.Customer
             #
             ord.symbolVouchersequenceCode = MU.SYMBOLVOUCHERSEQUENCECODE
@@ -92,17 +93,30 @@ def transformGetRequestObject(root, action, xmlPart):
             if ucc:
                 ucc.unasAddrXml = [] if ord.Customer.Addresses is None else [ ord.Customer.Addresses.Invoice, ord.Customer.Addresses.Shipping ] 
             #
+            # get symbolId
+            xmlCustSymbolId = 0
+            if ord.find('Params'):
+                for prm in ord.Params.getchildren():
+                    if 'symbolId' == prm.Name:
+                        if prm.Value and 'OrderBy' != xmlPart: 
+                                ord.SkipThisOrderItem = 1
+            if unasCustXmlItem.find('Params'):
+                for prm in unasCustXmlItem.Params.getchildren():
+                    if 'symbolId' == prm.Name:
+                        if prm.Value:
+                            xmlCustSymbolId = int(prm.Value)
             atp = transformOrderOptions(ord.Shipping.Name, ord.Payment.Name) # Transform UNAS-name to Symbol-Name
             ord.Shipping.Name = atp[0]
-            ord.Payment.Name = atp[1]
+            if atp[1].startswith('specialFunction'):
+                paymentName, paymentDays = getPaymentSpecial( atp[1][len('specialFunction'):], xmlCustSymbolId, unasCustXmlItem.Id )
+                ord.paymentMethodName      = paymentName
+                ord.paymentMethodTolerance = paymentDays
+            else:
+                ord.paymentMethodName      = atp[1]
             #
             if MU.isLogLevelTrace():
                 print(unasCustXmlItem.CustSymbolCode)
             logging.info("trfGet-Ord:%s (%s)", ord.Id, email )
-            for prm in ord.Params.getchildren():
-                if 'symbolId' == prm.Name:
-                    if prm.Value: 
-                        ord.SkipThisOrderItem = 1
     elif action == 'OrderCustomers':
         for ord in root.getchildren():
             if MU.isLogLevelTrace():
@@ -248,13 +262,18 @@ def transformOrderOptions(shipping, payment):
     transportMode = shipping
     for f in MU.PRICERULE_TRANSPORTMODES:
         if f[1] == shipping:
-            transportMode = f[0]
+            transportMode = str(f[0])
     paymentMethod = payment
     for f in MU.PRICERULE_PAYMENTMETHODS:
         if f[1] == payment:
-            paymentMethod = f[0]
+            paymentMethod = str(f[0])
     return [transportMode, paymentMethod]
 
+def getPaymentSpecial(specCode:str, custId:int, unasId:int):
+    if "01" == specCode:
+        retv = FBU.getPaymentMethodByCustomerId(custId) if custId > 0 else FBU.getPaymentMethodByCustomerCode('UC_-%d' % unasId) 
+        return retv[0], retv[1]
+    return None, None
 
 def postProcessCAddresses(customerId:int, uccAddrs: List[CA]):
     for uu in uccAddrs:
@@ -361,7 +380,6 @@ def processCAddresses(ucc: UCC.UnasCustomerCache, unasCustSymbolId, unasCustXml)
 def transformResponse(xmlResp, action, xmlPart):
     if xmlResp is None:
         return None
-    ts = MU.getCurrTime()  # TODO Ebbol tranzakcio azonosito kellene legyen
     xmlEnc='utf-8'
     if xmlResp[30:36] == 'utf-16':
         xmlEnc='utf-16'
@@ -378,7 +396,7 @@ def transformResponse(xmlResp, action, xmlPart):
         return None
 
     preparedXmlStr = preparedXml.decode()
-    outfileReq = open("xmlfiles/get"+ action +".resp." + str(ts) + ".xml", 'a')
+    outfileReq = open("xmlfiles/get"+ action +".resp." + str( MU.getTS() ) + ".xml", 'a')
     outfileReq.write(preparedXmlStr)
     outfileReq.close()
     # xml = bytes(bytearray(preparedXml, encoding="utf-8"))
@@ -400,7 +418,7 @@ def transformResponse(xmlResp, action, xmlPart):
     if outBytes is not None:
         if MU.isLogLevelTrace():
             print(outBytes.decode())
-        outfile = open("xmlfiles/get"+ action + ".symb." + str(ts) + ".xml", 'a')
+        outfile = open("xmlfiles/get"+ action + ".symb." + str(MU.getTS()) + ".xml", 'a')
         outBytesStr = outBytes.decode()
         outfile.write(outBytesStr)
         return outBytesStr.replace('<?xml version="1.0"?>',"")
@@ -489,16 +507,16 @@ def doUnasFeedback(pathArray, path):
                     FBU.updateSymbolCode(symbolId, '%s-%s' % ( MU.SYMBOLORDERIDPREFIX, orderKey), 'CustomerOrder', 'PrimeVoucherNumber' )
                     uoc.symbolId = symbolId
                     xmlResp ='x'
+                    FBU.updateOrderStatus(symbolId, MU.SYMBOLORDERSTATUS)
                     if MU.ORDER_autoAcknowledge:
                         # set Order status to Visszaigazolva
-                        FBU.updateOrderStatus(symbolId, MU.SYMBOLORDERSTATUS)
                         uoc.acknowledged = True
                         xmlResp = UCH.unasSetOrderStatus( orderKey, MU.ORDER_STATUS_ACCEPTED,
                                         symbolId, True, "Rendelését befogadtuk, az előkeszítést megkezdtük.")
                     else:
                         xmlResp = UCH.unasSetOrderStatus( orderKey, None, symbolId )
                         
-                    return getErrorTextOrder('newOrder', xmlResp, symbolId, '3', MU.UtcNow())
+                    return getErrorTextOrder('newOrder', xmlResp, symbolId, '3')
                 elif (symbolId != uoc.symbolId):
                     raise ValueError(f"FB-Order-Cacche corrupted! order:{orderKey}: symbolId-s differ [Sym]{symbolId}/[Cache]{uoc.symbolId}")
 
@@ -559,7 +577,7 @@ def doUnasFeedback(pathArray, path):
                 if upc is not None:
                     if upc.symbolId != symbolId:
                         retXml = UCH.updateProductSymbolId(upc.unasId, symbolId, upc.sku )
-                        getErrorTextProduct("Product-Set.Unas.SymbolID", retXml, 0) # TS a 3. param: KESOBB
+                        getErrorTextProduct("Product-Set.Unas.SymbolID", retXml)
                         retObj = objectify.fromstring(retXml.replace(MU.XMLTAG, ''), None).getchildren()
                         
                     upc.symbolId = symbolId
@@ -625,16 +643,16 @@ def getMissingCustomersFromOrder(xml:str):
     for ord in orders.findall('Order'):
         cust = ord.Customer
         taxTag = None if cust.Addresses is None else None if cust.Addresses.Invoice is None else cust.Addresses.Invoice.TaxNumber
-        ucc = MU.getCustomerFormCache(cust.Email, taxTag, cust.Id)
+        ucc = MU.getCustomerFormCache(cust.Email, taxTag, cust.find('Id'))
         if ucc is None:
-            unasCust = UCH.unasGetCustomers('Id', cust.Id.text )
+            unasCust = UCH.unasGetCustomers('Id', None if not cust.find('Id') else cust.Id.text )
             if unasCust is None:
                 _m = "getOrder failed!\r\nOrder Azon:%s, ID:%d\r\n\r\ngetMissingCustomersFromOrder unasCust:[%s, %s] NOT exist in UNAS" % (
                     ord.Key.text,  ord.Id.text, cust.Id, cust.Email)
                 SM.sendAlertMail(_m, '[UNAS-Proxy]: megrendeles lekeres hiba! Id:%s, Azon:%s' % ( ord.Id.text, ord.Key.text))
                 raise ValueError(_m)
 
-            ucc = UCC.UnasCustomerCache(int(cust.Id.text), cust.Email.text, None if taxTag is None else taxTag.text) # type: ignore
+            ucc = UCC.UnasCustomerCache(cust.find('Id') and int(cust.Id.text), cust.Email.text, None if taxTag is None else taxTag.text) # type: ignore
             unasCustObj = objectify.fromstring(unasCust.replace(MU.XMLTAG, ''), None).getchildren()
             if len(unasCustObj) == 1:
                 ucc.fromXml(unasCustObj[0])
@@ -669,7 +687,8 @@ def doUnasGetRequest(path, errors) -> str:
     GBL_ErrorMessages.append("Test GET errMsg:%d" % tsStart)
     unasresp : str = None # type: ignore
     if (actionPath == 'orders'):
-        logging.debug("getOrderToday")
+        uts = MU.createTransactionId( UTSTYPE.ORDERS )
+        logging.debug("getOrderToday-TS:%d" % uts)
         xmlResp = UCH.unasGetOrderNew()
         
         # Ha nincs a symbolban, csinaljak egy dummy rekordot?
@@ -687,30 +706,36 @@ def doUnasGetRequest(path, errors) -> str:
 
         unasresp = doUnasActionRequest(xmlResp, 'orders', 'Order' )
     elif actionPath == 'orderby':
-        logging.debug("getOrderBy")
+        uts = MU.createTransactionId( UTSTYPE.ORDERBY )
+        logging.debug("getOrderBy-TS:%d" , uts)
         xmlResp = UCH.unasGetOrderBy( path[3], path[4])
-        unasresp = doUnasActionRequest(xmlResp, 'orders', 'Order')
+        unasresp = doUnasActionRequest(xmlResp, 'orders', 'Order', 'OrderBy')
     elif actionPath == 'products':
-        logging.debug("getProducts")
+        uts = MU.createTransactionId( UTSTYPE.PRODUCTS )
+        logging.debug("getProducts-TS:%d" , uts)
         xmlResp = UCH.unasGetProducts( '1' , 1, 0 )
         unasresp =  doUnasActionRequest(xmlResp, 'products','Product')
     elif actionPath.startswith('prodby'):
-        logging.debug("getProduct BY Item:%s, val:%s", path[3], path[4] )
+        uts = MU.createTransactionId( UTSTYPE.PRODBY )
+        logging.debug("getProduct BY-TS:%d Item:%s, val:%s", uts, path[3], path[4] )
         xmlResp = UCH.unasGetProductByAzon( path[3], path[4])
         unasresp = doUnasActionRequest(xmlResp, 'prodbyid','Product')
     elif actionPath.startswith('unasprod'):
-        logging.debug("getProduct BY Item:%s, val:%s", path[3], path[4] ) 
+        uts = MU.createTransactionId( UTSTYPE.UNASPROD )
+        logging.debug("unasprod BY-TS:%d Item:%s, val:%s", uts, path[3], path[4] )
         unasresp = UCH.unasGetProductByAzon( path[3], path[4])              # NINCS checkCacheState
     elif actionPath.startswith('inquirers'):
         prodId = actionPath[9:]
-        logging.debug("getProduct BY ID:" + prodId)
+        uts = MU.createTransactionId( UTSTYPE.INQUIRERS )
+        logging.debug("getProducts-TS:%d, Inquirer:%s" , uts,prodId)
         xmlResp = UCH.unasGetInquirers( prodId)
         unasresp = doUnasActionRequest(xmlResp, 'inquirers','Inquirer')
         if "OK" == "OK" if unasresp is None else unasresp:
             unasresp = '@@errors@@ - inquirers'
     elif actionPath.startswith('customers'):
         if MU.ORDER_HandleUnregistered:
-            logging.debug("getCustomers - Unregistered in Order")
+            uts = MU.createTransactionId( UTSTYPE.CUSTOMERORDER )
+            logging.debug("getCustomers - Unregistered in Order-TS:%d" , uts)
             xmlResp = UCH.unasGetOrderNew()
             orderCustomers = ET.fromstring('<customerPartXmlObj></customerPartXmlObj>', None)
             retV = doUnasActionRequest(xmlResp, 'orders', 'OrderCustomers', orderCustomers)
@@ -725,28 +750,38 @@ def doUnasGetRequest(path, errors) -> str:
         #     logging.debug("getCustomers - Unregistered in Order:%s", orderCustomers)
         # else:
         #     orderCustomers = None
-            
+
+        uts = MU.createTransactionId( UTSTYPE.CUSTOMERS )
+        logging.debug("getCustomer-TS:%d" , uts)
         xmlResp = UCH.unasGetCustomers()
         unasresp = doUnasActionRequest(xmlResp, 'customers','Customers', orderCustomers)
     elif actionPath.startswith('unascust'):
-        logging.debug("getCustomers - unascust %s, %s",path[3], 'NoNe' if len(path) < 5 else path[4])
+        uts = MU.createTransactionId( UTSTYPE.UNASCUST )
+        logging.debug("getCustomers-TS:%d - unascust %s, %s", uts, path[3], 'NoNe' if len(path) < 5 else path[4])
         unasresp = UCH.unasGetCustomers( path[3], None if len(path) < 5 else path[4])                # NINCS checkCacheState
     elif actionPath.startswith('customerby'):
-        logging.debug("getCustomers - customerby %s, %s",'3-None' if len(path) < 4 else path[3], '4-None' if len(path) < 5 else path[4])
+        uts = MU.createTransactionId( UTSTYPE.CUSTOMERBY )
+        logging.debug("getCustomers-TS:%d - customerby %s, %s", uts, '3-None' if len(path) < 4 else path[3], '4-None' if len(path) < 5 else path[4])
         xmlResp = UCH.unasGetCustomers( None if len(path) < 4 else path[3], None if len(path) < 5 else path[4])
         unasresp = doUnasActionRequest(xmlResp, 'customers','Customers', None)
     elif actionPath.startswith('storage'):
-        logging.debug("get Storage files")
+        uts = MU.createTransactionId( UTSTYPE.STORAGE )
+        logging.debug("get Storage files-TS:%d" , uts)
         xmlResp = UCH.unasGetStorage( None if len(path) < 4 else path[3], None if len(path) < 5 else path[4]) # NOT TESTED!! NINCS checkCacheState
         unasresp = xmlResp
     elif actionPath.startswith('logger'):
-        logging.error('Logger GET called')
+        uts = MU.createTransactionId( UTSTYPE.LOGGER )
+        logging.debug("Logger GET called-TS:%d" , uts)
         raise ValueError("Logger GET Not Implmented Yet!")
     elif actionPath.startswith('initcache'):
+        uts = MU.createTransactionId( UTSTYPE.INITCACHE )
+        logging.debug("InitCache-TS:%d" , uts)
         MU.reinitCacheState()
         unasresp = 'OKJ:{ "custs":%i , "prods":%i , "orders":%i  }' % ( len(MU.UnasCustomerList), len(MU.UnasProductList), len(MU.UnasOrderList) )
     elif actionPath.startswith('proxytest'):
         try:
+            uts = MU.createTransactionId( UTSTYPE.TESTGET )
+            logging.debug("proxytest-TS:%d" , uts)
             unasresp =  doProxyTest(path, None if len(path) < 4 else path[3], None if len(path) < 5 else path[4])
         except Exception as e:
             errors.append( "FATAL TEST   req: " + "/".join(path) )
@@ -754,6 +789,8 @@ def doUnasGetRequest(path, errors) -> str:
         # end try
     elif actionPath.startswith('proxycontrol'):
         try:
+            uts = MU.createTransactionId( UTSTYPE.PROXYCONTROLS )
+            logging.debug("proxycontrol-TS:%d" , uts)
             resp =  doProxyControl(path, None if len(path) < 4 else path[3], None if len(path) < 5 else path[4])
             unasresp =  'err' if not resp else  ("OKJ:" + resp)
         except Exception as e:
@@ -761,8 +798,12 @@ def doUnasGetRequest(path, errors) -> str:
             errors.append( "FATAL CONTROL Xcptn: " + str(e) )
         # end try
     elif actionPath.startswith('test'):
+        uts = MU.createTransactionId( UTSTYPE.TESTJOE )
+        logging.debug("test-TS:%d" , uts)
         unasresp =  doJoeTest(path, None if len(path) < 4 else path[3], None if len(path) < 5 else path[4])
     elif actionPath.startswith('TEST'):
+        uts = MU.createTransactionId( UTSTYPE.TESTJOE )
+        logging.debug("testJOE-TS:%d" , uts)
         unasresp = doJoeTEST(path)
     else:
         errors.append( "Unhandled GET req: " + "/".join(path) )
@@ -772,7 +813,7 @@ def doUnasGetRequest(path, errors) -> str:
         errors.append( str(errItm) )
     return unasresp    #raise  ValueError( "Err: unresolved action: %s" % actionPath)
 
-def getErrorTextProduct(act, xmlResp, ts):
+def getErrorTextProduct(act, xmlResp):
     if xmlResp == None:
         logging.debug("Null %s response?", act.upper())
     else:
@@ -785,7 +826,7 @@ def getErrorTextProduct(act, xmlResp, ts):
             status = prod.find('Status').text
             action = prod.find('Action')
             if status.lower() ==  'ok':
-                MU.UnasProductList[productSku].lastmod = ts # MU.UtcNow()
+                MU.UnasProductList[productSku].lastmod = MU.getNowFromTS() # MU.UtcNow()
                 logging.info( "%s-ok:%s", 'NoneAction' if action is None else action.text, productSku)
             else:
                 errMsg = prod.find('Error').text
@@ -794,7 +835,7 @@ def getErrorTextProduct(act, xmlResp, ts):
                 logging.error( "%s-%s ERR:%s", 'NoneAction' if action is None else action.text, productSku, '-' if errMsg is None else errMsg )
     return 'OK' if errorMessage is None else errorMessage
 
-def getErrorTextOrder(act, xmlResp, symbolId, statusCode, ts) -> str:  # @20240914 NEZDMEG!
+def getErrorTextOrder(act, xmlResp, symbolId, statusCode) -> str:  # @20240914 NEZDMEG!
     if xmlResp == None:
         logging.warning("Null %s response?", act.upper())
     else:
@@ -810,7 +851,7 @@ def getErrorTextOrder(act, xmlResp, symbolId, statusCode, ts) -> str:  # @202409
                 # uoc = next((x for x in  MU.UnasOrderList.values() if x["orderKey"] == key), None )
                 uoc = MU.UnasOrderList[key]
                 if uoc:
-                    uoc.lastmod = ts # MU.UtcNow()
+                    uoc.lastmod = MU.getNowFromTS()
                     logging.info("%s-ok:%s lastMod:%i,%s",
                             'NoneAction' if action is None else action.text,
                             key,
@@ -821,7 +862,7 @@ def getErrorTextOrder(act, xmlResp, symbolId, statusCode, ts) -> str:  # @202409
                     orderRow = FBU.getOrderById(symbolId)
                     if orderRow is not None:
                         uoc = UOC.UnasOrderCache(ordKey=key, status=statusCode,
-                                    sid=orderRow['Id'],lastmod = MU.UtcNow(), custid=orderRow["Customer"],
+                                    sid=orderRow['Id'],lastmod = MU.getNowFromTS(), custid=orderRow["Customer"],
                                     ordcode=orderRow["PrimeVoucherNumber"]  )
             else:
                 errMsg = tt.find('Error').text
@@ -869,15 +910,13 @@ def doProxyTest(path, unit, id) -> str:
             retV = UCH.unasGetActiveCustomers()
             customers = MU.collectCustItems(retV)
             for cust in customers.values():
-                ucc : UCC.UnasCustomerCache = cust
-                ucc.symbolId = 0
-                ucc.code = ''
-                xmlArray.append(ucc.toXml())
+                xmlArray.append(UCH.UNAS_SETSYMBOLID_XML % (cust.unasId, '','') )
             if len(xmlArray) > 0:
-                xmlreq = doUnasActionRequest( "<Customers>%s</Customers>" % "\n".join(xmlArray), 'simpleTransform','CustNullParams')                
-            resp = UCH.updateCustomer(xmlreq)
-            retV = UCH.unasGetActiveCustomers()
-            customers = MU.collectCustItems(retV)
+                # xmlreq = doUnasActionRequest( "<Customers>%s</Customers>" % "\n".join(xmlArray), 'simpleTransform','CustNullParams')                
+                xmlreq = "<Customers>%s</Customers>" % "\n".join(xmlArray)
+                resp = UCH.updateCustomer(xmlreq)
+                retV = UCH.unasGetActiveCustomers()
+                customers = MU.collectCustItems(retV)
             MU.checkCacheState(True)
             return resp
         elif "nullsymazon" == id:
@@ -933,8 +972,104 @@ def doProxyControl(path, unit, id) -> str:
         else:
             pass
     elif "customer" == unit:
-        if "deleteAll" == id:
-            pass
+##########################
+        if "caddrall" == id:
+            xrx = MU.CUSTOMER_CYCLIC_INTERVAL
+            MU.CUSTOMER_CYCLIC_INTERVAL = 9999999
+            xmlResp = UCH.unasGetCustomers( 'ModTimeStart', str(MU.UtcNow(999999999)))
+            MU.CUSTOMER_CYCLIC_INTERVAL = xrx 
+            unasresp = doUnasActionRequest(xmlResp, 'customers','TestCustAddr', None)
+            dom=ET.fromstring (unasresp, None)
+            root=ET.fromstring(bytes('<?xml version="1.0"?><A></A>', 'utf-8'), None)
+            for custItem in dom.getchildren():
+                unasId = getXmlTag(custItem, 'unasId')
+                custEmail = getXmlTag(custItem, 'email')
+                print( f"Id:{unasId}:E:{custEmail}" )
+                if custItem.find('customeraddresses') is not None:
+                    for addr in custItem.find('customeraddresses').getchildren():
+                        cim1 = getXmlTag(addr, 'CIM1')
+                        cim2 = getXmlTag(addr, 'CIM2')
+                        if cim1 is not None and cim1 != cim2 and cim1 + '.' != cim2:
+                            xmlTag0 = ET.SubElement(root, 'diffed', None, None)
+                            xmlTagA = ET.SubElement(xmlTag0, 'ID', None, None)
+                            xmlTagA.text = f"Id:{unasId}:E:{custEmail}"
+                            xmlTag1 = ET.SubElement(xmlTag0, 'cim1', None, None)
+                            xmlTag2 = ET.SubElement(xmlTag0, 'cim2', None, None)
+                            xmlTag1.text = cim1
+                            xmlTag2.text = cim2
+            outBytes=ET.tostring(root, encoding='utf-8', pretty_print=True) # type: ignore
+            addresses = outBytes.decode('utf-8')
+            return addresses
+        elif "nullparams" == id:
+            xmlArray = []
+            retV = UCH.unasGetActiveCustomers()
+            customers = MU.collectCustItems(retV)
+            for cust in customers.values():
+                xmlArray.append(UCH.UNAS_SETSYMBOLID_XML % (cust.unasId, '','') )
+            if len(xmlArray) > 0:
+                # xmlreq = doUnasActionRequest( "<Customers>%s</Customers>" % "\n".join(xmlArray), 'simpleTransform','CustNullParams')                
+                xmlreq = "\n".join(xmlArray)
+                resp = UCH.updateCustomer(xmlreq)
+                retV = UCH.unasGetActiveCustomers()
+                customers = MU.collectCustItems(retV)
+            #       ucc : UCC.UnasCustomerCache = cust
+            #       ucc.symbolId = 0
+            #       ucc.code = ''
+            #       xmlArray.append(ucc.toXml())
+            #   if len(xmlArray) > 0:
+            #       xmlreq = doUnasActionRequest( "<Customers>%s</Customers>" % "\n".join(xmlArray), 'simpleTransform','CustNullParams')                
+            #   resp = UCH.updateCustomer(xmlreq)
+            #   retV = UCH.unasGetActiveCustomers()
+            #   customers = MU.collectCustItems(retV)
+            MU.checkCacheState(True)
+            return resp
+        elif "nullsymazon" == id:
+            xmlArray = []
+            retV = UCH.unasGetActiveCustomers()
+            customers = MU.collectCustItems(retV)
+            resp = []
+            for cust in customers.values():
+                ucc : UCC.UnasCustomerCache = cust
+                xml = UCH.updateCustomerSymbolId(ucc.unasId, '', '')
+                item = ET.fromstring(bytes(xml.strip(), 'utf-8'), None).getchildren()
+                resp.append(item)
+            MU.checkCacheState(True)
+            root = ET.Element("nullsymazon", None, None)
+            #doc = ET.SubElement(root, "nullsymazon", None, None)
+            for itm in resp:
+                child = itm[0]
+                root.append(child)
+            outBytes=ET.tostring(root, encoding='utf-8', pretty_print=True) # type: ignore
+            return MU.XMLTAG + outBytes.decode('utf-8')
+        elif "deleteall" == id:
+            xmlArray = []
+            retV = UCH.unasGetActiveCustomers()
+            customers = MU.collectCustItems(retV)
+            xmlArray = []
+            for ucc in customers.values():
+                xmlArray.append( f"<Customer><Action>delete</Action><Id>{ucc.unasId}</Id></Customer>" )
+            if len(xmlArray) > 0:
+                resp = UCH.updateCustomer(  " ".join(xmlArray) )
+            return resp
+##########################        
+        elif "getAll" == id:
+            resp = UCH.getCusts()
+            return resp
+        elif "clearparams" == id:
+            xmlTag = ''
+            for cust in MU.UnasCustomerList.values():
+                xmlTag += UCH.UNAS_SETSYMBOLID_XML % (cust.unasId, '', '') 
+            resp = UCH.updateCustomer(xmlTag)
+            return resp
+        elif "getby" == id:
+            resp = UCH.unasGetCustomers( path[5] , path[6] )
+            return resp
+        elif "deletebycache" == id:
+            xmlTag = ''
+            for cust in MU.UnasCustomerList.values():
+                xmlTag += f"<Customer><Action>delete</Action><Id>{ucc.unasId}</Id></Customer>" 
+            resp = UCH.updateCustomer(xmlTag)
+            return resp
         else:
             pass
     elif "initcat" == unit:
@@ -984,6 +1119,25 @@ def doProxyControl(path, unit, id) -> str:
             return UCH.getProds()
         elif "getby" == id:
             return UCH.getProds( path[5] , path[6] )
+        elif "nullparam" == id:
+            xmlArray = []
+            # MU.checkCacheState(True)
+            idx = 0
+            for prod in MU.UnasProductList.values():
+                xmlArray.append(UCH.UNAS_SETPRODUCTSYMBOLID_XML % (prod.unasId, prod.sku, '1a') )
+                idx = 1 + idx
+                if idx > 5:
+                    xmlreq = "\n".join(xmlArray)
+                    resp = UCH.unasProduct_Direct(xmlreq)
+                    errors = getErrorTextProduct(resp)
+                    xmlArray = []
+                    idx = 0
+            if len(xmlArray) > 0:
+                # xmlreq = doUnasActionRequest( "<Customers>%s</Customers>" % "\n".join(xmlArray), 'simpleTransform','CustNullParams')                
+                xmlreq = "\n".join(xmlArray)
+                resp = UCH.unasProduct_Direct(xmlreq)
+                return resp
+
         elif "deleteall" == id:
             prodsXml = UCH.getProds()
             cats = objectify.fromstring(prodsXml[41:], None)

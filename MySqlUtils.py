@@ -1,5 +1,4 @@
 import MyUtils as MU
-
 # import mysql as mySQL
 import mysql.connector
 import json
@@ -44,26 +43,35 @@ class MySqlWrapper():
     def getCursor(self):
         return self.MyDB.cursor(buffered=True, dictionary=True) # type: ignore
 
-    def doSql(self, sql = "SELECT * FROM  tests"):
+    def doSql(self, sql, params):
         crsr = self.getCursor()
-        crsr.execute(sql)
+        crsr.execute(sql, params)
         result = crsr.fetchall()
         self.RowCount = crsr.rowcount
         return result
     
-    def getRow(self, param):
-        sql = "SELECT * FROM  customers WHERE a = %s" # prevent SQL  injection
-        val = (param ,)
+    def getRow(self, sql, param = ()):
         crsr = self.getCursor()
-        crsr.execute(sql, val)
+        crsr.execute(sql, param)
         resultRow = crsr.fetchone()
         return resultRow
     
     def doSqlList(self):
         pass
     
-    def execSql(self):
-        pass
+    def execSql(self, sql:str, params, commit = False):
+        crsr = self.getCursor()
+        if params is None:
+            crsr.execute(sql)
+        elif "<class 'tuple'>" == str(type (params)):
+            crsr.execute(sql, params)
+        elif "<class 'list'>" == str(type (params)):
+            crsr.execute(sql, params)
+        else:
+            crsr.execute(sql, [params])
+        if commit:
+            self.commit()
+        return crsr.lastrowid # type: ignore
     
     def insSql(self, commit = False) -> int:
         sql = "INSERT INTO customers (name, address) VALUES (%s, %s)"
@@ -73,7 +81,7 @@ class MySqlWrapper():
         if commit:
             self.commit()
         return self.getCursor().lastrowid() # type: ignore
-    
+
 """
 def dbClose(con = None):
     global CON
