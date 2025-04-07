@@ -1,9 +1,14 @@
 #!/bin/python3
 
-import fdb # type: ignore
 import logging
+import sys
+from typing import Dict, List
+
+import fdb  # type: ignore
+
 import MyUtils as MU
-from typing  import List, Dict
+from MyUtilsTypes import (AlertMailType, MyProgramFlowErrorException,
+                          ProxyErrCode, UnasTransactionType)
 
 global CON
 CON = None
@@ -44,8 +49,8 @@ def doSqlList( sql, params = () ):
         cur.execute(sql)
     return cur
 
-def doSql( sql, param = None ):
-    cur = getFbCursor()
+def doSql( sql, param = None, cursor = None ):
+    cur = getFbCursor() if cursor is None else cursor
     try:
         # comment: 
         # end try
@@ -59,7 +64,8 @@ def doSql( sql, param = None ):
             cur.execute(sql, [param])
     except Exception as e:
         err = f"DB-Err; sql:{sql},\r\nprms:{param}\r\nX:{e}"
-        raise ValueError(err)
+        MU.errorHandler(err, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E19), level = logging.ERROR, eDescr=sys.exc_info())
+        raise MyProgramFlowErrorException(err)
     return cur
 
 def insSql(table:str, colList:str='', valuePart:str = '',  param = None ) -> int:
@@ -232,9 +238,32 @@ def setDeletedAddrById(id:int, deleted:int=1):
     CON.commit() # type: ignore
     cur.close()
     
+def delCustomerById(id : int, commit:bool = True, cur = None):
+    if id > 0:
+        cur = doSql('delete from "CustomerAddress" where "Customer" = ? ', (id, ), cursor = cur )
+        cur = doSql('delete from "Customer" where "Id" = ? ', (id, ), cursor = cur )
+    if commit and cur is not None:
+        CON.commit() # type: ignore
+        cur.close()
+        return None
+    else:
+        return cur
+
+def getOrdersByCustomerCode(code : str = "UCO%"):
+    pass
+
+def delOrdersCustomerCode(code : str = "UCO%"):
+    pass
+
+def delCustomerByUCO(code : str = "UCO%"):
+    cur = doSql('delete from "CustomerAddress" where "Customer" in (select "Id" from "Customer" where "Code" LIKE ?)', (code, ) )
+    cur = doSql('delete from "Customer" where "Code" LIKE ?', (code, ), cursor = cur )
+    CON.commit() # type: ignore
+    cur.close()
+
 def delCustAddrById(id : int):
     cur = doSql('delete from "CustomerAddress" where "Id" = ? ', id )
-    cur.commit() # type: ignore
+    CON.commit() # type: ignore
     cur.close()
 
 def deleteDummyCArex(unasId:int = 0, custId:int = -2):
@@ -351,9 +380,9 @@ def getPaymentMethodByCustomerId(custId:int):
         return None
 
     sql = 'select PM."Name", PM."ToleranceDay" from "PaymentMethod" PM join "Customer" CU on PM."Id" = CU."PaymentMethod" and CU."Id" = ?'
-    cur = doSql(sql,  custId )
+    cur = doSql(sql,  (custId,) )
     row = cur.fetchone()
-    return None if row == None else row
+    return  ('Hiányzó fizetési mód', -99999) if row == None else row
 
 def getPaymentMethodByCustomerCode(custCode:str):
     sql = 'select PM."Name", PM."ToleranceDay" from "PaymentMethod" PM join "Customer" CU on PM."Id" = CU."PaymentMethod" and CU."Code" like ?'
