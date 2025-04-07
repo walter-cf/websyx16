@@ -8,13 +8,25 @@ mail:
   server: localhost
   sender: web6proxy-alert@ledsound.hu
   operator: web6proxy-operator@ledsound.hu
+#
+# Control socket
+controlSocket:
+  enabled: False
+  host: 0.0.0.0
+  port: 3305
+#
+# Control WebServer
+controlWeb:
+  enabled: True
+  host: 0.0.0.0
+  port: 3307
 
 unas:
   # Lehet .hu es .eu is
   apiUrl: https://api.unas.eu/shop
   feedbackUrl: "'http://' + hostName + ':' + str(serverPort) + '/fbunas'"
   # a WewbShopban kell generalni a hozzaferesi kulcsot
-  apiKey: aaf1b4abc70f36851959d1d7a527b31fef07d2d6 
+  apiKey: 9ec1518e8c685c1c26fbc548b029ea78e4435ef8
   # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
   webcategory:
     # id: 880790
@@ -28,8 +40,11 @@ unas:
     maxerrorcnt: 3 # continous tries
     maxloginerr: 3 # Not Used Yet - a Login es a POST - kulon kezelem , hatha kulon kell nezni az errorCnt is - de MOST NU.!
     blockedTimeMax: 600 # after 10 minutes will retry again - error counters will reset + SendMail -again
-    sendPacketThreshold: 1900 # hourly max packet MySQL-ben tartom, es onnan is kerdezm le
-  #
+    sendPacketWarningThreshold: 1600  # hourly max packet MySQL-ben tartom, es onnan is kerdez le
+    sendPacketStopLimit: 1900   # hourly max packet MySQL-ben tartom, es onnan is kerdez le
+    alertRetryAfter: 600       # Resend Alert mail by [alertRetryAfter] seconds
+    enableMasterChallenger: False # TRUE -> Ha automatizalt lesz az Symbol-Unas utemezes, es csak EGY gepnek akarom engedni(IP cim alapjan)
+    preserveIdleMaster: 600 #  Ennyi IDLE utan Master status torlodeik es a kovetkezo(vagy utoljara) aktiv lesz a master
   #
   customerPaymentMode: "Szerződés szerint"
   priceRules:
@@ -41,7 +56,7 @@ unas:
         [ "Utánvét"         , "Utánvéttel"      ],
         [ "Bankkártya"      , "Bankkártyával a helyszínen"   ],
         [ "Előre utalás"    , "Előre utalással" ],
-        [ specialFunction01 , "Szerződött fizetési mód " ]   ## Ide tettem, hogy helyen legyen a program kezelem `specialFuncion01` kifejezest, ha azt kapom
+        [ specialFunction01 , "Szerződött fizetési mód" ]   ## Ide tettem, hogy helyen legyen a program kezelem `specialFuncion01` kifejezest, ha azt kapom
       ]
 
   order:
@@ -51,13 +66,15 @@ unas:
     vouchersequencecode: "B2B"
     symbolOrderPrefix: H24
     symbolOrderStatusNew: 1
+    sendOrderStatusEmail: No   # Yes - send alert-mail if customerOrder status changed
+
     # Order params - statuses
     status:
-        new:      5741085 # Feldolgozasra var
-        accepted: 5741090 # Visszaigazolva
-        prepared: 5741095 # Keszletezes alatt
+        new:      5785605 # Feldolgozasra var
+        accepted: 5785610 # Visszaigazolva
+        prepared: 5785615 # Keszletezes alatt
         shipping: 0       # NU.? 
-        closed:   5741105 # Lezarva
+        closed:   5785625 # Lezarva
         returned: 0       # NU. in UNAS (yet)
         cancel:   0       # NU. in UNAS (yet)
     autoAcknowledge: False
@@ -68,7 +85,7 @@ unas:
   customer:
     # Unas paarmeterek: symbolId, symbolCode
     categoryName: HU / Channel / Haffner24 UNAS
-    getInterval: 999999999
+    getInterval: 600 
     bulk: False
     ignoreCyclicInterval: 1
     cerateMissingCustomer: False
@@ -127,19 +144,33 @@ batch:
   processes:
     - orderStatus:
         startDelay: 10                     # initial delay after start BatchScheduler
-        frequency: 120                     # Batch thread raise/trigger interval
+        frequency: 30                     # Batch thread raise/trigger interval
         name: Rendeles Statusz - UNAS      # Batch threadName
         method: orderStatusUnas            # called Entry point
-        orderStatusCheckInterval: 186400    # RovModified > NOW -orderStatusCheckInterval(seconds)
+        orderStatusCheckInterval: 864000    # RovModified > NOW -orderStatusCheckInterval(seconds)
         checkVoucherSequence: 42           # UNAS order type identifier
+        defaultClosedStatus: "Megrendelés lezárva" # IF  closed, manuallyClosed, canceled is 1 and can nto find in statuses? elvileg nem lehet
         statuses:
           - [ closed, "Megrendelés lezárva"]            # CustmerOrder.Closed = 1
           - [ manuallyClosed, "Megrendelés törölve"]    # CustmerOrder.ClosedManually = 1
           - [ canceled, "Megrendelés lezárva"]          # CustmerOrder.Cancelled = 1
           - [ 1, "Feldolgozásra vár"]                   #   == 1, 2, 3 ...
           - [ 2, "Visszaigazolva"]                      # 
-          - [ 3, "Készletezés alatt"]                   # 
-          # -[ 4, "Visszaküldve"]                         # Back Order
+          - [ 3, "Készletezés alatt"]                   #
+          
+    - saveProxyContent:
+        enabled: False
+        startDelay: 105
+        frequency:  3601
+        name: Unas Context Saver
+        method: saveUnasProxyContext
+
+    - refreshCache:
+        enabled: False
+        startDelay: 1000
+        frequency:  3603
+        name: Unas-Cache-Referesher
+        method: refreshUnasCache
 
     #  - prc1:
     #      startDelay: 5

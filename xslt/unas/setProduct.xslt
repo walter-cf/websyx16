@@ -145,22 +145,23 @@
             <!--  Felteteles ADD ended -->
             <Unit><xsl:value-of select="quantityunit" /></Unit>
             <xsl:if test="weight > 0"><Weight><xsl:value-of select="weight" /></Weight></xsl:if>
-            <Description>
-                <Short><xsl:value-of select="webname" /></Short>
-                <Long><xsl:value-of select="webdescription" /></Long>
-            </Description>
-            <!-- -->
-            <xsl:if test="pictureX">
-                <Images><Image>
-                    <Type>base</Type>
-                    <Import>
-                    <Encoded><xsl:value-of select="picture" /></Encoded>
-                    </Import>
-                </Image></Images>
-            </xsl:if>
-            <xsl:if test="not(webmetadescription ='')">
-                <Meta><Keywords>LedSound Haffner24</Keywords><Description><xsl:value-of select="webmetadescription" /></Description></Meta>
-            </xsl:if>
+            <!--  Peti keresere kikerult  az xml-bol
+                <Description>
+                    <Short><xsl:value-of select="webname" /></Short>
+                    <Long><xsl:value-of select="webdescription" /></Long>
+                </Description>
+                <xsl:if test="not(webmetadescription ='')">
+                    <Meta><Keywords>LedSound Haffner24</Keywords><Description><xsl:value-of select="webmetadescription" /></Description></Meta>
+                </xsl:if>
+                <xsl:if test="pictureX">
+                    <Images><Image>
+                        <Type>base</Type>
+                        <Import>
+                        <Encoded><xsl:value-of select="picture" /></Encoded>
+                        </Import>
+                    </Image></Images>
+                </xsl:if>
+            -->
         </Product>
     </xsl:if> <!-- Webdisplay is 1? = not(SkipThisItem) -->
     </xsl:for-each>
