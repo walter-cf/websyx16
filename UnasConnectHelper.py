@@ -1,11 +1,15 @@
-import logging
-import requests
 import datetime as date
+import logging
 import urllib.parse as urlParse
-import UnasAuth
-import MyUtils as MU
-import MySmtpClient as SM
+
+import requests
 from lxml import objectify
+
+import MySmtpClient as SM
+import MyUtils as MU
+import UnasAuth
+from MyUtilsTypes import UnasCommErrException
+
 #
 #  neworder, cancelOrder, returnOrder
 #
@@ -74,7 +78,7 @@ def unasSetOrderStatus( orderKey, status, symbolId, statusEmail = False, statusM
 
 def unasGetOrderBy( tag, val): # elso ID : 146194506
     xmlParam = MU.XMLTAG + '<Params><{0}>{1}</{0}></Params>'.format(tag, val)
-    return doPostReq('getProduct', xmlParam)
+    return doPostReq('getOrder', xmlParam)
 
 def unasGetProducts( status, limitStart, limitNum):
     if MU.IGNORE_BLOCKED_UNAS:
@@ -104,16 +108,25 @@ def unasGetStorage(tag = None, val = None):
 def unasGetInquirers(prodId):
     return None
 
+def unasOrder_Direct(xml):
+    xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Orders>' + xml +'</Orders>'
+    return doPostReq('setOrder', xmlParam)
+
+def unasCustomer_Direct(xml):
+    xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Customers>' + xml +'</Customers>'
+    return doPostReq('setCustomer', xmlParam)
+
+def unasDummyAction(xml, action):
+    return f"<dUmmYAction>{action}</dUmmYAction><reqXml>{xml}</reqXml>"
+
 def unasGetActiveCustomers():
     xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><ContentType>full</ContentType></Params>'
-    responseText =  doPostReq('getCustomer', xmlParam)
-    xml = bytes(bytearray(responseText, encoding="utf-8"))
-    return xml
+    return doPostReq('getCustomer', xmlParam)
 
 def unasGetActiveProducts( limitNum, limitStart ):
     if MU.UnasProductWebCategoryId is None:
         xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><Name>%s</Name><ContentType>minimal</ContentType></Params>' % MU.UnasProductWebCategoryName
-        responseText =  doPostReq('getProduct', xmlParam)
+        responseText =  doPostReq('getCategory', xmlParam)
 
         catObj = objectify.fromstring(bytes(responseText, 'utf-8'), None)
         if (len(catObj.getchildren()) < 1):
@@ -180,17 +193,35 @@ def unasFreeXml(action, xmlTag):
     xmlParam = MU.XMLTAG + xmlTag
     return doPostReq(action, xmlParam)
 
+# TODO Ezekbe is kellene a hibakezeles
+def callGET(path):
+    x = requests.get("http://%s:%d/%s" % (MU.hostName, MU.serverPort, path))
+    return f'respCode:{x.status_code}' if x.status_code != 200 else x.text
+
+def callUnasGET(path):
+    x = requests.get("http://%s:%d/unas/%s" % (MU.hostName, MU.serverPort, path))
+    return f'respCode:{x.status_code}' if x.status_code != 200 else x.text
+
+def callProxyControl(action):
+    x = requests.get("http://%s:%d/unas/proxycontrol/%s" % (MU.hostName, MU.serverPort, action))
+    return x.status_code, x.text
+
+# DON`T USE !! Not ready Yet!
+def callProxyControlPost(action, xmlParam):
+    x = requests.post("%s:%d/unas/proxycontrol/%s" % (MU.hostName, MU.serverPort, action), data=xmlParam.encode('utf-8'))
+    return x.text
+
 def doPostReq(action, xmlParam):
     MU.checkCommError()
     token = UnasAuth.doAuth()
     MU.createStatEntry(action, xmlParam)
     if MU.isLogLevelTrace():
-        print( "UCh-req:", action,  " TS:%s", MU.getTS())
-        logging.debug("UCh-req:%ss TS:%d, Token:%s", action, MU.getTS(), token)
+        print( "UCh-req:", action,  " TS:", MU.getTS())
+        logging.debug("UCh-req:%s TS:%d", action, MU.getTS())
         logging.debug("xmlParam: %s", xmlParam)
     else:
         logging.debug("UCh-req:%s", action)
-    x = requests.post("%s/%s" % (MU.UNASAPI_URL, action), data=xmlParam, headers={ "Authorization" : "Bearer " + token })
+    x = requests.post("%s/%s" % (MU.UNASAPI_URL, action), data=xmlParam.encode('utf-8'), headers={ "Authorization" : "Bearer " + token })
     if x.status_code == 200:
         logging.debug("Req returned st:%s", x.status_code)
         MU.createStatEntryOK(x.text)
@@ -198,11 +229,10 @@ def doPostReq(action, xmlParam):
             logging.debug("response: %s", x.text)
     else:
         MU.createStatEntryERR(x.status_code, x.text)
-        logging.error("Req returned st:%s", x.status_code)
-        logging.info("xmlParam: %s", x.text)
-        msg = "ERROR - UCh-req:%ss. TS:%d, Token:%s" % (action, MU.getTS(), token)
-        msg += '\r\n\r\nxmlResp-status:%s\r\nResponse:%s' % (x.status_code, x.text)
-        SM.sendAlertMail(msg, '[UNAS-Comm-Err] Sikertelen UNAS keres ST:%s' % x.status_code )
+        logging.error(f"Req returned ({x.status_code}) -> {x.text}") # Hibakezelest a hiva programban kell majd elvegezni!!!
+        # msg = f"ERROR - UCh-req:{action}. TS:{ MU.getTS()}\r\n({x.status_code}) -> {x.text}"
+        # SM.sendProxyMail(msg, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR), '[UNAS-Comm-Err] Sikertelen UNAS keres ST:%s' % x.status_code )
+        raise UnasCommErrException(x.status_code, x.text)
     return x.text
 #
 # Posts-End
@@ -221,6 +251,33 @@ UNAS_SETSYMBOLID_XML = """<Customer>
         </Params>
     </Customer>
 """
+UNAS_SETORDERSYMBOLID_XML = """<Order>
+        <Action>modify</Action>
+        <Key>%s</Key>
+        <Params>
+            <Param>
+                <Name>symbolId</Name>
+                <Value>%s</Value>
+            </Param>
+        </Params>
+    </Order>
+"""
+UNAS_SETORDERPARAMS_XML = """<Order>
+        <Action>modify</Action>
+        <Id>%i</Id>
+        <Key>%s</Key>
+        <Params>
+            <Param>
+                <Name>symbolId</Name>
+                <Value>%s</Value>
+            </Param>
+            <Param>
+                <Name>symbolCode</Name>
+                <Value>%s</Value>
+            </Param>
+        </Params>
+    </Order>
+"""
 UNAS_SETPRODUCTSYMBOLID_XML = """<Products>
     <Product>
         <Action>modify</Action>
@@ -238,6 +295,12 @@ UNAS_SETPRODUCTSYMBOLID_XML = """<Products>
 def updateProductSymbolId(unasId, symbolId, sku):
     xmlParam = UNAS_SETPRODUCTSYMBOLID_XML % (unasId, sku, '' if symbolId <= 0 else str(symbolId) )
     return doPostReq('setProduct', xmlParam)
+
+def updateCustomerSymbolIdList(cl):
+    xml = []
+    for unasId, symbolId, symbolCode in cl:
+        xml.append( UNAS_SETSYMBOLID_XML % (unasId, str(symbolId), symbolCode))
+    return None if len(xml) == 0 else updateCustomer( ' '.join( xml ))
 
 def updateCustomerSymbolId(unasId, symbolId, symbolCode):
     xmlParam = UNAS_SETSYMBOLID_XML % (unasId, str(symbolId), symbolCode)
@@ -319,25 +382,24 @@ def unasDirectXml(action, xmlTag:str, trailer = None):
 # Prods
 #
 UNAS_DELETEPRODUCT_XML = "<Product><Action>delete</Action><Id>%s</Id></Product>"
-def deleteProds(catIds):
+def deleteProds(prodIds):
     xmlParam = ''
-    if catIds is None:
+    if prodIds is None:
         return '<Products />'
     
-    for cid in catIds:
-        xmlParam += UNAS_DELETEPRODUCT_XML % str(cid)
+    for pid in prodIds:
+        xmlParam += UNAS_DELETEPRODUCT_XML % str(pid)
     if len(xmlParam) > 0:
         xmlParam =  MU.XMLTAG + f"<Products>{xmlParam}</Products>"
-        return doPostReq('setCategory', xmlParam)
-    return '<Categories />'
+        return doPostReq('setProducts', xmlParam)
+    return '<Products />'
 
 def getProds(tag = None, val = None):
     xmlTag = '' if tag is None else '<{0}>{1}</{0}>'.format(tag, str(val).replace('Q','/'))
     xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params>%s<ContentType>minimal</ContentType></Params>' % xmlTag
     return doPostReq('getProduct', xmlParam)
 
-def addProdsXml(xmlTag:str):
-    token = UnasAuth.doAuth()
-    xmlParam =  MU.XMLTAG + f"<Categories />{xmlTag}</Categories>"
+def addProdsXml_NU(xmlTag:str):
+    xmlParam =  MU.XMLTAG + f"<Products>{xmlTag}</Products>"
     return doPostReq('setProduct', xmlParam)
 

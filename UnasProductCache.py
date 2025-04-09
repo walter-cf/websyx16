@@ -1,4 +1,7 @@
+import json
+
 import MyUtils as MU
+
 
 class UnasProductCache:
     unasId: int
@@ -31,3 +34,21 @@ class UnasProductCache:
         self.qty = q
         self.lastmod = MU.UtcNow(1 + MU.GETPRODUCT_INTERVAL * 2)
         self.stocks = sts
+
+class UnasProductCacheEncoder(json.JSONEncoder):
+    
+        def recursive_dict(self, element):
+            return element.tag, dict(map(self.recursive_dict, element)) or element.text
+                
+        def recursive_dict_with_attribs(self, element):
+            if element.text == None and len(element.attrib):
+                return element.tag, element.attrib
+            return element.tag, dict(map(self.recursive_dict_with_attribs, element)) or element.text
+                
+        def default(self, o):
+            if "<class 'lxml.etree._Element'>" == str(type(o)):
+                return self.recursive_dict(o)
+            elif "<class 'set'>" == str(type(o)):
+                return str(o)
+            else:
+                return o.__dict__

@@ -1,37 +1,40 @@
 #!/usr/bin/python3
 
-import threading
+import json
+import logging
 import signal
+import sys
+import threading
 from time import sleep
 from typing import List
-import json
 
-import logging
-import sys
+from lxml import etree as ET
 
-
-import MyUtils as MU
-import MySmtpClient as SM
 import FdbUtils as FBU
-import MySqlService as sqlSrv
-from MySqlUtils import MySqlWrapper as mSqlWrapper
-
-import GetProcessor as getProc
-import PostProcessorUNAS as PPU
-import PostProcessorEMAG as PPE
+import MySmtpClient as SM
+import MyUtils as MU
 import UnasConnectHelper as UCH
 import UnasOrderCache as UOC
+from MyServer import logrotate
+from MySqlUtils import MySqlWrapper as mSqlWrapper
+from MyUtilsTypes import (AlertMailType, MyProgramFlowWarningException,
+                          ProxyErrCode, ProxyObjectType, UnasTransactionType)
 
 global GBL_ErrorMessages
 GBL_ErrorMessages = []
 
 YAML_CONFIG_FILE = 'web6proxy.yaml'
 
+ORDER_SETSTAUS_XML = '<Action>modify</Action><Key>%s</Key><Status>%s</Status><StatusEmail>%s</StatusEmail><Params><Param><Name>symbolId</Name><Value>%i</Value></Param></Params>'
+
 ORDSTATCOLUMNS = [ "Id",  "VoucherNumber", "PrimeVoucherNumber", "CustomerOrderStatus", "Customer", "Closed", "Cancelled", "ClosedManually",  "RowVersion","RowModify" ]
 Interrupted = False
 
+def masterChallengeUnas(prc):
+    raise MyProgramFlowWarningException("Not Usable Yet, under developed until... faszomTuggya ",1234321)
+
 # Elavult notUsed! 
-def quickStatusChange( ):
+def quickStatusChange_NU( ):
     # get Orders
     orders = FBU.getModifiedOrders(ORDSTATCOLUMNS, 999962, 42)
     # foreach Orders
@@ -81,58 +84,117 @@ def quickStatusChange( ):
             #
         # TODO into Cache and cache handling
 
-def orderStatusUnas( prc ):
+def getOrdercacheFromProxy():
+    code, resp = UCH.callProxyControl('qry/unascache/order')
+    return [] if code > 200 else json.loads(resp)
+    
+def orderStatusUnasProxy( prc ):
+    skippingStatus = next(( x[1] for x in prc["statuses"] if x[0] == 'manuallyClosed'), prc["defaultClosedStatus"])
     # get Orders
     orders = FBU.getModifiedOrders(ORDSTATCOLUMNS, prc["orderStatusCheckInterval"], prc["checkVoucherSequence"])
+    # orderStatusXmlArray = []
     # foreach Orders
     for ord in orders:
         # set status if not Set?
         #status = None
-        if 1 == ord[ ORDSTATCOLUMNS.index("Cancelled")]:
-            #status = 'canceled'
-            ordStatusStr = next(( x[1] for x in prc["statuses"] if x[0] == 'canceled'), "Megrendelés lezárva")
-        elif 1 == ord[ ORDSTATCOLUMNS.index("Closed") ]:
-            #status = 'closed'
-            ordStatusStr = next(( x[1] for x in prc["statuses"] if x[0] == 'closed'), "Megrendelés lezárva")
-        elif 1 == ord[ ORDSTATCOLUMNS.index("ClosedManually") ]:
-            #status = 'manuallyClosed'
-            ordStatusStr = next(( x[1] for x in prc["statuses"] if x[0] == 'manuallyClosed'), "Megrendelés lezárva")
-        else:
-            st = ord[ ORDSTATCOLUMNS.index("CustomerOrderStatus") ]
-            ordStatusStr = next(( x[1] for x in prc["statuses"] if x[0] == st), None)
-        #    ucc = next((x for x in  MU.UnasCustomerList.values() if x.unasId == unasId), None )
-        if ordStatusStr is not None:
-            #prc["statuses"]
-            ordKey = ord[ ORDSTATCOLUMNS.index("PrimeVoucherNumber") ][ 1+len(MU.SYMBOLORDERIDPREFIX):]
-            symbolId = int( ord[ORDSTATCOLUMNS.index("Id")]  )
-            uoc = None if ordKey not in MU.UnasOrderList.keys() else MU.UnasOrderList[ordKey]
-            if not uoc:
-                ordXml = UCH.unasGetOrderBy("Key", ordKey)
-                if ordXml is not None:
-                    uoc = MU.putOrderXmlIntoCache(ordKey, ordXml)
-                else:
-                    uoc = UOC.UnasOrderCache(ordKey, -1, None, 0, 'Missing from UNAS')
-                    MU.UnasOrderList[ordKey] = uoc 
-                    _m = f""
-                    SM.sendAlertMail('', 'Unasbol hianyzo rendeles')
-            if uoc:
-                if symbolId != uoc.symbolId:
-                    logging.error("Set statusnal UOC symbolId kulonbozott!!! Ori-UOC-id:{uoc.symbolId} symb:orderId:{symbolId}")
-                    # uoc.symbolId = symbolId
-                elif (ordStatusStr == uoc.orderStatus):
-                    logging.debug("Skipping:%s", ordKey)
-                else:
-                    xmlResp = UCH.unasSetOrderStatus( ordKey,  ordStatusStr, symbolId)
-                    logging.debug(f'SetOrder:[{ordKey}] set Status: {ordStatusStr}')
-                    logging.debug(f'SetOrder response:{xmlResp}')
-                    print(xmlResp)
-                    # TODO meg kellene vizsgalni, hogy xml valos-e
-                    if xmlResp.find('<Status>ok</Status>') > 0:
-                        uoc.orderStatus = ordStatusStr
+        symbolId = int( ord[ORDSTATCOLUMNS.index("Id")]  )
+        ordKey  = ord[ ORDSTATCOLUMNS.index("PrimeVoucherNumber") ][ 1+len(MU.SYMBOLORDERIDPREFIX):]
+        ordCode = ord[ ORDSTATCOLUMNS.index("VoucherNumber") ]
+        badOrder = MU.UnasBadOrderList.get( symbolId )
+
+        if badOrder is None or badOrder.badCounter < 4: 
+            if 1 == ord[ ORDSTATCOLUMNS.index("Cancelled")]:
+                #status = 'canceled'
+                ordStatusStr = next(( x[1] for x in prc["statuses"] if x[0] == 'canceled'), prc["defaultClosedStatus"])
+            elif 1 == ord[ ORDSTATCOLUMNS.index("Closed") ]:
+                #status = 'closed'
+                ordStatusStr = next(( x[1] for x in prc["statuses"] if x[0] == 'closed'), prc["defaultClosedStatus"])
+            elif 1 == ord[ ORDSTATCOLUMNS.index("ClosedManually") ]:
+                #status = 'manuallyClosed'
+                ordStatusStr = next(( x[1] for x in prc["statuses"] if x[0] == 'manuallyClosed'), prc["defaultClosedStatus"])
             else:
-                logging.error("ordKEY missing Missing from UNAS Skipping:%s", ordKey)
-            #
-        # TODO into Cache and cache handling
+                st = ord[ ORDSTATCOLUMNS.index("CustomerOrderStatus") ]
+                ordStatusStr = next(( x[1] for x in prc["statuses"] if x[0] == st), None)
+            #    ucc = next((x for x in  MU.UnasCustomerList.values() if x.unasId == unasId), None )
+            if ordStatusStr is not None:
+                #prc["statuses"]
+                uoc = None if ordKey not in MU.UnasOrderList.keys() else MU.UnasOrderList.get(ordKey)
+                if not uoc:
+                    _xml = UCH.unasGetOrderBy("Key", ordKey)
+                    #getOrders....
+                    _ords = ET.fromstring(  _xml.replace(MU.XMLTAG, '').replace('\r\n', '') )
+                    if _ords is not None and len(_ords.getchildren()) > 0:
+                        uoc = MU.putOrderXmlObjectIntoCache(ordKey, _ords)
+                    elif  ordStatusStr == skippingStatus: # UNAS bol hianyzik, Statusza manuallyClosed: KIZAROM a folyamatbol
+                        tmpOrder = UOC.UnasOrderCache(ordKey, sid=symbolId, ordcode=ordCode, status=skippingStatus)
+                        tmpOrder.badCounter = 11 # Azonnal kizarom!
+                        MU.UnasBadOrderList[symbolId] = tmpOrder
+                        _m = f"Symbol Rendeles: {ordKey} / {ordCode} (Id:{symbolId}) - UNAS bol hianyzik, Statusza manuallyClosed: Azonnal KIZAROM a folyamatbol"
+                        _m += "\r\n\r\n A web6Proxy ujrainditaskor visszakerul a folyamatba - ezt kesobb kezelem majd, elteszem a ``Rosszak listajat``"
+                        SM.sendProxyMail(_m, AlertMailType(UnasTransactionType.ORDERSTATUS, oid=symbolId, otyp=ProxyObjectType.ORDER), 'Lekezeletlen rendeles! Unasbol hianyzik: %s' % ordKey)
+                    else:
+                        if badOrder is None:
+                            tmpOrder = UOC.UnasOrderCache(ordKey, sid=symbolId, ordcode=ordCode, status=ordStatusStr)
+                            tmpOrder.badCounter = 1 + tmpOrder.badCounter
+                            MU.UnasBadOrderList[symbolId] = tmpOrder
+                        badOrder.badCounter = 1 + badOrder.badCounter
+                        _m = f"Symbol Rendeles: {ordKey} / {ordCode} (Id:{symbolId}) adatai valtoztak, de az UNAS-ban nem talalhato"
+                        if badOrder.badCounter >= 4:
+                            _m += "\r\nTobbszoros (3) probalkozasbol nem sikerult megtalalni a rendelest - KIZAROM a feldolgozasbol!"
+                        else:
+                            _m += f"\r\nTobbszoros: {badOrder.badCounter}. probalkozas"
+                        #
+                        SM.sendProxyMail(_m, AlertMailType(UnasTransactionType.ORDERSTATUS, oid=symbolId, otyp=ProxyObjectType.ORDER),'Lekezeletlen rendeles! Unasbol hianyzik: %s' % ordKey)
+                #
+                if uoc:
+                    if symbolId != uoc.symbolId:
+                        if ordStatusStr != skippingStatus:
+                            MU.UnasBadOrderList[symbolId] = uoc
+                            _msg = f"Set statusnal UOC symbolId kulonbozott!!! Ori-UOC-id:{uoc.symbolId} symb:orderId:{symbolId}"
+                            MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.B24), level = logging.ERROR, eDescr=sys.exc_info())
+                            uoc.badCounter = 1 + uoc.badCounter
+
+                    elif (ordStatusStr == uoc.orderStatus):
+                        logging.debug(f"Skipping:{ordKey}({symbolId}) BizSz:{ord[ORDSTATCOLUMNS.index('VoucherNumber')]} Customer:{uoc.code}({uoc.symbolCustId})")
+                    else:
+                        # TODO BVlokkosirttani
+                        # orderStatusXmlArray.append(f"<Order>{ORDER_SETSTAUS_XML % (ordKey, MU.ORDER_STATUS_SENDMAIL, ordStatusStr, symbolId)}</Order>")
+                        xmlResp = UCH.unasSetOrderStatus( ordKey,  ordStatusStr, symbolId)
+                        logging.debug(f'SetOrder:[{ordKey}] set Status: {ordStatusStr}')
+                        # TODO meg kellene vizsgalni, hogy xml valos-e
+                        if xmlResp.find('<Status>ok</Status>') > 0:
+                            uoc.orderStatus = ordStatusStr
+                        else:
+                            _msg = f"ORDERSTATUS process error - UNAS reply:\r\n{xmlResp}"
+                            _msg = f"A status feldolgozasbol kizartam:  {ordKey} ({symbolId}) / {ordStatusStr} )"
+                            MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.B25), level = logging.ERROR, eDescr=sys.exc_info())
+                            MU.UnasBadOrderList[symbolId] = uoc
+                            uoc.badCounter = 11
+                elif  ordStatusStr == skippingStatus:
+                    pass
+                else:
+                    logging.error("ordKEY missing from UNAS Skipping:%s", ordKey)
+                #
+            # TODO into Cache and cache handling
+            ## if len(orderStatusXmlArray) > 0:
+            ##     xmlResp = UCH.unasOrder_Direct(orderStatusXmlArray.join('\n'))
+            ##     logging.debug(f'SetOrder response:{xmlResp}')
+            ##     print(xmlResp)
+        #
+        elif badOrder:
+            logging.debug("BadList hit:%s" % badOrder)
+
+def orderStatusUnas( prc ):
+    UCH.callGET('batch/orderStatusUnas')
+    
+def saveUnasProxyContext( prc ):
+    UCH.callProxyControl('saveProxyContext')
+
+def refreshUnasCache( prc ):
+    if MU.WEB_CONTROL_ENABLED:
+        UCH.callUnasGET('initcache')
+    MU.checkCacheState(typ=ProxyObjectType.ORDER)
+
 
 class ServiceExit(Exception):
     """
@@ -199,7 +261,16 @@ def startProcess(**kwargs):
         procName = vals["method"]
         while not Interrupted:
             logger.info(' Process:%s Started at:%s' , procName, MU.tsToDateSql(MU.getCurrTime()))
-            exec(f"x = {procName}(vals)")
+            try:
+                exec(f"x = {procName}(vals)")
+            except Exception as e:
+                if isinstance(e, KeyboardInterrupt):
+                    Interrupted = True
+                elif isinstance(e, ServiceExit):
+                    Interrupted = True
+                else:
+                    _msg = f"Batch exception ({procName}) : {str(e) if not hasattr(e, 'message') else e.message}"
+                    MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.B26), eDescr=sys.exc_info())
             iterIdx = 0
             while not Interrupted and frequency > iterIdx:
                 sleep(MU.BATCH_GRANULARITY)
@@ -209,8 +280,17 @@ def startProcess(**kwargs):
 def processloop(threads):
     global Interrupted
     try:
-        while not Interrupted:
-            sleep(999999)
+        try:
+            while not Interrupted:
+                sleep(999999)
+        except Exception as e:
+            if isinstance(e, KeyboardInterrupt):
+                Interrupted = True
+            elif isinstance(e, ServiceExit):
+                Interrupted = True
+            else:
+                _msg = f"Batch exception : {str(e) if not hasattr(e, 'message') else e.message}"
+                MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.B27), eDescr=sys.exc_info())
     except (KeyboardInterrupt, ServiceExit) as ex:
       logging.info('Batch Server interrupted - closing...(%s)', ex)
     #
@@ -241,14 +321,18 @@ if __name__ == "__main__":
   else:
       logLevel = logging.DEBUG
       
-  logging.basicConfig(filename='syxBatch{0}.log'.format( '' if MU.serverPort == 3301 else '-'+str(MU.serverPort)),level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
+  logFileName='syxBatch{0}.log'.format( '' if MU.serverPort == 3301 else '-'+str(MU.serverPort))
+  logrotate(logFileName)
+  logging.basicConfig(filename=logFileName,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
   logger=logging.getLogger(__name__)
 
+  MU.getUnasContext().processName = 'Batch'
   if MU.isLogLevelWarn():
       print("Batch server started" )  #Server starts
-      SM.sendAlertMail(f'batch-Server (re)started')
+      SM.sendProxyMail(f'batch-Server (re)started', AlertMailType(UnasTransactionType.STARTBATCH), 'starting')
   #
-  mSqlSrv = sqlSrv.MySqlService()
+  # TODO Tesztelni kelene a szervizeket, rendelkezesre allnak-e: Socket, WebControl, FDB, MySQL
+  # mSqlSrv = sqlSrv.MySqlService()
   #
   # Register the signal handlers
   signal.signal(signal.SIGTERM, service_shutdown)
@@ -256,7 +340,8 @@ if __name__ == "__main__":
   #
   threads = []
   try:
-    # MU.checkCacheState(force=True)
+    # MU.checkCacheState(force=True) # TODO Ezt at kell hozni a Proxy-bol
+    MU.UnasOrderList = getOrdercacheFromProxy()
     # get Processes
     # ??? bp = MyBatch()
     # ??? myMyslConnection = bp.mSql.getConn()
@@ -279,11 +364,11 @@ if __name__ == "__main__":
     processloop(threads)
     if MU.isLogLevelWarn():
         print("Server stopped normally.")
-        SM.sendAlertMail("Batch Server stopped (normal)")
+        SM.sendProxyMail("Batch Server stopped (normal)", AlertMailType(UnasTransactionType.STARTBATCH), 'web6batch stopped')
   except Exception as ex:
     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
     message = template.format(type(ex).__name__, ex.args)
     print(message)
     logging.error('Server Crashed x:', message)
-    SM.sendAlertMail(message, "Batch Server aborted (CRASH)")
+    SM.sendProxyMail(message, AlertMailType(UnasTransactionType.STARTBATCH), "Batch Server aborted (CRASH)")
 

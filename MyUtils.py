@@ -1,45 +1,46 @@
-from time import time
-from datetime import datetime, timezone
-from markdown import  markdown, markdownFromFile
-from typing import List
-
-import yaml
 import json
 import logging
-#
+import traceback as SysTB
+from datetime import datetime, timezone
+from time import time
+from typing import Dict, List
 
-import MyUtilsTypes
-import MyBatch
-from UnasProductCache import UnasProductCache as UPC
-import UnasCustomerCache as UCC
-import UnasConnectHelper as UCH
-import UnasOrderCache as UOC
-import FdbUtils as FBU
-import MySqlUtils as MyDB
+import xmltodict
+import yaml
 # import xml.etree.ElementTree as ET
 from lxml import etree as ET
 from lxml import objectify
-from typing import Dict
+from markdown2 import Markdown as markdown
 
-import mysql.connector
-import json
+import FdbUtils as FBU
+import MyBatch
+import MySmtpClient as SM
+import MyUtilsTypes as MUT
+import UnasConnectHelper as UCH
+import UnasCustomerCache as UCC
+import UnasOrderCache as UOC
+from MySqlUtils import MySqlWrapper
+from UnasProductCache import UnasProductCache as UPC
+
+#
 
 CONFIG_FILE = None
 def reReadYaml():
-	return readYaml(CONFIG_FILE)
+    return readYaml(CONFIG_FILE)
 
+PROXYCONFIG = None
 def readYaml(yamlFile) -> str:
-    global CONFIG_FILE
+    global CONFIG_FILE, PROXYCONFIG
     CONFIG_FILE = yamlFile 
     with open(yamlFile, 'r') as stream:
         try:
-            cfg = yaml.safe_load(stream)
+            PROXYCONFIG = yaml.safe_load(stream)
             if isLogLevelInfo():
-                print(cfg)
-            setConstants(cfg)
+                print(PROXYCONFIG)
+            setConstants(PROXYCONFIG)
         except yaml.YAMLError as exc:
             print(exc)
-    return json.dumps(cfg)
+    return json.dumps(PROXYCONFIG)
 
 def valDef(val, defa):
     return defa if val is None else val
@@ -60,113 +61,142 @@ def nullSafeStru(obj, tagList:List,  defa):
     return defa if item is None else item
 
 def setConstants(cfg):
-	global BATCH_PROCESSES, BATCH_GRANULARITY
-	BATCH_PROCESSES   = valDef(cfg["batch"]["processes"], [])
-	BATCH_GRANULARITY = valDef(cfg["batch"]["granularity"], 10)
+    global BATCH_PROCESSES, BATCH_GRANULARITY
+    BATCH_PROCESSES   = valDef(cfg["batch"]["processes"], [])
+    BATCH_GRANULARITY = valDef(cfg["batch"]["granularity"], 10)
 
-	global FB_HOST, FB_USER, FB_PASSWORD, FB_DBDATA_ROOT, FB_DBDATA_DEFAULT
-	FB_HOST              = valDef(cfg["firebird"]["dbHost"], FB_HOST          )
-	FB_USER              = valDef(cfg["firebird"]["dbUser"], FB_USER          )
-	FB_PASSWORD          = valDef(cfg["firebird"]["dbPass"], FB_PASSWORD      )
-	FB_DBDATA_ROOT       = valDef(cfg["firebird"]["dbRoot"], FB_DBDATA_ROOT   )
-	FB_DBDATA_DEFAULT    = valDef(cfg["firebird"]["dbFile"], FB_DBDATA_DEFAULT)
+    global FB_HOST, FB_USER, FB_PASSWORD, FB_DBDATA_ROOT, FB_DBDATA_DEFAULT
+    FB_HOST              = valDef(cfg["firebird"]["dbHost"], FB_HOST          )
+    FB_USER              = valDef(cfg["firebird"]["dbUser"], FB_USER          )
+    FB_PASSWORD          = valDef(cfg["firebird"]["dbPass"], FB_PASSWORD      )
+    FB_DBDATA_ROOT       = valDef(cfg["firebird"]["dbRoot"], FB_DBDATA_ROOT   )
+    FB_DBDATA_DEFAULT    = valDef(cfg["firebird"]["dbFile"], FB_DBDATA_DEFAULT)
  
-	global MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
-	MYSQL_HOST              = valDef(cfg["mysql"]["dbHost"], MYSQL_HOST       )
-	MYSQL_USER              = valDef(cfg["mysql"]["dbUser"], MYSQL_USER       )
-	MYSQL_PASSWORD          = valDef(cfg["mysql"]["dbPass"], MYSQL_PASSWORD   )
-	MYSQL_DB                = valDef(cfg["mysql"]["dbFile"], MYSQL_DB         )
+    global SOCKET_CONTROL_HOST, SOCKET_CONTROL_PORT, SOCKET_CONTROL_ENABLED
+    if "controlSocket" in cfg:
+        SOCKET_CONTROL_HOST              = valDef(cfg["controlSocket"]["host"],    SOCKET_CONTROL_HOST )
+        SOCKET_CONTROL_PORT              = valDef(cfg["controlSocket"]["port"],    SOCKET_CONTROL_PORT )
+        SOCKET_CONTROL_ENABLED           = valDef(cfg["controlSocket"]["enabled"], SOCKET_CONTROL_ENABLED )
+    else:
+        SOCKET_CONTROL_ENABLED           = False
      
-	global UnasCustomerCategoryName, UnasProductWebCategoryId, UnasProductWebCategoryName, IGNORE_BLOCKED_UNAS, UNASAPI_URL, API_KEY, UNAS_FEEDBACK_URL
-	IGNORE_BLOCKED_UNAS = cfg["unas"]["ignoreBlockedClient"]
-	UNASAPI_URL = cfg["unas"]["apiUrl"]
-	API_KEY = cfg["unas"]["apiKey"]
-	UNAS_FEEDBACK_URL          = cfg["unas"]["feedbackUrl"]
-	UnasCustomerCategoryName   = cfg["unas"]["customer"]["categoryName"]
-	UnasProductWebCategoryId   =  itemValDef(cfg["unas"]["webcategory"], "id", None) # 'x' if 'name' not in cfg["unas"]["webcategory"] else 'AAAAAAA'
-	UnasProductWebCategoryName = itemValDef(cfg["unas"]["webcategory"],"name", None)
-
-	global hostName, serverPort
-	hostName   = cfg["proxy"]["hostName"]
-	serverPort = cfg["proxy"]["serverPort"]
-
-	UNAS_FEEDBACK_URL=eval(cfg["unas"]["feedbackUrl"])
-
-	global XMLTAG, XMLTAG16, LOGLEVEL, CurrentLogLevel, CACHE_FORCE_RELOAD_PERIOD, PRODUCT_EXTATTRIBS
-	XMLTAG   = cfg["prghelper"]["xmltag"]
-	XMLTAG16 = cfg["prghelper"]["xmltag16"]
-	LOGLEVEL = cfg["logLevel"]
-	PRODUCT_EXTATTRIBS = cfg["prghelper"]["extendedProductAttributes"]
-  
-	CurrentLogLevel = MyUtilsTypes.LogLvl.getLevelFromStr(LOGLEVEL)
-	CACHE_FORCE_RELOAD_PERIOD = cfg["unas"]["cacheForceReload"]
-
-	global PRODUCT_PRICECAT_BASE, PRODUCT_PRICECAT_FALLBACK, PRODUCT_PRICECAT_FALLBACK2, PRODUCT_BULK, PRODUCTNAME_OVERWRITE, PRODUCTCNT_CACHE_GETLIMIT
-	# ProductPriceCat
-	PRODUCT_PRICECAT_BASE      = cfg["unas"]["product"]["pricecat"]["base"]
-	PRODUCT_PRICECAT_FALLBACK  = cfg["unas"]["product"]["pricecat"]["fallback1"]
-	PRODUCT_PRICECAT_FALLBACK2 = cfg["unas"]["product"]["pricecat"]["fallback2"]
-	PRODUCT_BULK               = cfg["unas"]["product"]["bulk"]
-	PRODUCTNAME_OVERWRITE      = cfg["unas"]["product"]["overwriteName"]
-	PRODUCTCNT_CACHE_GETLIMIT  = cfg["unas"]["product"]["getproductLimit"]
-
-	#global GETORDER_INTERVAL
-	#GETORDER_INTERVAL = cfg["order"]["getInterval"]
-	global SYMBOLVOUCHERSEQUENCECODE, SYMBOLORDERIDPREFIX, SYMBOLORDERSTATUS
-	SYMBOLVOUCHERSEQUENCECODE  = cfg["unas"]["order"]["vouchersequencecode"]
-	SYMBOLORDERIDPREFIX        = cfg["unas"]["order"]["symbolOrderPrefix"]
-	SYMBOLORDERSTATUS        = cfg["unas"]["order"]["symbolOrderStatusNew"]
-	# Intervals
-	global GETPRODUCT_INTERVAL, GETCUSTOMER_INTERVAL, CUSTOMER_CYCLIC_INTERVAL
-	GETPRODUCT_INTERVAL      = cfg["unas"]["product"]["getInterval"]
-	GETCUSTOMER_INTERVAL     = cfg["unas"]["customer"]["getInterval"]
-	CUSTOMER_CYCLIC_INTERVAL = cfg["unas"]["customer"]["ignoreCyclicInterval"]
-	global CUSTOMER_COUNTRIES, WAREHOUSES, CUSTOMER_BULK, CUSTOMER_CODE_PREFIXES, CREATE_CUSTOMER_MISSING, CUSTOMER_FORCENEW, HANDLE_CUSTOMERADDRESS
-	# Customer
-	CUSTOMER_COUNTRIES     = cfg["unas"]["customer"]["countries"]	# print(list(CUSTOMER_COUNTRIES.keys())[list(CUSTOMER_COUNTRIES.values()).index('Magyarország')])
-	CUSTOMER_BULK          = cfg["unas"]["customer"]["bulk"]
-	CUSTOMER_CODE_PREFIXES = cfg["unas"]["customer"]["codePrefix"]
-	CREATE_CUSTOMER_MISSING = cfg["unas"]["customer"]["cerateMissingCustomer"]
-	CUSTOMER_FORCENEW       = cfg["unas"]["customer"]["forceNewState"]
-	HANDLE_CUSTOMERADDRESS  = nullSafe( cfg["unas"]["customer"], "handleCustomerAddress", False)
-	# Inventory warehouses
-	WAREHOUSES            = cfg["unas"]["inventory"]["warehouses"]
-
-	global 	ORDER_STATUS_NEW, ORDER_STATUS_ACCEPTED, ORDER_STATUS_PREP,ORDER_STATUS_SHIP, ORDER_STATUS_CLOSE,ORDER_STATUS_RETURN, ORDER_STATUS_CANCEL
-	# Order params - statuses
-	ORDER_STATUS_NEW      = cfg["unas"]["order"]["status"]['new']
-	ORDER_STATUS_ACCEPTED = cfg["unas"]["order"]["status"]['accepted']
-	ORDER_STATUS_PREP     = cfg["unas"]["order"]["status"]['prepared']
-	ORDER_STATUS_SHIP     = cfg["unas"]["order"]["status"]['shipping']
-	ORDER_STATUS_CLOSE    = cfg["unas"]["order"]["status"]['closed']
-	ORDER_STATUS_RETURN   = cfg["unas"]["order"]["status"]['returned']
-	ORDER_STATUS_CANCEL   = cfg["unas"]["order"]["status"]['cancel']
-
-	# Order FLOW Control
-	global 	ORDER_HandleUnregistered, ORDER_getMissingCust, ORDER_autoAcknowledge
-	ORDER_HandleUnregistered  = cfg["unas"]["order"]["flow"]['getUnregistered'] # Leszedjem az Order elott a hianyzo Customereket? most ki lesz kapcsolva
-	ORDER_getMissingCust      = cfg["unas"]["order"]["flow"]['getMissingCust']
-	ORDER_autoAcknowledge     = cfg["unas"]["order"]['autoAcknowledge']
-
-	global PRICERULE_TRANSPORTMODES, PRICERULE_PAYMENTMETHODS
-	PRICERULE_TRANSPORTMODES = cfg["unas"]["priceRules"]['transportModes']
-	PRICERULE_PAYMENTMETHODS = cfg["unas"]["priceRules"]['paymentMethods']
+    global WEB_CONTROL_HOST, WEB_CONTROL_PORT, WEB_CONTROL_ENABLED
+    if "controlWeb" in cfg:
+        WEB_CONTROL_HOST              = valDef(cfg["controlWeb"]["host"],    WEB_CONTROL_HOST )
+        WEB_CONTROL_PORT              = valDef(cfg["controlWeb"]["port"],    WEB_CONTROL_PORT )
+        WEB_CONTROL_ENABLED           = valDef(cfg["controlWeb"]["enabled"], WEB_CONTROL_ENABLED )
+    else:
+        WEB_CONTROL_ENABLED           = False
  
-	global MAIL_SERVER, MAIL_ME, MAIL_OPERATOR
-	MAIL_SERVER    = cfg["mail"]["server"]
-	MAIL_ME        = cfg["mail"]["sender"]
-	MAIL_OPERATOR  = cfg["mail"]["operator"]
+    global MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+    MYSQL_HOST              = valDef(cfg["mysql"]["dbHost"], MYSQL_HOST       )
+    MYSQL_USER              = valDef(cfg["mysql"]["dbUser"], MYSQL_USER       )
+    MYSQL_PASSWORD          = valDef(cfg["mysql"]["dbPass"], MYSQL_PASSWORD   )
+    MYSQL_DB                = valDef(cfg["mysql"]["dbFile"], MYSQL_DB         )
+     
+    global UnasCustomerCategoryName, UnasProductWebCategoryId, UnasProductWebCategoryName, IGNORE_BLOCKED_UNAS, UNASAPI_URL, API_KEY, UNAS_FEEDBACK_URL
+    IGNORE_BLOCKED_UNAS = cfg["unas"]["ignoreBlockedClient"]
+    UNASAPI_URL = cfg["unas"]["apiUrl"]
+    API_KEY = cfg["unas"]["apiKey"]
+    UNAS_FEEDBACK_URL          = cfg["unas"]["feedbackUrl"]
+    UnasCustomerCategoryName   = cfg["unas"]["customer"]["categoryName"]
+    UnasProductWebCategoryId   =  itemValDef(cfg["unas"]["webcategory"], "id", None) # 'x' if 'name' not in cfg["unas"]["webcategory"] else 'AAAAAAA'
+    UnasProductWebCategoryName = itemValDef(cfg["unas"]["webcategory"],"name", None)
 
-	# Comm Stats
-	global UNASCOMM_MAXERRCNT, UNASCOMM_MAXLOGINERRCNT, UNASCOMM_BLOCKEDTIME, UNASCOMM_SENDPACKETMAX 
-	UNASCOMM_MAXERRCNT      = cfg["unas"]["commstat"]["maxerrorcnt"]
-	UNASCOMM_MAXLOGINERRCNT = cfg["unas"]["commstat"]["maxloginerr"]
-	UNASCOMM_BLOCKEDTIME    = cfg["unas"]["commstat"]["blockedTimeMax"]
-	UNASCOMM_SENDPACKETMAX  = cfg["unas"]["commstat"]["sendPacketThreshold"]
+    global hostName, serverPort
+    hostName   = cfg["proxy"]["hostName"]
+    serverPort = cfg["proxy"]["serverPort"]
 
+    UNAS_FEEDBACK_URL=eval(cfg["unas"]["feedbackUrl"])
+
+    global XMLTAG, XMLTAG16, LOGLEVEL, CurrentLogLevel, CACHE_FORCE_RELOAD_PERIOD, PRODUCT_EXTATTRIBS
+    XMLTAG   = cfg["prghelper"]["xmltag"]
+    XMLTAG16 = cfg["prghelper"]["xmltag16"]
+    LOGLEVEL = cfg["logLevel"]
+    PRODUCT_EXTATTRIBS = cfg["prghelper"]["extendedProductAttributes"]
+  
+    CurrentLogLevel = MUT.LogLvl.getLevelFromStr(LOGLEVEL)
+    CACHE_FORCE_RELOAD_PERIOD = cfg["unas"]["cacheForceReload"]
+
+    global PRODUCT_PRICECAT_BASE, PRODUCT_PRICECAT_FALLBACK, PRODUCT_PRICECAT_FALLBACK2, PRODUCT_BULK, PRODUCTNAME_OVERWRITE, PRODUCTCNT_CACHE_GETLIMIT
+    # ProductPriceCat
+    PRODUCT_PRICECAT_BASE      = cfg["unas"]["product"]["pricecat"]["base"]
+    PRODUCT_PRICECAT_FALLBACK  = cfg["unas"]["product"]["pricecat"]["fallback1"]
+    PRODUCT_PRICECAT_FALLBACK2 = cfg["unas"]["product"]["pricecat"]["fallback2"]
+    PRODUCT_BULK               = cfg["unas"]["product"]["bulk"]
+    PRODUCTNAME_OVERWRITE      = cfg["unas"]["product"]["overwriteName"]
+    PRODUCTCNT_CACHE_GETLIMIT  = cfg["unas"]["product"]["getproductLimit"]
+
+    #global GETORDER_INTERVAL
+    #GETORDER_INTERVAL = cfg["order"]["getInterval"]
+    global SYMBOLVOUCHERSEQUENCECODE, SYMBOLORDERIDPREFIX, SYMBOLORDERSTATUS,ORDER_STATUS_SENDMAIL
+    SYMBOLVOUCHERSEQUENCECODE  = cfg["unas"]["order"]["vouchersequencecode"]
+    SYMBOLORDERIDPREFIX        = cfg["unas"]["order"]["symbolOrderPrefix"]
+    SYMBOLORDERSTATUS          = cfg["unas"]["order"]["symbolOrderStatusNew"]
+    ORDER_STATUS_SENDMAIL      = cfg["unas"]["order"]["sendOrderStatusEmail"]
+    # Intervals
+    global GETPRODUCT_INTERVAL, GETCUSTOMER_INTERVAL, CUSTOMER_CYCLIC_INTERVAL
+    GETPRODUCT_INTERVAL      = cfg["unas"]["product"]["getInterval"]
+    GETCUSTOMER_INTERVAL     = cfg["unas"]["customer"]["getInterval"]
+    CUSTOMER_CYCLIC_INTERVAL = cfg["unas"]["customer"]["ignoreCyclicInterval"]
+    global CUSTOMER_COUNTRIES, WAREHOUSES, CUSTOMER_BULK, CUSTOMER_CODE_PREFIXES, CREATE_CUSTOMER_MISSING, CUSTOMER_FORCENEW, HANDLE_CUSTOMERADDRESS, BULK_FEEDBACK_CUSTOMER, JOETESTCustomer
+    # Customer
+    if (cfg["unas"]["customer"]):
+        cfgCust = cfg["unas"]["customer"]
+        CUSTOMER_COUNTRIES      = cfgCust["countries"]    # print(list(CUSTOMER_COUNTRIES.keys())[list(CUSTOMER_COUNTRIES.values()).index('Magyarország')])
+        CUSTOMER_BULK           = cfgCust["bulk"]
+        CUSTOMER_CODE_PREFIXES  = cfgCust["codePrefix"]
+        CREATE_CUSTOMER_MISSING = cfgCust["cerateMissingCustomer"]
+        CUSTOMER_FORCENEW       = cfgCust["forceNewState"]
+        HANDLE_CUSTOMERADDRESS  = cfgCust.get("handleCustomerAddress") or False
+        BULK_FEEDBACK_CUSTOMER  = cfgCust.get("bulkFeedback") or False
+        JOETESTCustomer         = cfgCust.get("JOETESTCustomer") or False
+    # Inventory warehouses
+    WAREHOUSES            = cfg["unas"]["inventory"]["warehouses"]
+
+    global     ORDER_STATUS_NEW, ORDER_STATUS_ACCEPTED, ORDER_STATUS_PREP,ORDER_STATUS_SHIP, ORDER_STATUS_CLOSE,ORDER_STATUS_RETURN, ORDER_STATUS_CANCEL
+    # Order params - statuses
+    ORDER_STATUS_NEW      = cfg["unas"]["order"]["status"]['new']
+    ORDER_STATUS_ACCEPTED = cfg["unas"]["order"]["status"]['accepted']
+    ORDER_STATUS_PREP     = cfg["unas"]["order"]["status"]['prepared']
+    ORDER_STATUS_SHIP     = cfg["unas"]["order"]["status"]['shipping']
+    ORDER_STATUS_CLOSE    = cfg["unas"]["order"]["status"]['closed']
+    ORDER_STATUS_RETURN   = cfg["unas"]["order"]["status"]['returned']
+    ORDER_STATUS_CANCEL   = cfg["unas"]["order"]["status"]['cancel']
+
+    # Order FLOW Control
+    global     ORDER_HandleUnregistered, ORDER_getMissingCust, ORDER_autoAcknowledge
+    ORDER_HandleUnregistered  = cfg["unas"]["order"]["flow"]['getUnregistered'] # Leszedjem az Order elott a hianyzo Customereket? most ki lesz kapcsolva
+    ORDER_getMissingCust      = cfg["unas"]["order"]["flow"]['getMissingCust']
+    ORDER_autoAcknowledge     = cfg["unas"]["order"]['autoAcknowledge']
+
+    global PRICERULE_TRANSPORTMODES, PRICERULE_PAYMENTMETHODS
+    PRICERULE_TRANSPORTMODES = cfg["unas"]["priceRules"]['transportModes']
+    PRICERULE_PAYMENTMETHODS = cfg["unas"]["priceRules"]['paymentMethods']
+ 
+    global MAIL_SERVER, MAIL_ME, MAIL_OPERATOR
+    MAIL_SERVER    = cfg["mail"]["server"]
+    MAIL_ME        = cfg["mail"]["sender"]
+    MAIL_OPERATOR  = cfg["mail"]["operator"]
+
+    # Comm Stats
+    global UNASCOMM_MAXERRCNT, UNASCOMM_MAXLOGINERRCNT, UNASCOMM_BLOCKEDTIME, UNASCOMM_SENDPACKETMAX, UNASCOMM_SENDPACKETWARN,UNASCOMM_ALERTRETRYAFTER, UNASCOMM_MASTER_CHALLENGE, UNASCOMM_MASTER_IDLE,UNASCOMM_CLIENT_CHALLENGE
+    cfgItm = cfg["unas"].get("commstat") or {}
+    UNASCOMM_MAXERRCNT       = cfgItm.get("maxerrorcnt") or 3
+    UNASCOMM_MAXLOGINERRCNT  = cfgItm.get("maxloginerr") or 3
+    UNASCOMM_BLOCKEDTIME     = cfgItm.get("blockedTimeMax") or 1800
+    UNASCOMM_ALERTRETRYAFTER = cfgItm.get("alertRetryAfter") or 600
+    UNASCOMM_SENDPACKETWARN  = cfgItm.get("sendPacketWarningThreshold") or 1600
+    UNASCOMM_SENDPACKETMAX   = cfgItm.get("sendPacketStopLimit")
+    UNASCOMM_MASTER_CHALLENGE= cfgItm.get("enableMasterChallenger") or False
+    UNASCOMM_MASTER_IDLE     = cfgItm.get("preserveIdleMaster") or 300
+    UNASCOMM_CLIENT_CHALLENGE= cfgItm.get("clientChallenge") or  {'idleTime': 100, 'machines': [], 'method': 'None'}
 #
 # Utilz
 #
+def unasXmltoJSON(xml : str = '<a></a>' ):
+    data_dict = xmltodict.parse( xml )
+    return json.dumps(data_dict)
 
 def getCountryCode(country, raisError = True):
     if country is None:
@@ -178,7 +208,7 @@ def getCountryCode(country, raisError = True):
         cc = list(CUSTOMER_COUNTRIES.keys())[uccContryCodeIdx]
         return cc
     elif raisError:
-        raise ValueError("Bad/Missed country: " + country)
+        raise MUT.MyProgramFlowErrorException("Bad/Missed country: " + country)
     # else
     return None
 
@@ -188,52 +218,65 @@ def addCountryCode(country, code):
 def collectCustItems(xml):
     global UnasCustomerList
     root=ET.fromstring(xml,None)
-    for prod in root.getchildren():
-        custId    = prod.find('Id').text
-        custEmail = prod.find('Email').text
-        symbolId = '0'
-        symbolCode = None
-        unasLastMod = prod.find('Dates')
-        if unasLastMod is not None and unasLastMod.find('Modification') is not None:
-            unasLastMod = prod.find('Dates').find('Modification').text
-        if len(prod.findall('Params')) > 0 :
-            for ppp in prod.find('Params'):
-                pName = ppp.find('Name')
-                if (pName.text == 'symbolId'):
-                    symbolId = ppp.find('Value').text
-                elif (pName.text == 'symbolCode'):
-                    symbolCode = ppp.find('Value').text
-        # Addresses CountryCode / TaxNUmber
-        custTaxNo = None        
-        for addr in prod.find('Addresses'):
-                country = addr.find('Country')
-                countryCode = addr.find('CountryCode')
-                if addr.tag == "Invoice":
-                    custTaxNo = next((x.text for x in addr if x.tag == 'TaxNumber') , None )
-                cc = getCountryCode( country.text, False)
-                if cc is None:
-                    addCountryCode(country.text, countryCode.text)
+    for cust in root.getchildren():
+        custId = 0 if len(cust.findall('Id')) == 0 else int(cust.find('Id').text)
+        if custId > 0:
+            custEmail = cust.find('Email').text
+            symbolId = '0'
+            symbolCode = None
+            unasLastMod = cust.find('Dates')
+            if unasLastMod is not None and unasLastMod.find('Modification') is not None:
+                unasLastMod = cust.find('Dates').find('Modification').text
+            if len(cust.findall('Params')) > 0 :
+                for ppp in cust.find('Params'):
+                    pName = ppp.find('Name')
+                    if (pName.text == 'symbolId'):
+                        symbolId = ppp.find('Value').text
+                    elif (pName.text == 'symbolCode'):
+                        symbolCode = ppp.find('Value').text
+            # Addresses CountryCode / TaxNUmber
+            custTaxNo = None
+            if len(cust.findall('Addresses')) > 0:
+                for addr in cust.find('Addresses'): # TODO Kikapcsolt cimkezelesnel nem kellen basztatni a cimeket - asszem
+                        country = addr.find('Country')
+                        countryCode = addr.find('CountryCode')
+                        if addr.tag == "Invoice":
+                            custTaxNo = next((x.text for x in addr if x.tag == 'TaxNumber') , None )
+                        cc = getCountryCode( country.text, False) or 'hu'
+                        if cc is None:
+                            addCountryCode(country.text, countryCode.text)
+            #
+            ucc = UCC.UnasCustomerCache(int(custId), custEmail, custTaxNo, symbolCode, int(symbolId)) # type: ignore # State NotUsed yet
+            for addr in cust.find('Addresses'):
+                ucc.unasAddrXml.append( addr ) # type: ignore
+            ucc.lastmod = 0 if unasLastMod is None else dateStrToTs( unasLastMod )
+            if CUSTOMER_FORCENEW:
+                ucc.state = 'new'
+            if  UnasCustomerList.get(custId) is None:
+                try:
+                    putCustomerIntoCache(ucc)
+                except Exception as e:
+                    logging.error(f"UnasCustomerCache corrupted! Err:{str(e)}, unasId:{custId}")
+                # end try
+            elif  custId is None:
+                logging.error(f"UnasCustomer DATA-ERROR! Customer-unasId is NULL UCC:" + ucc.toStr())
+            elif  UnasCustomerList.get(custId) is None:
+                putCustomerIntoCache(ucc) # type: ignore
+            else:
+                logging.error(f"UnasCustomerCache corrupted! tripled, unasId:{custId}")
         #
-        ucc = UCC.UnasCustomerCache(int(custId), custEmail, custTaxNo, symbolCode, int(symbolId)) # type: ignore # State NotUsed yet
-        for addr in prod.find('Addresses'):
-            ucc.unasAddrXml.append( addr ) # type: ignore
-        ucc.lastmod = 0 if unasLastMod is None else dateStrToTs( unasLastMod )
-        if CUSTOMER_FORCENEW:
-            ucc.state = 'new'
-        if  UnasCustomerList.get(ucc.custAzon) is None:
-            try:
-                putCustomerIntoCache(ucc, ucc.custAzon)
-            except Exception as e:
-                logging.error(f"UnasCustomerCache corrupted! Err:{str(e)}, IDs:{ucc.custAzon}, unasId:{custId}")
-            # end try
-        elif  custId is None:
-            logging.error(f"UnasCustomer DATA-ERROR! Customer-unasId is NULL UCC:" + ucc.toStr())
-        elif  UnasCustomerList.get(UCC.buildCustAzonById(custId)) is None:
-            putCustomerIntoCache(ucc, UCC.buildCustAzonById(custId)) # type: ignore
         else:
-            logging.error(f"UnasCustomerCache corrupted! tripled custazon:{ucc.custAzon}, unasId:{custId}")
-    #
+            _m = "xmlData: %s" % ET.tostring(cust , encoding='utf-8', pretty_print=True)
+            SM.sendProxyMail(_m, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR), "initCustomerCache: UNAS-data corrupted (Customer:unasId missing)")
     return UnasCustomerList
+
+def putOrderXmlObjectIntoCache(orderKey, xml) ->  UOC.UnasOrderCache:
+    for px in xml.getchildren():
+        uoc = UOC.UnasOrderCache(orderKey)
+        uoc.initFromXmlObj(px)
+        UnasOrderList[orderKey] = uoc
+        return uoc
+    return None # type: ignore
 
 def putOrderXmlIntoCache(orderKey, xml) ->  UOC.UnasOrderCache:
     bajtz = bytes(xml, 'utf-8')
@@ -325,18 +368,22 @@ def reinitCacheState():
     checkCacheState(True)
     LastCacheUpdated = UtcNow()
 
+def getUnasActiveCustomers():
+    responseText = UCH.unasGetActiveCustomers()
+    xml = bytes(bytearray(responseText, encoding="utf-8"))
+    return collectCustItems(xml)
+
 CACHE_FORCE_RELOAD_PERIOD = 10000
-def checkCacheState(force: bool = False):
-    global UnasCustomerList, UnasProductList, UnasOrderList, LastCacheUpdated
-    if not force and UtcNow() - LastCacheUpdated > CACHE_FORCE_RELOAD_PERIOD:
-        force = True
-    minimunDelayed = (UtcNow() - LastCacheUpdated) > 1500 # Ha ures a cache akkor 25 percenkent force megnezem, van-e uj adat
-    if force or (minimunDelayed and (len(UnasCustomerList) < 1)):
+def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObjectType.ALL):
+    global UnasCustomerList, UnasProductList, UnasOrderList, LastCacheUpdated,UNASCOMM_SENDPACKETMAX
+    saved_SENDPACKETMAX = UNASCOMM_SENDPACKETMAX
+    UNASCOMM_SENDPACKETMAX =  2000
+    if force or typ == MUT.ProxyObjectType.CUSTOMER:
         UnasCustomerList.clear()
-        retV = UCH.unasGetActiveCustomers()
-        UnasCustomerList = collectCustItems(retV)
-        LastCacheUpdated = UtcNow()
-    if force or (minimunDelayed and (len(UnasProductList) < 1)):
+        UnasCustomerList = getUnasActiveCustomers()
+        if typ == MUT.ProxyObjectType.ALL:
+            LastCacheUpdated = UtcNow()
+    if force or typ == MUT.ProxyObjectType.PRODUCT:
         retrivedProductCount = 1
         limitStart = 0
         UnasProductList.clear()
@@ -351,14 +398,17 @@ def checkCacheState(force: bool = False):
                 if retrivedProductCount > 0:
                     UnasProductList.update(pList)
                     limitStart += retrivedProductCount
-        LastCacheUpdated = UtcNow()
-    if force or minimunDelayed: # Rendelesnek nem kell a minimum delay, az lehet ures
+        if typ == MUT.ProxyObjectType.ALL:
+            LastCacheUpdated = UtcNow()
+    if force or typ == MUT.ProxyObjectType.ORDER: # Rendelesnek nem kell a minimum delay, az lehet ures
         UnasOrderList.clear()
         retV = UCH.unasGetActiveOrders()
         UnasOrderList = collectOrderItems(retV)
-        LastCacheUpdated = UtcNow()
+        if typ == MUT.ProxyObjectType.ALL:
+            LastCacheUpdated = UtcNow()
     #
-
+    UNASCOMM_SENDPACKETMAX =  saved_SENDPACKETMAX
+    #
 
 LastSetCustomerDT:str = None # type: ignore
 LastSetProductDT:str = None # type: ignore
@@ -379,7 +429,7 @@ def saveDBcurrentDT(varSel: str = None) -> str: # type: ignore
         LastSetCustomerDT = dt
         LastSetProductDT = dt
         LastSetOrderDT = dt
-	#
+    #
     return dt
 
 def getCurrTime() -> int:
@@ -397,15 +447,17 @@ def diffLocalTime(fromTime, toTime):
 
 def tsToDateStr(ts) -> str:
     dt = datetime.fromtimestamp(ts)
-    return "%i/%i/%i-%i:%i:%i" % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+    return "%d.%02d.%02d %02d:%02d:%02d" % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
 
 def tsToDateSql(ts) -> str:
     dt = datetime.fromtimestamp(ts)
-    return "%i-%i-%i %i:%i:%i" % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+    return "%d-%02d-%02d %02d:%02d:%02d" % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
 
-def dateStrToTs(date):  # '2024.03.04 12:51:08'
-    return int(datetime.strptime(date, '%Y.%m.%d %H:%M:%S').timestamp())
-
+def dateStrToTs(date:str):  # '2024.03.04 12:51:08'
+    if date is None:
+        return None
+    else:
+        return int(datetime.strptime(date, '%Y.%m.%d %H:%M:%S').timestamp())
 
 def mdConverter( fileName ):
     try:
@@ -419,8 +471,8 @@ def mkCustomerCode( ucc : UCC.UnasCustomerCache, prefix : str = 'unregistered'):
     prfx = CUSTOMER_CODE_PREFIXES[prefix] # type: ignore
     return f"{prfx}-{ucc.unasId}"
 
-#				
-def getCustomerFormCache(email, taxnumber, unasId ) -> UCC.UnasCustomerCache:
+#                
+def getCustomerFormCache_NU(email, taxnumber, unasId ) -> UCC.UnasCustomerCache:
     ucc = UnasCustomerList.get( UCC.buildAzonData( email, taxnumber ))
     if ucc is None:
         ucc = UnasCustomerList.get( UCC.buildCustAzonById(unasId))
@@ -431,19 +483,47 @@ def getCustomerFormCache(email, taxnumber, unasId ) -> UCC.UnasCustomerCache:
             ucc.lastmod = 0
     return ucc # type: ignore
 
-def putCustomerIntoCache(ucc : UCC.UnasCustomerCache, cc:str):
+def getCustomerFormCacheByOrder( cust ) -> UCC.UnasCustomerCache:
+    unasId = 0 if len(cust.findall('Id')) == 0 else int(cust.find('Id').text)
+    return getCustomerFormCache(unasId)
+
+def getCustomerFormCache(unasId:int ) -> UCC.UnasCustomerCache:
+    ucc = UnasCustomerList.get( unasId )
+    if ucc is not None:
+        if ucc.symbolId is None:
+            ucc.symbolId = 0
+        if ucc.lastmod is None:
+            ucc.lastmod = 0
+    return ucc # type: ignore
+
+def putCustomerIntoCache_NU(ucc : UCC.UnasCustomerCache, cc:str):
     azon = ucc.custAzon if cc is None else cc
     u = UnasCustomerList.get( azon )
-    if u is None:
+    if u is None: # Remek hely a programhiba ellenorzesere!!!!!
         ucc.custAzon = azon
         UnasCustomerList[azon] = ucc
     elif u.email == ucc.email and u.unasId == ucc.unasId and u.symbolId == ucc.symbolId:
         ucc.custAzon = azon
         UnasCustomerList[azon] = ucc
+    elif u.symbolId == 0 and u.email == ucc.email and u.unasId == ucc.unasId and u.azon == cc:
+        ucc.custAzon = azon
+        UnasCustomerList[azon] = ucc
     else:
-        raise ValueError( '[putCustomerIntoCache]:Duplicate item:' + u.toStr() + ' :*-*: '+ ucc.toStr() )
-    
-    
+        _m = f'Figyelmen kivul hagyott CustomerCache hiba!\r\n[CacheItem] {u.toStr()}\r\n[Duplicate] {ucc.toStr()}'
+        errorHandler( _m , MUT.AlertMailType(MUT.UnasTransactionType.UNKNOWN_MAX, code=MUT.ProxyErrCode.E20),
+                     level=logging.WARNING, subject='[putCustomerIntoCache] -+- Duplicate item')
+        raise MUT.MyProgramFlowErrorException( '[putCustomerIntoCache]:Duplicate item:' + u.toStr() + ' :*-*: '+ ucc.toStr() )
+
+def putCustomerIntoCache(ucc : UCC.UnasCustomerCache):
+    u = UnasCustomerList.get( ucc.unasId )
+    if u is None:
+        UnasCustomerList[ucc.unasId] = ucc
+    elif u.email == ucc.email and u.unasId == ucc.unasId and u.symbolId == ucc.symbolId:
+        UnasCustomerList[ucc.unasId] = ucc
+    else:
+        _m = '[putCustomerIntoCache]:Duplicate item:' + u.toStr() + ' :*-*: '+ ucc.toStr()
+        logging.error( _m, u, ucc)
+        raise MUT.MyProgramFlowErrorException( _m, ucc.unasId )
 #
 # Constants
 #
@@ -461,6 +541,7 @@ UnasProductList : Dict[str, UPC] = dict({})
 UnasCustomerList = dict({})
 #UnasOrderList    = dict({})
 UnasOrderList : Dict[str, UOC.UnasOrderCache] = dict({})
+UnasBadOrderList : Dict[str, UOC.UnasOrderCache] = dict({})
 UnasProductWebCategoryId = 0
 UnasProductWebCategoryName = "WebCat"
 UnasCustomerCategoryName = "UNAS vevo"
@@ -499,6 +580,14 @@ MYSQL_USER              = 'w6pusr'
 MYSQL_PASSWORD          = 'w6p-Abc+123'
 MYSQL_DB                = 'web6proxy'
 
+SOCKET_CONTROL_HOST    = "127.0.0.1"
+SOCKET_CONTROL_PORT    = 3305
+SOCKET_CONTROL_ENABLED = False
+
+WEB_CONTROL_HOST    = "127.0.0.1"
+WEB_CONTROL_PORT    = 3306
+WEB_CONTROL_ENABLED = False
+
 # ProductPriceCat
 PRODUCT_PRICECAT_BASE = -1
 PRODUCT_PRICECAT_FALLBACK  = 17
@@ -520,7 +609,10 @@ CUSTOMER_CODE_PREFIXES   = []
 CREATE_CUSTOMER_MISSING  = False
 CUSTOMER_FORCENEW        = False
 HANDLE_CUSTOMERADDRESS   = False
-
+BULK_FEEDBACK_CUSTOMER   = False
+UnasCustomerFeedbackList = []
+#
+# Orders
 ORDER_STATUS_NEW      = 0
 ORDER_STATUS_ACCEPTED = 0
 ORDER_STATUS_PREP     = 0
@@ -528,6 +620,7 @@ ORDER_STATUS_SHIP     = 0
 ORDER_STATUS_CLOSE    = 0
 ORDER_STATUS_RETURN   = 0
 ORDER_STATUS_CANCEL   = 0
+ORDER_STATUS_SENDMAIL = 'No'
 
 ORDER_HandleUnregistered  = False
 ORDER_getMissingCust      = False
@@ -555,708 +648,708 @@ ORDERSCUSTOMER_TESTDATA2 = """
 """
 ORDERSCUSTOMER_TESTDATA1 = """<?xml version="1.0" encoding="UTF-8" ?>
 <Orders>
-	<Order>
-		<Key>54017-285726</Key>
-		<Id>146194506</Id>
-		<Date>2023.10.10 17:14:43</Date>
-		<DateMod>2023.10.10 17:14:43</DateMod>
-		<Lang>hu</Lang>
-		<Customer>
-			<Email><![CDATA[etyepetye@mailinator.com]]></Email>
-			<Username><![CDATA[]]></Username>
-			<Contact>
-				<Name><![CDATA[Etye Petye]]></Name>
-				<Phone><![CDATA[+3613216547]]></Phname
-					<Name><![CDATA[Etye Petye]]></Name>
-					<ZIP>2235</ZIP>
-					<City><![CDATA[Mende]]></City>
-					<Street><![CDATA[Kossuth 11]]></Street>
-					<StreetName><![CDATA[Kossuth]]></StreetName>
-					<StreetNumber><![CDATA[11]]></StreetNumber>
-					<County><![CDATA[]]></County>
-					<Country><![CDATA[Magyarország]]></Country>
-					<CountryCode>hu</CountryCode>
-					<TaxNumber><![CDATA[]]></TaxNumber>
-					<EUTaxNumber><![CDATA[]]></EUTaxNumber>
-				</Invoice>
-				<Shipping>
-					<Name><![CDATA[Etye Petye]]></Name>
-					<ZIP>2235</ZIP>
-					<City><![CDATA[Mende]]></City>
-					<Street><![CDATA[Kossuth 11]]></Street>
-					<StreetName><![CDATA[Kossuth]]></StreetName>
-					<StreetNumber><![CDATA[11]]></StreetNumber>
-					<County><![CDATA[]]></County>
-					<Country><![CDATA[Magyarország]]></Country>
-					<CountryCode>hu</CountryCode>
-				</Shipping>
-			</Addresses>
-		</Customer>
-		<Currency>HUF</Currency>
-		<Status><![CDATA[Feldolgozásra vár]]></Status>
-		<StatusID><![CDATA[4681666]]></StatusID>
-		<Authenticated>yes</Authenticated>
-		<Payment>
-			<Id>4681651</Id>
-			<Name><![CDATA[Készpénzzel a helyszínen]]></Name>
-			<Type>cash</Type>
-		</Payment>
-		<Shipping>
-			<Id>4681636</Id>
-			<Name><![CDATA[Futárral]]></Name>
-		</Shipping>
-		<Invoice>
-			<Status>0</Status>
-			<StatusText><![CDATA[]]></StatusText>
-		</Invoice>
-		<Comments>
-			<Comment>
-				<Type>customer</Type>
-				<Text><![CDATA[Akkuratusan + jegyzem!]]></Text>
-			</Comment>
-		</Comments>
-		<SumPriceGross>23790</SumPriceGross>
-		<Items>
-			<Item>
-				<Id>717298606</Id>
-				<Sku>product_009</Sku>
-				<Name><![CDATA[Amet sit ipsum]]></Name>
-				<ProductParams>
-				</ProductParams>
-				<Unit>db</Unit>
-				<Quantity>1</Quantity>
-				<PriceNet>3141.7323</PriceNet>
-				<PriceGross>3990</PriceGross>
-				<Vat>27%</Vat>
-				<Status><![CDATA[]]></Status>
-			</Item>
-			<Item>
-				<Id>717298616</Id>
-				<Sku>product_005</Sku>
-				<Name><![CDATA[Dolor sit amet]]></Name>
-				<ProductParams>
-				</ProductParams>
-				<Unit>db</Unit>
-				<Quantity>2</Quantity>
-				<PriceNet>7795.2756</PriceNet>
-				<PriceGross>9900</PriceGross>
-				<Vat>27%</Vat>
-				<Status><![CDATA[]]></Status>
-			</Item>
-		</Items>
-	</Order>
+    <Order>
+        <Key>54017-285726</Key>
+        <Id>146194506</Id>
+        <Date>2023.10.10 17:14:43</Date>
+        <DateMod>2023.10.10 17:14:43</DateMod>
+        <Lang>hu</Lang>
+        <Customer>
+            <Email><![CDATA[etyepetye@mailinator.com]]></Email>
+            <Username><![CDATA[]]></Username>
+            <Contact>
+                <Name><![CDATA[Etye Petye]]></Name>
+                <Phone><![CDATA[+3613216547]]></Phname
+                    <Name><![CDATA[Etye Petye]]></Name>
+                    <ZIP>2235</ZIP>
+                    <City><![CDATA[Mende]]></City>
+                    <Street><![CDATA[Kossuth 11]]></Street>
+                    <StreetName><![CDATA[Kossuth]]></StreetName>
+                    <StreetNumber><![CDATA[11]]></StreetNumber>
+                    <County><![CDATA[]]></County>
+                    <Country><![CDATA[Magyarország]]></Country>
+                    <CountryCode>hu</CountryCode>
+                    <TaxNumber><![CDATA[]]></TaxNumber>
+                    <EUTaxNumber><![CDATA[]]></EUTaxNumber>
+                </Invoice>
+                <Shipping>
+                    <Name><![CDATA[Etye Petye]]></Name>
+                    <ZIP>2235</ZIP>
+                    <City><![CDATA[Mende]]></City>
+                    <Street><![CDATA[Kossuth 11]]></Street>
+                    <StreetName><![CDATA[Kossuth]]></StreetName>
+                    <StreetNumber><![CDATA[11]]></StreetNumber>
+                    <County><![CDATA[]]></County>
+                    <Country><![CDATA[Magyarország]]></Country>
+                    <CountryCode>hu</CountryCode>
+                </Shipping>
+            </Addresses>
+        </Customer>
+        <Currency>HUF</Currency>
+        <Status><![CDATA[Feldolgozásra vár]]></Status>
+        <StatusID><![CDATA[4681666]]></StatusID>
+        <Authenticated>yes</Authenticated>
+        <Payment>
+            <Id>4681651</Id>
+            <Name><![CDATA[Készpénzzel a helyszínen]]></Name>
+            <Type>cash</Type>
+        </Payment>
+        <Shipping>
+            <Id>4681636</Id>
+            <Name><![CDATA[Futárral]]></Name>
+        </Shipping>
+        <Invoice>
+            <Status>0</Status>
+            <StatusText><![CDATA[]]></StatusText>
+        </Invoice>
+        <Comments>
+            <Comment>
+                <Type>customer</Type>
+                <Text><![CDATA[Akkuratusan + jegyzem!]]></Text>
+            </Comment>
+        </Comments>
+        <SumPriceGross>23790</SumPriceGross>
+        <Items>
+            <Item>
+                <Id>717298606</Id>
+                <Sku>product_009</Sku>
+                <Name><![CDATA[Amet sit ipsum]]></Name>
+                <ProductParams>
+                </ProductParams>
+                <Unit>db</Unit>
+                <Quantity>1</Quantity>
+                <PriceNet>3141.7323</PriceNet>
+                <PriceGross>3990</PriceGross>
+                <Vat>27%</Vat>
+                <Status><![CDATA[]]></Status>
+            </Item>
+            <Item>
+                <Id>717298616</Id>
+                <Sku>product_005</Sku>
+                <Name><![CDATA[Dolor sit amet]]></Name>
+                <ProductParams>
+                </ProductParams>
+                <Unit>db</Unit>
+                <Quantity>2</Quantity>
+                <PriceNet>7795.2756</PriceNet>
+                <PriceGross>9900</PriceGross>
+                <Vat>27%</Vat>
+                <Status><![CDATA[]]></Status>
+            </Item>
+        </Items>
+    </Order>
 </Orders>
 """
 
 #
 #    <id>190</id>
 #    <code>WEB199543325</code>
-# 		<code>WEB00001231</code>
+#         <code>WEB00001231</code>
 #
-#		<sid>4357</sid>
+#        <sid>4357</sid>
 
 CUSTOMER_TESTDATA_SYMEX = """<?xml version="1.0" encoding="UTF-8" ?>
 <Customers>
-	<Customer>
-	    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=90001&symbolid=</feedbackurl>
-		<errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=90001&errormsg=</errorurl>	
-		<id>1231</id>
+    <Customer>
+        <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=90001&symbolid=</feedbackurl>
+        <errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=90001&errormsg=</errorurl>    
+        <id>1231</id>
           <sid>204</sid>
-		<code>UCO-90001-1</code>
-		<name>Kovács István</name>
-		<country>Hungary</country>
-		<region>Baranya</region>
-		<zip>1139</zip>
-		<city>Budapest</city>
-		<street>Fő utca</street>
-		<housenumber>1. / J-35</housenumber>
-		<mailcountry>Hungary</mailcountry>
-		<mailregion>Baranya</mailregion>
-		<mailzip>1139</mailzip>
-		<mailcity>Kecskemét</mailcity>
-		<mailstreet>Mellék utca</mailstreet>
-		<mailhousenumber>128</mailhousenumber>
-		<taxnumber>12345678-1-21</taxnumber>
-		<grouptaxnumber>12345678-1-21</grouptaxnumber>
-		<eutaxnumber>HU13581280-2-41</eutaxnumber>
-		<bankaccount>25874125-89562385</bankaccount>
-		<bankname>OTP Bank</bankname>
-		<bankswiftcode>OTPVHUHB</bankswiftcode>
-		<contactname>Balázs Piri Balázs-Invo-M1</contactname>
-		<email>info@st.hu</email>
-		<phone>70-789-4568</phone>
-		<sms>70-789-4568</sms>
-		<fax>70-789-4569</fax>
-		<iscompany>0</iscompany>
-		<description>Megjegyzés JOE 2</description>
-		<customercategory>HU</customercategory>
-		<pricecategoryname>Lista ár</pricecategoryname>
-		<discountpercent>1.5</discountpercent>
-		<webusername>user1</webusername>
-		<webpassword>userpass</webpassword>
-		<strexa>aaa</strexa>
-		<strexb>bbb</strexb>
-		<strexc>ccc</strexc>
-		<strexd>ddd</strexd>
-		<dateexa>2010-07-12</dateexa>
-		<dateexb>2010-07-12</dateexb>
-		<dateexc>2010-07-12</dateexc>
-		<dateexd>2010-07-12</dateexd>
-		<numexa>111</numexa>
-		<numexb>222</numexb>
-		<numexc>333</numexc>
-		<numexd>333</numexd>
-		<boolexa>0</boolexa>
-		<boolexb>1</boolexb>
-		<boolexc>1</boolexc>
-		<boolexd>1</boolexd>
-		<customeraddresses> 
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custshipaddr?id=90002&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custshipaddr?id=90002&errormsg=</errorurl>
-				<preferred>0</preferred>
-				<code>WEB9000201</code>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/M/1/b</housenumber>
-				<contactname>Balázs Piri Balázs M-1</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90003&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90003&errormsg=</errorurl>
-			    <preferred>0</preferred>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/M/1/Cc</housenumber>
-				<contactname>Balázs Piri Balázs M-1/b</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90004&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90004&errormsg=</errorurl>
-			    <preferred>1</preferred>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/M/1/DD</housenumber>
-				<contactname>Balázs Piri Balázs M-1/d</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90005&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90005&errormsg=</errorurl>
-			    <preferred>0</preferred>
-				<code>UCA-900001-05</code>>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/M/1/Ee</housenumber>
-				<contactname>Balázs Piri Balázs M-1/e5</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-		</customeraddresses>
-	</Customer>
+        <code>UCO-90001-1</code>
+        <name>Kovács István</name>
+        <country>Hungary</country>
+        <region>Baranya</region>
+        <zip>1139</zip>
+        <city>Budapest</city>
+        <street>Fő utca</street>
+        <housenumber>1. / J-35</housenumber>
+        <mailcountry>Hungary</mailcountry>
+        <mailregion>Baranya</mailregion>
+        <mailzip>1139</mailzip>
+        <mailcity>Kecskemét</mailcity>
+        <mailstreet>Mellék utca</mailstreet>
+        <mailhousenumber>128</mailhousenumber>
+        <taxnumber>12345678-1-21</taxnumber>
+        <grouptaxnumber>12345678-1-21</grouptaxnumber>
+        <eutaxnumber>HU13581280-2-41</eutaxnumber>
+        <bankaccount>25874125-89562385</bankaccount>
+        <bankname>OTP Bank</bankname>
+        <bankswiftcode>OTPVHUHB</bankswiftcode>
+        <contactname>Balázs Piri Balázs-Invo-M1</contactname>
+        <email>info@st.hu</email>
+        <phone>70-789-4568</phone>
+        <sms>70-789-4568</sms>
+        <fax>70-789-4569</fax>
+        <iscompany>0</iscompany>
+        <description>Megjegyzés JOE 2</description>
+        <customercategory>HU</customercategory>
+        <pricecategoryname>Lista ár</pricecategoryname>
+        <discountpercent>1.5</discountpercent>
+        <webusername>user1</webusername>
+        <webpassword>userpass</webpassword>
+        <strexa>aaa</strexa>
+        <strexb>bbb</strexb>
+        <strexc>ccc</strexc>
+        <strexd>ddd</strexd>
+        <dateexa>2010-07-12</dateexa>
+        <dateexb>2010-07-12</dateexb>
+        <dateexc>2010-07-12</dateexc>
+        <dateexd>2010-07-12</dateexd>
+        <numexa>111</numexa>
+        <numexb>222</numexb>
+        <numexc>333</numexc>
+        <numexd>333</numexd>
+        <boolexa>0</boolexa>
+        <boolexb>1</boolexb>
+        <boolexc>1</boolexc>
+        <boolexd>1</boolexd>
+        <customeraddresses> 
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custshipaddr?id=90002&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custshipaddr?id=90002&errormsg=</errorurl>
+                <preferred>0</preferred>
+                <code>WEB9000201</code>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/M/1/b</housenumber>
+                <contactname>Balázs Piri Balázs M-1</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90003&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90003&errormsg=</errorurl>
+                <preferred>0</preferred>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/M/1/Cc</housenumber>
+                <contactname>Balázs Piri Balázs M-1/b</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90004&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90004&errormsg=</errorurl>
+                <preferred>1</preferred>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/M/1/DD</housenumber>
+                <contactname>Balázs Piri Balázs M-1/d</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90005&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90005&errormsg=</errorurl>
+                <preferred>0</preferred>
+                <code>UCA-900001-05</code>>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/M/1/Ee</housenumber>
+                <contactname>Balázs Piri Balázs M-1/e5</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+        </customeraddresses>
+    </Customer>
 </Customers>
 """
 CUSTOMER_TESTDATA_SYMEX2 = """<?xml version="1.0" encoding="UTF-8" ?><Customers>
-	<Customer>
-	    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=90001&symbolid=</feedbackurl>
-		<errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=90001&errormsg=</errorurl>	
-		<id>1231</id>
-		<sid>4357</sid>
-		<code>WEB00001231</code>
-		<name>Kovács István</name>
-		<country>Hungary</country>
-		<region>Baranya</region>
-		<zip>1139</zip>
-		<city>Budapest</city>
-		<street>Fő utca</street>
-		<housenumber>1.</housenumber>
-		<mailcountry>Hungary</mailcountry>
-		<mailregion>Baranya</mailregion>
-		<mailzip>1139</mailzip>
-		<mailcity>Kecskemét</mailcity>
-		<mailstreet>Mellék utca</mailstreet>
-		<mailhousenumber>128</mailhousenumber>
-		<taxnumber>12345678-1-21</taxnumber>
-		<grouptaxnumber>12345678-1-21</grouptaxnumber>
-		<eutaxnumber>HU13581280-2-41</eutaxnumber>
-		<bankaccount>25874125-89562385</bankaccount>
-		<bankname>OTP Bank</bankname>
-		<bankswiftcode>OTPVHUHB</bankswiftcode>
-		<contactname>Balázs Piri Balázs</contactname>
-		<email>info@st.hu</email>
-		<phone>70-789-4568</phone>
-		<sms>70-789-4568</sms>
-		<fax>70-789-4569</fax>
-		<iscompany>0</iscompany>
-		<description>Megjegyzés</description>
-		<customercategory>RO</customercategory>
-		<pricecategoryname>Lista ár</pricecategoryname>
-		<discountpercent>1.5</discountpercent>
-		<webusername>user1</webusername>
-		<webpassword>userpass</webpassword>
-		<strexa>aaa</strexa>
-		<strexb>bbb</strexb>
-		<strexc>ccc</strexc>
-		<strexd>ddd</strexd>
-		<dateexa>2010-07-12</dateexa>
-		<dateexb>2010-07-12</dateexb>
-		<dateexc>2010-07-12</dateexc>
-		<dateexd>2010-07-12</dateexd>
-		<numexa>111</numexa>
-		<numexb>222</numexb>
-		<numexc>333</numexc>
-		<numexd>333</numexd>
-		<boolexa>0</boolexa>
-		<boolexb>1</boolexb>
-		<boolexc>1</boolexc>
-		<boolexd>1</boolexd>
-		<lookupexa>Főcsoport/Alcsoport</lookupexa>
-		<lookupexb>Főcsoport/Alcsoport</lookupexb>
-		<lookupexc>Főcsoport/Alcsoport</lookupexc>
-		<lookupexd>Főcsoport/Alcsoport</lookupexd>
-		<customeraddresses> 
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custshipaddr?id=90001&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custshipaddr?id=90001&errormsg=</errorurl>
-				<preferred>1</preferred>
-				<id>12315</id>
-				<sid>12315</sid>
-				<code>A12</code>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/a</housenumber>
-				<contactname>Balázs Piri Balázs</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90003&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90003&errormsg=</errorurl>
-			    <preferred>1</preferred>
-				<id>12315</id>
-				<sid>12315</sid>
-				<code>A12</code>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/a</housenumber>
-				<contactname>Balázs Piri Balázs</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-		</customeraddresses>
-		<customercontacts>
-			<customercontact>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=90005&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=90005&errormsg=</errorurl>
-				<name>Sample</name>
-				<sid>12317</sid>
-				<responsibility></responsibility>
-				<phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
-				<fax>1-456-7989</fax>
-				<sms>70-4587854</sms>
-				<email>info@sample.hu</email>
-				<url>www.sample.hu</url>
-				<skype>something</skype>
-				<facebookurl>facebook.com/sample</facebookurl>
-				<msn>123ert</msn>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customercontact>
-			<customercontact>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=90006&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=90006&errormsg=</errorurl>
-				<name>Sample</name>
-				<sid>12317</sid>
-				<responsibility></responsibility>
-				<phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
-				<fax>1-456-7989</fax>
-				<sms>70-4587854</sms>
-				<email>info@sample.hu</email>
-				<url>www.sample.hu</url>
-				<skype>something</skype>
-				<facebookurl>facebook.com/sample</facebookurl>
-				<msn>123ert</msn>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customercontact>
-		</customercontacts>
-	</Customer>
+    <Customer>
+        <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=90001&symbolid=</feedbackurl>
+        <errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=90001&errormsg=</errorurl>    
+        <id>1231</id>
+        <sid>4357</sid>
+        <code>WEB00001231</code>
+        <name>Kovács István</name>
+        <country>Hungary</country>
+        <region>Baranya</region>
+        <zip>1139</zip>
+        <city>Budapest</city>
+        <street>Fő utca</street>
+        <housenumber>1.</housenumber>
+        <mailcountry>Hungary</mailcountry>
+        <mailregion>Baranya</mailregion>
+        <mailzip>1139</mailzip>
+        <mailcity>Kecskemét</mailcity>
+        <mailstreet>Mellék utca</mailstreet>
+        <mailhousenumber>128</mailhousenumber>
+        <taxnumber>12345678-1-21</taxnumber>
+        <grouptaxnumber>12345678-1-21</grouptaxnumber>
+        <eutaxnumber>HU13581280-2-41</eutaxnumber>
+        <bankaccount>25874125-89562385</bankaccount>
+        <bankname>OTP Bank</bankname>
+        <bankswiftcode>OTPVHUHB</bankswiftcode>
+        <contactname>Balázs Piri Balázs</contactname>
+        <email>info@st.hu</email>
+        <phone>70-789-4568</phone>
+        <sms>70-789-4568</sms>
+        <fax>70-789-4569</fax>
+        <iscompany>0</iscompany>
+        <description>Megjegyzés</description>
+        <customercategory>RO</customercategory>
+        <pricecategoryname>Lista ár</pricecategoryname>
+        <discountpercent>1.5</discountpercent>
+        <webusername>user1</webusername>
+        <webpassword>userpass</webpassword>
+        <strexa>aaa</strexa>
+        <strexb>bbb</strexb>
+        <strexc>ccc</strexc>
+        <strexd>ddd</strexd>
+        <dateexa>2010-07-12</dateexa>
+        <dateexb>2010-07-12</dateexb>
+        <dateexc>2010-07-12</dateexc>
+        <dateexd>2010-07-12</dateexd>
+        <numexa>111</numexa>
+        <numexb>222</numexb>
+        <numexc>333</numexc>
+        <numexd>333</numexd>
+        <boolexa>0</boolexa>
+        <boolexb>1</boolexb>
+        <boolexc>1</boolexc>
+        <boolexd>1</boolexd>
+        <lookupexa>Főcsoport/Alcsoport</lookupexa>
+        <lookupexb>Főcsoport/Alcsoport</lookupexb>
+        <lookupexc>Főcsoport/Alcsoport</lookupexc>
+        <lookupexd>Főcsoport/Alcsoport</lookupexd>
+        <customeraddresses> 
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custshipaddr?id=90001&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custshipaddr?id=90001&errormsg=</errorurl>
+                <preferred>1</preferred>
+                <id>12315</id>
+                <sid>12315</sid>
+                <code>A12</code>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/a</housenumber>
+                <contactname>Balázs Piri Balázs</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90003&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90003&errormsg=</errorurl>
+                <preferred>1</preferred>
+                <id>12315</id>
+                <sid>12315</sid>
+                <code>A12</code>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/a</housenumber>
+                <contactname>Balázs Piri Balázs</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+        </customeraddresses>
+        <customercontacts>
+            <customercontact>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=90005&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=90005&errormsg=</errorurl>
+                <name>Sample</name>
+                <sid>12317</sid>
+                <responsibility></responsibility>
+                <phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
+                <fax>1-456-7989</fax>
+                <sms>70-4587854</sms>
+                <email>info@sample.hu</email>
+                <url>www.sample.hu</url>
+                <skype>something</skype>
+                <facebookurl>facebook.com/sample</facebookurl>
+                <msn>123ert</msn>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customercontact>
+            <customercontact>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=90006&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=90006&errormsg=</errorurl>
+                <name>Sample</name>
+                <sid>12317</sid>
+                <responsibility></responsibility>
+                <phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
+                <fax>1-456-7989</fax>
+                <sms>70-4587854</sms>
+                <email>info@sample.hu</email>
+                <url>www.sample.hu</url>
+                <skype>something</skype>
+                <facebookurl>facebook.com/sample</facebookurl>
+                <msn>123ert</msn>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customercontact>
+        </customercontacts>
+    </Customer>
 </Customers>
 """
 CUSTOMER_TESTDATA_SYMEX3 = """<?xml version="1.0" encoding="UTF-8" ?>"""
 
 CUSTOMER_TESTDATA_SYMEXORI = """<?xml version="1.0" encoding="UTF-8" ?>
 <Customers>
-	<Customer>
-	    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=90001&symbolid=</feedbackurl>
-		<errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=90001&errormsg=</errorurl>	
-		<id>1231</id>
-		<sid>4357</sid>
-		<code>WEB00001231</code>
-		<name>Kovács István</name>
-		<country>Hungary</country>
-		<region>Baranya</region>
-		<zip>1139</zip>
-		<city>Budapest</city>
-		<street>Fő utca</street>
-		<housenumber>1.</housenumber>
-		<mailcountry>Hungary</mailcountry>
-		<mailregion>Baranya</mailregion>
-		<mailzip>1139</mailzip>
-		<mailcity>Kecskemét</mailcity>
-		<mailstreet>Mellék utca</mailstreet>
-		<mailhousenumber>128</mailhousenumber>
-		<taxnumber>12345678-1-21</taxnumber>
-		<grouptaxnumber>12345678-1-21</grouptaxnumber>
-		<eutaxnumber>HU13581280-2-41</eutaxnumber>
-		<bankaccount>25874125-89562385</bankaccount>
-		<bankname>OTP Bank</bankname>
-		<bankswiftcode>OTPVHUHB</bankswiftcode>
-		<contactname>Balázs Piri Balázs</contactname>
-		<email>info@st.hu</email>
-		<phone>70-789-4568</phone>
-		<sms>70-789-4568</sms>
-		<fax>70-789-4569</fax>
-		<iscompany>0</iscompany>
-		<description>Megjegyzés</description>
-		<customercategory>SK</customercategory>
-		<pricecategoryname>Lista ár</pricecategoryname>
-		<discountpercent>1.5</discountpercent>
-		<webusername>user1</webusername>
-		<webpassword>userpass</webpassword>
-		<strexa>aaa</strexa>
-		<strexb>bbb</strexb>
-		<strexc>ccc</strexc>
-		<strexd>ddd</strexd>
-		<dateexa>2010-07-12</dateexa>
-		<dateexb>2010-07-12</dateexb>
-		<dateexc>2010-07-12</dateexc>
-		<dateexd>2010-07-12</dateexd>
-		<numexa>111</numexa>
-		<numexb>222</numexb>
-		<numexc>333</numexc>
-		<numexd>333</numexd>
-		<boolexa>0</boolexa>
-		<boolexb>1</boolexb>
-		<boolexc>1</boolexc>
-		<boolexd>1</boolexd>
-		<lookupexa>Főcsoport/Alcsoport</lookupexa>
-		<lookupexb>Főcsoport/Alcsoport</lookupexb>
-		<lookupexc>Főcsoport/Alcsoport</lookupexc>
-		<lookupexd>Főcsoport/Alcsoport</lookupexd>
-		<customeraddresses> 
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custshipaddr?id=90001&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custshipaddr?id=90001&errormsg=</errorurl>
-				<preferred>1</preferred>
-				<id>12315</id>
-				<sid>12315</sid>
-				<code>A12</code>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/a</housenumber>
-				<contactname>Balázs Piri Balázs</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90003&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90003&errormsg=</errorurl>
-			    <preferred>1</preferred>
-				<id>12315</id>
-				<sid>12315</sid>
-				<code>A12</code>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/a</housenumber>
-				<contactname>Balázs Piri Balázs</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-		</customeraddresses>
-		<customercontacts>
-			<customercontact>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=90005&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=90005&errormsg=</errorurl>
-				<name>Sample</name>
-				<sid>12317</sid>
-				<responsibility></responsibility>
-				<phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
-				<fax>1-456-7989</fax>
-				<sms>70-4587854</sms>
-				<email>info@sample.hu</email>
-				<url>www.sample.hu</url>
-				<skype>something</skype>
-				<facebookurl>facebook.com/sample</facebookurl>
-				<msn>123ert</msn>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customercontact>
-			<customercontact>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=90006&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=90006&errormsg=</errorurl>
-				<name>Sample</name>
-				<sid>12317</sid>
-				<responsibility></responsibility>
-				<phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
-				<fax>1-456-7989</fax>
-				<sms>70-4587854</sms>
-				<email>info@sample.hu</email>
-				<url>www.sample.hu</url>
-				<skype>something</skype>
-				<facebookurl>facebook.com/sample</facebookurl>
-				<msn>123ert</msn>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customercontact>
-		</customercontacts>
-	</Customer>
-	<Customer>
-	    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=900021&symbolid=</feedbackurl>
-		<errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=900021&errormsg=</errorurl>	
-		<id>1231</id>
-		<sid>4357</sid>
-		<code>WEB00001231</code>
-		<name>Kovács István</name>
-		<country>Hungary</country>
-		<region>Baranya</region>
-		<zip>1139</zip>
-		<city>Budapest</city>
-		<street>Fő utca</street>
-		<housenumber>1.</housenumber>
-		<mailcountry>Hungary</mailcountry>
-		<mailregion>Baranya</mailregion>
-		<mailzip>1139</mailzip>
-		<mailcity>Kecskemét</mailcity>
-		<mailstreet>Mellék utca</mailstreet>
-		<mailhousenumber>128</mailhousenumber>
-		<taxnumber>12345678-1-21</taxnumber>
-		<grouptaxnumber>12345678-1-21</grouptaxnumber>
-		<eutaxnumber>HU13581280-2-41</eutaxnumber>
-		<bankaccount>25874125-89562385</bankaccount>
-		<bankname>OTP Bank</bankname>
-		<bankswiftcode>OTPVHUHB</bankswiftcode>
-		<contactname>Balázs Piri Balázs</contactname>
-		<email>info@st.hu</email>
-		<phone>70-789-4568</phone>
-		<sms>70-789-4568</sms>
-		<fax>70-789-4569</fax>
-		<iscompany>0</iscompany>
-		<description>Megjegyzés</description>
-		<customercategory>CZ</customercategory>
-		<pricecategoryname>Lista ár</pricecategoryname>
-		<discountpercent>1.5</discountpercent>
-		<webusername>user1</webusername>
-		<webpassword>userpass</webpassword>
-		<strexa>aaa</strexa>
-		<strexb>bbb</strexb>
-		<strexc>ccc</strexc>
-		<strexd>ddd</strexd>
-		<dateexa>2010-07-12</dateexa>
-		<dateexb>2010-07-12</dateexb>
-		<dateexc>2010-07-12</dateexc>
-		<dateexd>2010-07-12</dateexd>
-		<numexa>111</numexa>
-		<numexb>222</numexb>
-		<numexc>333</numexc>
-		<numexd>333</numexd>
-		<boolexa>0</boolexa>
-		<boolexb>1</boolexb>
-		<boolexc>1</boolexc>
-		<boolexd>1</boolexd>
-		<lookupexa>Főcsoport/Alcsoport</lookupexa>
-		<lookupexb>Főcsoport/Alcsoport</lookupexb>
-		<lookupexc>Főcsoport/Alcsoport</lookupexc>
-		<lookupexd>Főcsoport/Alcsoport</lookupexd>
-		<customeraddresses> 
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custshipaddr?id=900022&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custshipaddr?id=900022&errormsg=</errorurl>
-				<preferred>1</preferred>
-				<id>12315</id>
-				<sid>12315</sid>
-				<code>A12</code>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/a</housenumber>
-				<contactname>Balázs Piri Balázs</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-			<customeraddress>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=900023&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=900023&errormsg=</errorurl>
-			    <preferred>1</preferred>
-				<id>12315</id>
-				<sid>12315</sid>
-				<code>A12</code>
-				<name>Sample</name>
-				<country>Hun</country>
-				<region>Baranya</region>
-				<zip>7624-2</zip>
-				<city>Pécs</city>
-				<street>Báthory István utca</street>
-				<housenumber>20/a</housenumber>
-				<contactname>Balázs Piri Balázs</contactname>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<email>info@sample.hu</email>
-				<iscompany>0</iscompany>
-				<companytaxnumber>12345678-1-21</companytaxnumber>
-				<companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
-				<companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customeraddress>
-		</customeraddresses>
-		<customercontacts>
-			<customercontact>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=900025&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=900025&errormsg=</errorurl>
-				<name>Sample</name>
-				<sid>12317</sid>
-				<responsibility></responsibility>
-				<phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
-				<fax>1-456-7989</fax>
-				<sms>70-4587854</sms>
-				<email>info@sample.hu</email>
-				<url>www.sample.hu</url>
-				<skype>something</skype>
-				<facebookurl>facebook.com/sample</facebookurl>
-				<msn>123ert</msn>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customercontact>
-			<customercontact>
-			    <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=900026&symbolid=</feedbackurl>
-				<errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=900026&errormsg=</errorurl>
-				<name>Sample</name>
-				<sid>12317</sid>
-				<responsibility></responsibility>
-				<phone>70-785-4587</phone>
-				<fax>1-456-7989</fax>
-				<sms>70-4587854</sms>
-				<email>info@sample.hu</email>
-				<url>www.sample.hu</url>
-				<skype>something</skype>
-				<facebookurl>facebook.com/sample</facebookurl>
-				<msn>123ert</msn>
-				<description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
-				<deleted>0</deleted>
-			</customercontact>
-		</customercontacts>
-	</Customer>
+    <Customer>
+        <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=90001&symbolid=</feedbackurl>
+        <errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=90001&errormsg=</errorurl>    
+        <id>1231</id>
+        <sid>4357</sid>
+        <code>WEB00001231</code>
+        <name>Kovács István</name>
+        <country>Hungary</country>
+        <region>Baranya</region>
+        <zip>1139</zip>
+        <city>Budapest</city>
+        <street>Fő utca</street>
+        <housenumber>1.</housenumber>
+        <mailcountry>Hungary</mailcountry>
+        <mailregion>Baranya</mailregion>
+        <mailzip>1139</mailzip>
+        <mailcity>Kecskemét</mailcity>
+        <mailstreet>Mellék utca</mailstreet>
+        <mailhousenumber>128</mailhousenumber>
+        <taxnumber>12345678-1-21</taxnumber>
+        <grouptaxnumber>12345678-1-21</grouptaxnumber>
+        <eutaxnumber>HU13581280-2-41</eutaxnumber>
+        <bankaccount>25874125-89562385</bankaccount>
+        <bankname>OTP Bank</bankname>
+        <bankswiftcode>OTPVHUHB</bankswiftcode>
+        <contactname>Balázs Piri Balázs</contactname>
+        <email>info@st.hu</email>
+        <phone>70-789-4568</phone>
+        <sms>70-789-4568</sms>
+        <fax>70-789-4569</fax>
+        <iscompany>0</iscompany>
+        <description>Megjegyzés</description>
+        <customercategory>SK</customercategory>
+        <pricecategoryname>Lista ár</pricecategoryname>
+        <discountpercent>1.5</discountpercent>
+        <webusername>user1</webusername>
+        <webpassword>userpass</webpassword>
+        <strexa>aaa</strexa>
+        <strexb>bbb</strexb>
+        <strexc>ccc</strexc>
+        <strexd>ddd</strexd>
+        <dateexa>2010-07-12</dateexa>
+        <dateexb>2010-07-12</dateexb>
+        <dateexc>2010-07-12</dateexc>
+        <dateexd>2010-07-12</dateexd>
+        <numexa>111</numexa>
+        <numexb>222</numexb>
+        <numexc>333</numexc>
+        <numexd>333</numexd>
+        <boolexa>0</boolexa>
+        <boolexb>1</boolexb>
+        <boolexc>1</boolexc>
+        <boolexd>1</boolexd>
+        <lookupexa>Főcsoport/Alcsoport</lookupexa>
+        <lookupexb>Főcsoport/Alcsoport</lookupexb>
+        <lookupexc>Főcsoport/Alcsoport</lookupexc>
+        <lookupexd>Főcsoport/Alcsoport</lookupexd>
+        <customeraddresses> 
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custshipaddr?id=90001&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custshipaddr?id=90001&errormsg=</errorurl>
+                <preferred>1</preferred>
+                <id>12315</id>
+                <sid>12315</sid>
+                <code>A12</code>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/a</housenumber>
+                <contactname>Balázs Piri Balázs</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=90003&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=90003&errormsg=</errorurl>
+                <preferred>1</preferred>
+                <id>12315</id>
+                <sid>12315</sid>
+                <code>A12</code>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/a</housenumber>
+                <contactname>Balázs Piri Balázs</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+        </customeraddresses>
+        <customercontacts>
+            <customercontact>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=90005&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=90005&errormsg=</errorurl>
+                <name>Sample</name>
+                <sid>12317</sid>
+                <responsibility></responsibility>
+                <phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
+                <fax>1-456-7989</fax>
+                <sms>70-4587854</sms>
+                <email>info@sample.hu</email>
+                <url>www.sample.hu</url>
+                <skype>something</skype>
+                <facebookurl>facebook.com/sample</facebookurl>
+                <msn>123ert</msn>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customercontact>
+            <customercontact>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=90006&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=90006&errormsg=</errorurl>
+                <name>Sample</name>
+                <sid>12317</sid>
+                <responsibility></responsibility>
+                <phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
+                <fax>1-456-7989</fax>
+                <sms>70-4587854</sms>
+                <email>info@sample.hu</email>
+                <url>www.sample.hu</url>
+                <skype>something</skype>
+                <facebookurl>facebook.com/sample</facebookurl>
+                <msn>123ert</msn>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customercontact>
+        </customercontacts>
+    </Customer>
+    <Customer>
+        <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=900021&symbolid=</feedbackurl>
+        <errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=900021&errormsg=</errorurl>    
+        <id>1231</id>
+        <sid>4357</sid>
+        <code>WEB00001231</code>
+        <name>Kovács István</name>
+        <country>Hungary</country>
+        <region>Baranya</region>
+        <zip>1139</zip>
+        <city>Budapest</city>
+        <street>Fő utca</street>
+        <housenumber>1.</housenumber>
+        <mailcountry>Hungary</mailcountry>
+        <mailregion>Baranya</mailregion>
+        <mailzip>1139</mailzip>
+        <mailcity>Kecskemét</mailcity>
+        <mailstreet>Mellék utca</mailstreet>
+        <mailhousenumber>128</mailhousenumber>
+        <taxnumber>12345678-1-21</taxnumber>
+        <grouptaxnumber>12345678-1-21</grouptaxnumber>
+        <eutaxnumber>HU13581280-2-41</eutaxnumber>
+        <bankaccount>25874125-89562385</bankaccount>
+        <bankname>OTP Bank</bankname>
+        <bankswiftcode>OTPVHUHB</bankswiftcode>
+        <contactname>Balázs Piri Balázs</contactname>
+        <email>info@st.hu</email>
+        <phone>70-789-4568</phone>
+        <sms>70-789-4568</sms>
+        <fax>70-789-4569</fax>
+        <iscompany>0</iscompany>
+        <description>Megjegyzés</description>
+        <customercategory>CZ</customercategory>
+        <pricecategoryname>Lista ár</pricecategoryname>
+        <discountpercent>1.5</discountpercent>
+        <webusername>user1</webusername>
+        <webpassword>userpass</webpassword>
+        <strexa>aaa</strexa>
+        <strexb>bbb</strexb>
+        <strexc>ccc</strexc>
+        <strexd>ddd</strexd>
+        <dateexa>2010-07-12</dateexa>
+        <dateexb>2010-07-12</dateexb>
+        <dateexc>2010-07-12</dateexc>
+        <dateexd>2010-07-12</dateexd>
+        <numexa>111</numexa>
+        <numexb>222</numexb>
+        <numexc>333</numexc>
+        <numexd>333</numexd>
+        <boolexa>0</boolexa>
+        <boolexb>1</boolexb>
+        <boolexc>1</boolexc>
+        <boolexd>1</boolexd>
+        <lookupexa>Főcsoport/Alcsoport</lookupexa>
+        <lookupexb>Főcsoport/Alcsoport</lookupexb>
+        <lookupexc>Főcsoport/Alcsoport</lookupexc>
+        <lookupexd>Főcsoport/Alcsoport</lookupexd>
+        <customeraddresses> 
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custshipaddr?id=900022&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custshipaddr?id=900022&errormsg=</errorurl>
+                <preferred>1</preferred>
+                <id>12315</id>
+                <sid>12315</sid>
+                <code>A12</code>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/a</housenumber>
+                <contactname>Balázs Piri Balázs</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+            <customeraddress>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custothaddr?id=900023&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custothaddr?id=900023&errormsg=</errorurl>
+                <preferred>1</preferred>
+                <id>12315</id>
+                <sid>12315</sid>
+                <code>A12</code>
+                <name>Sample</name>
+                <country>Hun</country>
+                <region>Baranya</region>
+                <zip>7624-2</zip>
+                <city>Pécs</city>
+                <street>Báthory István utca</street>
+                <housenumber>20/a</housenumber>
+                <contactname>Balázs Piri Balázs</contactname>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <email>info@sample.hu</email>
+                <iscompany>0</iscompany>
+                <companytaxnumber>12345678-1-21</companytaxnumber>
+                <companygrouptaxnumber>12345678-1-21</companygrouptaxnumber>
+                <companyeutaxnumber>HU13581280-2-41</companyeutaxnumber>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customeraddress>
+        </customeraddresses>
+        <customercontacts>
+            <customercontact>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=900025&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=900025&errormsg=</errorurl>
+                <name>Sample</name>
+                <sid>12317</sid>
+                <responsibility></responsibility>
+                <phone>70-785-4587</phone>  -- Kapcsolattartó telefonszáma (CustomerContact.Phone)
+                <fax>1-456-7989</fax>
+                <sms>70-4587854</sms>
+                <email>info@sample.hu</email>
+                <url>www.sample.hu</url>
+                <skype>something</skype>
+                <facebookurl>facebook.com/sample</facebookurl>
+                <msn>123ert</msn>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customercontact>
+            <customercontact>
+                <feedbackurl>http://192.168.10.6:3301/fbunas/oke/custcontact?id=900026&symbolid=</feedbackurl>
+                <errorurl>http://192.168.10.6:3301/fbunas/err/custcontact?id=900026&errormsg=</errorurl>
+                <name>Sample</name>
+                <sid>12317</sid>
+                <responsibility></responsibility>
+                <phone>70-785-4587</phone>
+                <fax>1-456-7989</fax>
+                <sms>70-4587854</sms>
+                <email>info@sample.hu</email>
+                <url>www.sample.hu</url>
+                <skype>something</skype>
+                <facebookurl>facebook.com/sample</facebookurl>
+                <msn>123ert</msn>
+                <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description>
+                <deleted>0</deleted>
+            </customercontact>
+        </customercontacts>
+    </Customer>
 </Customers>
 """
 
 CUSTOMER_TESTDATA_NANO = """<Customers>
   <Customer>
     <feedbackurl>http://192.168.10.6:3301/fbunas/oke/customer?id=199543325&ipaddr=&symbolid=</feedbackurl>
-	<errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=199543325&errormsg=</errorurl>	
+    <errorurl>http://192.168.10.6:3301/fbunas/err/customer?id=199543325&errormsg=</errorurl>    
     <customerstatus>1</customerstatus>
     <supplierstatus>0</supplierstatus>
     <name>Nano Phone Kft</name>
@@ -1449,56 +1542,80 @@ CUSTOMER_TESTDATA_NANO = """<Customers>
 
 
 def isLogLevelTrace():
-    return isLogLevel(MyUtilsTypes.LogLvl.TRACE)
+    return isLogLevel(MUT.LogLvl.TRACE)
 def isLogLevelDebug():
-    return isLogLevel(MyUtilsTypes.LogLvl.DEBUG)
+    return isLogLevel(MUT.LogLvl.DEBUG)
 def isLogLevelInfo():
-    return isLogLevel(MyUtilsTypes.LogLvl.INFO)
+    return isLogLevel(MUT.LogLvl.INFO)
 def isLogLevelWarn():
-    return isLogLevel(MyUtilsTypes.LogLvl.WARNING)
+    return isLogLevel(MUT.LogLvl.WARNING)
 
-CurrentLogLevel:MyUtilsTypes.LogLvl = MyUtilsTypes.LogLvl.INFO
-def isLogLevel(lvl:MyUtilsTypes.LogLvl) -> bool: 
+CurrentLogLevel:MUT.LogLvl = MUT.LogLvl.INFO
+def isLogLevel(lvl:MUT.LogLvl) -> bool: 
     return lvl <= CurrentLogLevel
 
 
 # get (new) Transaction ID from Tomestamp + xx as originate from
-unasTransactionId:int = 0
 typeMultiplier = 1000
-def getNowFromTS():
-    global unasTransactionId
-    return int(unasTransactionId // typeMultiplier)
+def getTimeFromTS(ts:int = 0):
+    return int((getTS() if ts == 0 else ts) // typeMultiplier)
+def getTimeStringTS(ts:int = 0):
+    return tsToDateStr(getTimeFromTS(ts))
+def getActionTypeNameFromTS(ts:int = 0):
+    return getActionTypeFromTS(ts).name
+def getActionTypeFromTS(ts = 0):
+    return MUT.UnasTransactionType(int((getTS() if ts == 0 else ts) % typeMultiplier))
 
-def getActionTypeFromTS():
-    return MyUtilsTypes.UnasTransactionType(int(unasTransactionId % typeMultiplier))
-
-def createTransactionId(tsType:MyUtilsTypes.UnasTransactionType = MyUtilsTypes.UnasTransactionType.CREATENEW):
-    global unasTransactionId
-    unasTransactionId = typeMultiplier * getCurrTime() + tsType
-    return unasTransactionId
+def createTransactionId(tsType:MUT.UnasTransactionType = MUT.UnasTransactionType.CREATENEW):
+    getUnasContext().lastTS = typeMultiplier * getCurrTime() + tsType
+    return getUnasContext().lastTS # TODO Logoljam a transaction Created Event-t?
 
 def getTS():
-    global unasTransactionId
-    return unasTransactionId
+    return getUnasContext().lastTS
 
 def createStatEntry(action:str, xmlParam:str): # login, getXXX , setXXX, procycontrol, test, TEST ???
-    unasContext.statEntryMySqlId = createStatEntrySql(action, xmlParam, tsId=getTS() )
+    unasContext.statEntryMySqlId = createStatEntrySql(action, xmlParam )
     updateStatEntry(action)
 
 def createStatEntryOK(resp:str = ''):
-    updateStatEntryStatus(200, xml=resp, myId=unasContext.statEntryMySqlId, tsId=getTS() )
+    updateStatEntryStatus(200, xml=resp, myId=unasContext.statEntryMySqlId )
     updateStatEntryOK()
 
 def createStatEntryERR(retCode:int, response:str):
-    updateStatEntryStatus(retCode, xml=response, ts=getTS(), myId=unasContext.statEntryMySqlId )
+    updateStatEntryStatus(retCode, xml=response, myId=unasContext.statEntryMySqlId )
     updateStatEntryERR(retCode)
 
-unasContext = MyUtilsTypes.UnasContext()
-def getUnasContext() -> MyUtilsTypes.UnasContext: 
+unasContext = MUT.UnasContext()
+def getUnasContext() -> MUT.UnasContext: 
     global unasContext
     return unasContext
 
-def clearUnasContextCounter() -> MyUtilsTypes.UnasContext: 
+def loadUnasProxyContext():
+    sql = 'SELECT * FROM proxy_context'
+    ctxRow = mySqlIntance.getRow(sql)
+    ctx = getUnasContext()
+    ctx.lastGetCustomer = 0 if ctxRow['lastGetCustomer'] is None else ctxRow['lastGetCustomer']
+    ctx.lastGetOrder    = 0 if ctxRow['lastGetOrder'   ] is None else ctxRow['lastGetOrder'   ]
+    ctx.lastSetCustomer = 0 if ctxRow['lastSetCustomer'] is None else ctxRow['lastSetCustomer']
+    ctx.lastSetProduct  = 0 if ctxRow['lastSetProduct' ] is None else ctxRow['lastSetProduct' ]
+
+def loadUnasBatchContext():
+    sql = 'SELECT * FROM proxy_context'
+    ctxRow = mySqlIntance.getRow(sql)
+    ctx = getUnasContext()
+    ctx.lastUnasOrderStatus = ctxRow['lastUnasOrderStatus']
+
+def saveUnasProxyContext():
+    ctx = getUnasContext()
+    sql = 'UPDATE proxy_context set lastGetCustomer=%s, lastGetOrder=%s, lastSetCustomer=%s, lastSetProduct=%s, updated = NOW()'
+    val = (ctx.lastGetCustomer, ctx.lastGetOrder, ctx.lastSetCustomer, ctx.lastSetProduct )
+    return mySqlIntance.execSql(sql, val, True )
+
+def saveUnasBatchContext():
+    sql = f"UPDATE proxy_context set lastUnasOrderStatus={getUnasContext().lastUnasOrderStatus}, updated = NOW()"
+    return mySqlIntance.execSql(sql, (), True )
+
+def clearUnasContextCounter() -> MUT.UnasContext: 
     unasContext.clearCounters()
     return unasContext
 
@@ -1515,59 +1632,219 @@ def updateStatEntry(action:str):
 def updateStatEntryOK():
     unasContext.commOkCnt = 1 + unasContext.commOkCnt
 
-def updateStatEntryERR():
+def updateStatEntryERR(retCode:int):
     unasContext.commErrCnt = 1 + unasContext.commErrCnt
 
 def clearCommError():
     unasContext.commBlocked = 0
     unasContext.commErrCnt = 0
-    unasContext.lastAlertMailSent = 0
+    unasContext.lastAlertMailSent = dict({})
 
 UNASCOMM_MAXERRCNT = 3
 UNASCOMM_MAXLOGINERRCNT = 3
 UNASCOMM_BLOCKEDTIME = 1800
+UNASCOMM_ALERTRETRYAFTER = 600
 UNASCOMM_SENDPACKETMAX = 1900
+UNASCOMM_SENDPACKETWARN = 1600
+UNASCOMM_MASTER_CHALLENGE = False
+UNASCOMM_MASTER_IDLE = 300
+UNASCOMM_CLIENT_CHALLENGE = None
 
 def checkCommError():
+    unasCtx = getUnasContext()
+    # Clear sent mail AlertTimes if needed
+    if UtcNow( UNASCOMM_BLOCKEDTIME ) > unasCtx.lastBlockMailSent:
+        unasCtx.lastBlockMailSent = 0
+    if UtcNow( UNASCOMM_ALERTRETRYAFTER ) > unasCtx.lastYarnMailSent:
+        unasCtx.lastYarnMailSent = 0
+        
     if unasContext.commBlocked > 0:
-        if getCurrTime() - unasContext.commBlocked > UNASCOMM_BLOCKEDTIME: # release block
+        if getCurrTime() - unasCtx.commBlocked > UNASCOMM_BLOCKEDTIME: # release block
             clearCommError()
+            unasCtx.lastBlockMailSent = 0
+            unasCtx.lastYarnMailSent = 0
         else:
             # set Context State
-            unasContext.lastAction = getActionTypeFromTS().name
+            unasCtx.lastAction = getActionTypeFromTS().name
             # send Alert - email + lastAlertEmailType
-            # unasContext.lastAlertMailSent = getCurrTime()
-            raise ValueError("Communication error! action:%s, TS:%d" % (unasContext.lastAction, getTS()) )
+            errMsg = f'Communication blocked! Packet LOST!\r\n action:%s, TS:%d' % (unasContext.lastAction, getTS()) 
+            if unasCtx.lastBlockMailSent == 0:
+                SM.sendProxyMail(errMsg, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR),'UNAS comm blocked by Proxy!') 
+            raise Exception( errMsg )
     elif unasContext.commErrCnt > UNASCOMM_MAXERRCNT:
-            unasContext.commBlocked = getCurrTime()
-            raise ValueError("Communication error! action:%s, TS:%d" % (unasContext.lastAction, getTS()) )
-    elif getPacketLastHourCnt() > UNASCOMM_SENDPACKETMAX:
-            unasContext.commBlocked = getCurrTime()
-            raise ValueError("Communication error! action:%s, TS:%d" % (unasContext.lastAction, getTS()) )
+            unasCtx.commBlocked = getCurrTime()
+            errMsg = f"MAXERRCNT - reached: action:%s, TS:%d" % (unasCtx.lastAction, getTS()) 
+            if unasCtx.lastBlockMailSent == 0:
+                SM.sendProxyMail(errMsg, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR), 'UNAS comm blocked by Proxy!')
+            raise Exception("MAXERRCNT - reached: Communication droped! action:%s, TS:%d" % (unasCtx.lastAction, getTS()) )
+    #elif getPacketLastHourCnt() > UNASCOMM_SENDPACKETMAX:
+    #        unasContext.commBlocked = getCurrTime()
+    #        errMsg = "Hourly SEND-LIMIT reached - UNAS comm blocked by Proxy! action:%s, TS:%d" % (unasContext.lastAction, getTS()) 
+    #        raise Exception(errMsg)
     else:
-        pass
-#
+        currCnt = getPacketLastIntervalCnt(60) # 60 mins
+        if isLogLevelTrace():
+            print(currCnt)
+        if currCnt > UNASCOMM_SENDPACKETMAX:
+            unasCtx.commBlocked = getCurrTime()
+            blockedUntil = tsToDateStr( UtcNow( -1 * UNASCOMM_BLOCKEDTIME ))
+            errMsg = "Hourly SEND-LIMIT reached - UNAS comm BLOCKED Until: %s !" % blockedUntil
+            SM.sendProxyMail(errMsg, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR), f'[RED-Alert] - UNAS comm blocked because of limit {currCnt} reached!')
+            unasCtx.lastBlockMailSent = getCurrTime()
+            raise Exception(errMsg)
+        elif currCnt < UNASCOMM_SENDPACKETWARN:
+            unasCtx.lastYarnMailSent = 0
+        elif unasCtx.lastYarnMailSent == 0:
+            unasCtx.lastYarnMailSent = getCurrTime()
+            errMsg = '''SOFT-Packet-LIMIT:[%d] reached!
+                Hard limit: %d
+                Available now   : %d
+                after 10 mins : %d
+                after 20 mins : %d
+                after 30 mins : %d
+                after 40 mins : %d''' %  (UNASCOMM_SENDPACKETWARN, UNASCOMM_SENDPACKETMAX,
+                    UNASCOMM_SENDPACKETMAX - currCnt,
+                    UNASCOMM_SENDPACKETMAX - getPacketLastIntervalCnt(50),
+                    UNASCOMM_SENDPACKETMAX - getPacketLastIntervalCnt(40),
+                    UNASCOMM_SENDPACKETMAX - getPacketLastIntervalCnt(30),
+                    UNASCOMM_SENDPACKETMAX - getPacketLastIntervalCnt(20)
+                )
+            SM.sendProxyMail(errMsg, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR), '-[Yellow-Warn] Packet SoftLimit [%d/hour] reached!' % UNASCOMM_SENDPACKETWARN)
+
+#########################################################################################
 # MySQL wrapper funtions
-#
-mySqlIntance = MyDB.MySqlWrapper()
-def createStatEntrySql(action, xmlParam, tsId = getTS() ):
+#########################################################################################
+mySqlIntance = MySqlWrapper()
+def doMySql(sql, params):
+    return mySqlIntance.doSql( sql, params)
+
+def execMySql(sql, params):
+    return mySqlIntance.execSql( sql, params)
+
+def createStatEntrySql(action, xmlParam ):
     sql = "INSERT INTO commstats (action, requestXml, transactionId) VALUES (%s, %s, %s)"
-    val = (action, xmlParam, tsId)
+    val = (action, xmlParam, getTS())
     return mySqlIntance.execSql(sql, val, True )
 
-def updateStatEntryStatus(retCode, xml:str = '', tsId:int =0, myId:int = 0):
+def createStatEntrySql(action, xmlParam ):
+    sql = "INSERT INTO commstats (action, requestXml, transactionId) VALUES (%s, %s, %s)"
+    val = (action, xmlParam, getTS())
+    return mySqlIntance.execSql(sql, val, True )
+
+def updateStatEntryStatus(retCode, xml:str = '', myId:int = 0):
     if myId > 0:
         sql = "UPDATE commstats set responseCode=%s, responseXml = %s WHERE Id = %s"
         val = (retCode, xml, myId)
     else:
         sql = "UPDATE commstats set responseCode=%s, responseXml = %s WHERE transactionId = %s"
-        val = (retCode, xml, tsId)
+        val = (retCode, xml, getTS())
     return mySqlIntance.execSql(sql, val, True )
 
 def getPacketLastHourCnt(fromTime:int=0, toTime:int = 0):
     result =  mySqlIntance.doSql(
-		    "SELECT count(*) cnt from commstats WHERE createdAt between %s and %s", (
+            "SELECT count(*) cnt from commstats WHERE createdAt between %s and %s", (
                 tsToDateSql( fromTime if fromTime > 0 else UtcNow(3600)),
                 tsToDateSql( toTime if toTime > 0 else getCurrTime())     ))
     return result[0]['cnt']
+# Modositott  verzio: count last 10,20,40 60 minutes
+def getPacketLastIntervalCnt(interval:int=60):
+    result =  mySqlIntance.doSql(f"SELECT count(*) cnt from commstats WHERE createdAt > DATE_SUB(NOW(), interval {interval} MINUTE)")
+    return result[0]['cnt']
 
+
+def getQueryParamInt(queryParams, name:str):
+    val = getQueryParam(queryParams, name)
+    return 0 if val is None else int(val)
+
+def getQueryParam(queryParams, name:str):
+    return None if queryParams.get(name) is None else None if len(queryParams.get(name)) == 0 else queryParams.get(name)[0]
+
+def errorHandler(errMsg:str, alertType:MUT.AlertMailType, level = logging.INFO, subject:str=None, eDescr=None):
+    if subject is None:
+        if level == logging.WARNING:
+            _subj = f'WARNING - unexpected but ignored error ({alertType.errCode})'
+        elif level == logging.ERROR:
+            _subj = f'FATAL - unhandled error ({alertType.errCode})'
+        else:
+            _subj = f'INFO: processflow interrupted ({alertType.errCode})'
+    else:
+        _subj = subject
+    #
+    actTS = getTS()
+    logErrMsg = f"TS:[{actTS}] - Err:[{alertType.errCode}]: {json.dumps(alertType,cls=MUT.AlertMailTypeEncoder)} %s"
+    if eDescr is None:
+        SM.sendProxyMail(errMsg, alertType, '%s! TS:%d' % ( _subj, actTS))
+        logging.error(logErrMsg, errMsg)
+        writeErrorSql(errMsg, alertType,_subj )
+    else:
+        exception_type, exception_value, tracebackDummy = eDescr
+        errMsg += f"\r\n\r\nException:{exception_type} / {exception_value}\r\n{SysTB.format_exc()}"
+        if exception_type in ( MUT.MyProgramFlowWarningException, MUT.MyProgramFlowErrorException ):
+            logging.debug(logErrMsg, errMsg)
+        else:
+            SM.sendProxyMail(errMsg, alertType, '%s! TS:%d' % ( _subj, actTS))
+            logging.error(logErrMsg, errMsg)
+            writeErrorSql(errMsg, alertType,_subj )
+
+def writeErrorSql(errMsg:str, alertType:MUT.AlertMailType, _subj:str='genericDirectWrite', ts:int=0):
+    if ts == 0:
+        ts = getTS()
+    mySqlIntance.writeError(_subj, errMsg, alertType, ts)
+    logging.error(errMsg)
+#########################################################################################
+# MySQL Wrapper section endz....
+#########################################################################################
+def getSymbolCustomerList():
+    # unasId, symbolId, symbolCode
+    cur = FBU.doSql('select cast(substring("Code" from 5) as integer) as UnasId, "Id", "Code" from "Customer" where "Id" > 0 and "Code" like ? ' , ('UC_-%',))
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+def processControl(req:str):
+    return f"Response:{req.upper()}"
+
+def isClientIpDisabled( clientIp ):
+    ip, port = clientIp
+    putIntoClientList(ip)
+    if not UNASCOMM_MASTER_CHALLENGE:
+        return False # Challenge not enabled
+    mc = challengeMasterPromoter(ip)
+    return unasContext.masterClient.ip != ip
+
+# TODO Not Ready Yet! Under development !!!
+def challengeMasterPromoter(ip:str = None):
+    if unasContext.masterClient is None:
+        unasContext.masterClient = unasContext.clientList[ip]
+        unasContext.masterClient.isMaster = True
+    return unasContext.masterClient
+
+def putIntoClientList(ip:str):
+    clients = getUnasContext().clientList
+    client = clients.get(ip)
+    if client is None:
+        client = MUT.ProxyClient(ip)
+        clients[ip] = client
+    else:
+        pass
+    client.lastAction = getCurrTime()
+
+def trimXmlItem(itm, tag):
+    if len(itm.findall(tag)) > 0:
+        val = itm.findtext(tag)
+        if len(val) > len(val.strip()):
+            itm[tag]._setText(val.strip())
+    
+def trimAddressAttributes(addr):
+    trimXmlItem(addr,"Name")
+    trimXmlItem(addr,"ZIP")
+    trimXmlItem(addr,"City")
+    trimXmlItem(addr,"Street")
+    trimXmlItem(addr,"StreetName")
+    trimXmlItem(addr,"StreetType")
+    trimXmlItem(addr,"StreetNumber")
+    trimXmlItem(addr,"County")
+    trimXmlItem(addr,"Country")
+    trimXmlItem(addr,"CountryCode")
+    trimXmlItem(addr,"TaxNumber")
+    trimXmlItem(addr,"EUTaxNumber")

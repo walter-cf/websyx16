@@ -135,3 +135,4 @@ xslt/unas/NotUsed*
 *.nogit
 web6proxy-*.yaml
 logz
+*Old.py

@@ -17,8 +17,17 @@ def dbClose(con = None):
     global CON
     con = CON if con is None else con
     if con is not None and not con._Connection__get_closed(): # type: ignore
-        con.rollback()
-        con.close()
+        try:
+            con.rollback()
+        except fdb.DatabaseError as e:
+            pass        
+        if not con._Connection__get_closed(): # type: ignore
+            try:
+                con.close()
+            except fdb.DatabaseError as e:
+                pass
+        #
+    con = None
     CON = None
 
 def fbConnect(dbFileName, dbRoot, fbUser, fbPass, fbHost):
@@ -430,5 +439,4 @@ def insertDummyCustomer():
 def testDbConnect():
     cur = doSql( 'select count(*) from "Customer"')
     row = cur.fetchone()
-    cur.close()
     return row[0]

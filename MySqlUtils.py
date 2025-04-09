@@ -1,7 +1,10 @@
-import MyUtils as MU
+import json
+
 # import mysql as mySQL
 import mysql.connector
-import json
+
+import MyUtils as MU
+from MyUtilsTypes import AlertMailType, AlertMailTypeEncoder
 
 
 class MySqlWrapper():
@@ -36,14 +39,15 @@ class MySqlWrapper():
                 host     = MU.MYSQL_HOST,
                 user     = MU.MYSQL_USER,
                 password = MU.MYSQL_PASSWORD,
-                database = MU.MYSQL_DB
+                database = MU.MYSQL_DB,
+                auth_plugin='mysql_native_password'
         )
         return self.MyDB
     
     def getCursor(self):
         return self.MyDB.cursor(buffered=True, dictionary=True) # type: ignore
 
-    def doSql(self, sql, params):
+    def doSql(self, sql, params = () ):
         crsr = self.getCursor()
         crsr.execute(sql, params)
         result = crsr.fetchall()
@@ -73,7 +77,7 @@ class MySqlWrapper():
             self.commit()
         return crsr.lastrowid # type: ignore
     
-    def insSql(self, commit = False) -> int:
+    def insSqlTest(self, commit = False) -> int:
         sql = "INSERT INTO customers (name, address) VALUES (%s, %s)"
         val = ("John", "Highway 21")
         crsr = self.getCursor()
@@ -81,6 +85,19 @@ class MySqlWrapper():
         if commit:
             self.commit()
         return self.getCursor().lastrowid() # type: ignore
+    
+    def handleError_NU(self, msgStr, action, uts, ):
+        pass # write error
+    
+    def writeError(self, shortTxt, errTxt,  typ:AlertMailType, trId:int=0, ):
+        errSql = "INSERT INTO errors (objTyp, shorttext, errortext, alerttype, transactionId, created) values( %s,%s,%s,%s,%s, now())"
+        objTyp = 'other' # TODO alertmailtypebol kepzem majd, ha lesz!
+        self.execSql(errSql, ( objTyp, shortTxt, errTxt, json.dumps(typ,cls=AlertMailTypeEncoder), trId ), commit=True)
+
+    def getLastErrors(self, cnt:int = 10, startFrom:int=0):
+        startFromString = '' if startFrom==0 else '%d,' % startFrom
+        sql = f"select * from errors order by created desc  LIMIT {startFromString} {cnt}"
+        return  self.doSql(sql )
 
 """
 def dbClose(con = None):
@@ -134,7 +151,7 @@ def doSql( sql, param = None ):
             cur.execute(sql, [param])
     except Exception as e:
         err = f"DB-Err; sql:{sql},\r\nprms:{param}\r\nX:{e}"
-        raise ValueError(err)
+        raise WalueError(err)
     return cur
 
 def insSql(table:str, colList:str='', valuePart:str = '',  param = None ) -> int:

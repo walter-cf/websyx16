@@ -1,22 +1,30 @@
 # Import smtplib for the actual sending function
 import smtplib
-import MyUtils as MU
-
+import threading
 # Import the email modules we'll need
 from email.message import EmailMessage
+
+import MyUtils as MU
+import MyUtilsTypes as MUT
+
+
 #
 # https://docs.python.org/3/library/email.examples.html
 #
-def sendAlertMail(message:str, subject :str = 'alert from WebSyx-Proxy'):
-    actionType = MU.getActionTypeFromTS()                         # Ez itt nagyon kulon van a levelkuldestol
+def sendProxyMail(message:str, alertTyp:MUT.AlertMailType, subject :str = 'alert from WebSyx-Proxy'):
     unasCtx = MU.getUnasContext()
-    if unasCtx.lastAlertMailSent.get(actionType) == 0:
-        unasCtx.lastAlertMailSent[actionType] = MU.getCurrTime()
+    if alertTyp is None:
+        actionType = MU.getActionTypeFromTS()                         # Ez itt nagyon kulon van a levelkuldestol
+        alertTyp = MUT.AlertMailType(actionType)
+    alertTyp.sent = MU.getCurrTime()
+    unasCtx.lastAlertMailSent.append(alertTyp)
 
     # Create a text/plain message
     msg = EmailMessage()
-    msg.set_content( message )
-    msg['Subject'] = subject
+    uCtx = MU.getUnasContext()
+    _ctxMsg = f"Context:: client:{uCtx.lastIpAddress}, action:{uCtx.lastAction} -+- TS:{uCtx.lastTS}, tsTime:{MU.getTimeStringTS()}, tsType:{MU.getActionTypeNameFromTS()}"
+    msg.set_content( _ctxMsg + "\r\n\r\n" + message )
+    msg['Subject'] = f"[WebSyx-{MU.getUnasContext().processName}] {subject}"
     msg['From'] = MU.MAIL_ME     # me == the sender's email address
     msg['To'] = MU.MAIL_OPERATOR # you == the recipient's email address
     # Send the message via our own SMTP server.
