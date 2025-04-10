@@ -402,14 +402,14 @@ def getPaymentMethodByCustomerCode(custCode:str):
 def getOrderById(id:int):
     if id < 1:
         return None
-    cur = doSql('select Name from "PaymentCustomerOrder" where "Id" = ?' %  id )
+    cur = doSql('select Name from "PaymentCustomerOrder" where "Id" = ?', (id,) )
     row = cur.fetchone()
     return None if row == None else row[0]
     
 def getModTime( id, tableName = "Customer"):
     if id < 1:
         return None
-    cur = doSql('select "RowModify" from "%s" where "Id" = ?' % tableName, id )
+    cur = doSql('select "RowModify" from "%s" where "Id" = ?' % tableName,(id ,))
     row = cur.fetchone()
     return None if row == None else row[0]
 
