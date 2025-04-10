@@ -39,7 +39,7 @@ def doWebPageJS(pPath, queryParams):
 
 def doWebPageFile(pPath, queryParams):
     path = f"{BASEDIR}{'/'.join(pPath)}"
-    with open(path) as dox:
+    with open(path, 'rb') as dox:
         content = dox.read()
     return content
 

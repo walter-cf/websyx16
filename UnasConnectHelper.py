@@ -202,6 +202,10 @@ def callUnasGET(path):
     x = requests.get("http://%s:%d/unas/%s" % (MU.hostName, MU.serverPort, path))
     return f'respCode:{x.status_code}' if x.status_code != 200 else x.text
 
+def callWebControl(action):
+    x = requests.get("http://%s:%d/%s" % (MU.WEB_CONTROL_HOST, MU.WEB_CONTROL_PORT, action))
+    return x.status_code, x.text
+
 def callProxyControl(action):
     x = requests.get("http://%s:%d/unas/proxycontrol/%s" % (MU.hostName, MU.serverPort, action))
     return x.status_code, x.text

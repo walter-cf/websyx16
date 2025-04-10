@@ -4,7 +4,6 @@
     <xsl:output method="xml" indent="yes" />
 
     <xsl:template match="Customers">
-        <xsl:variable name="FeedbackUrl"><xsl:value-of select="unasFeedbackURL" /></xsl:variable>
         <Customers>
             <xsl:if test="UnregisteredCustomers">
                 <xsl:value-of select="UnregisteredCustomers" disable-output-escaping="yes" />
@@ -16,8 +15,8 @@
                 <xsl:variable name="UnasCustomerID"><xsl:value-of select="Id" /></xsl:variable>
                 <xsl:variable name="SymbolCustomerID"><xsl:value-of select="Params/Param[contains('symbolId',Name)]/Value" /></xsl:variable>
                 
-                <feedbackurl><xsl:value-of select="$FeedbackUrl"/>/oke/customer?id=<xsl:value-of select="Id" /><xsl:text>&amp;</xsl:text>ipaddr=<xsl:value-of select="Others/Ip" />&amp;symbolid=</feedbackurl>
-                <errorurl><xsl:value-of select="$FeedbackUrl"/>/err/customer?id=<xsl:value-of select="Id" />&amp;errormsg=</errorurl>
+                <feedbackurl><xsl:value-of select="/Customers/unasFeedbackURL"/>/oke/customer?id=<xsl:value-of select="Id" /><xsl:text>&amp;</xsl:text>ipaddr=<xsl:value-of select="Others/Ip" />&amp;symbolid=</feedbackurl>
+                <errorurl><xsl:value-of select="/Customers/unasFeedbackURL"/>/err/customer?id=<xsl:value-of select="Id" />&amp;errormsg=</errorurl>
 
                 <id><xsl:value-of select="$UnasCustomerID" /></id>
                 <xsl:if test="$SymbolCustomerID != ''">
@@ -52,8 +51,8 @@
                     <customeraddresses>
                         <xsl:for-each select="Addresses/Shipping">
                         <customeraddress>
-                            <feedbackurl><xsl:value-of select="$FeedbackUrl"/>/oke/custshipaddr?id=<xsl:value-of select="$UnasCustomerID" /><xsl:text>&amp;</xsl:text>idx=<xsl:value-of select="otherAddressIndex" /><xsl:text>&amp;</xsl:text>symbolid=</feedbackurl>
-                            <errorurl><xsl:value-of select="$FeedbackUrl"/>/err/custshipaddr?id=<xsl:value-of select="$UnasCustomerID" /><xsl:text>&amp;</xsl:text>idx=<xsl:value-of select="otherAddressIndex" /><xsl:text>&amp;</xsl:text>errormsg=</errorurl>
+                            <feedbackurl><xsl:value-of select="/Customers/unasFeedbackURL"/>/oke/custshipaddr?id=<xsl:value-of select="$UnasCustomerID" /><xsl:text>&amp;</xsl:text>idx=<xsl:value-of select="otherAddressIndex" /><xsl:text>&amp;</xsl:text>symbolid=</feedbackurl>
+                            <errorurl><xsl:value-of select="/Customers/unasFeedbackURL"/>/err/custshipaddr?id=<xsl:value-of select="$UnasCustomerID" /><xsl:text>&amp;</xsl:text>idx=<xsl:value-of select="otherAddressIndex" /><xsl:text>&amp;</xsl:text>errormsg=</errorurl>
                             <preferred><xsl:value-of select="unasFirstAddresItem" /></preferred>
                             <code><xsl:value-of select="customerAddressCode" /></code>
                             <name><xsl:value-of select="Name" /></name>
@@ -83,8 +82,8 @@
                         <xsl:for-each select="Addresses/Other">
                         <xsl:if test="not(skipOtherAddress)">
                         <customeraddress>
-                            <feedbackurl><xsl:value-of select="$FeedbackUrl"/>/oke/custothaddr?id=<xsl:value-of select="$UnasCustomerID" /><xsl:text>&amp;</xsl:text>idx=<xsl:value-of select="otherAddressIndex" /><xsl:text>&amp;</xsl:text>symbolid=</feedbackurl>
-                            <errorurl><xsl:value-of select="$FeedbackUrl"/>/err/custothaddr?id=<xsl:value-of select="$UnasCustomerID" /><xsl:text>&amp;</xsl:text>idx=<xsl:value-of select="otherAddressIndex" /><xsl:text>&amp;</xsl:text>errormsg=</errorurl>
+                            <feedbackurl><xsl:value-of select="/Customers/unasFeedbackURL"/>/oke/custothaddr?id=<xsl:value-of select="$UnasCustomerID" /><xsl:text>&amp;</xsl:text>idx=<xsl:value-of select="otherAddressIndex" /><xsl:text>&amp;</xsl:text>symbolid=</feedbackurl>
+                            <errorurl><xsl:value-of select="/Customers/unasFeedbackURL"/>/err/custothaddr?id=<xsl:value-of select="$UnasCustomerID" /><xsl:text>&amp;</xsl:text>idx=<xsl:value-of select="otherAddressIndex" /><xsl:text>&amp;</xsl:text>errormsg=</errorurl>
 
                             <preferred>0</preferred>
 

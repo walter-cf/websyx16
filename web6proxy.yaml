@@ -1,7 +1,7 @@
 logLevel: Trace
 proxy:
   # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
-  hostName: 192.168.10.6
+  hostName: syxproxy
   serverPort: 3301
 
 mail:
@@ -40,11 +40,23 @@ unas:
     maxerrorcnt: 3 # continous tries
     maxloginerr: 3 # Not Used Yet - a Login es a POST - kulon kezelem , hatha kulon kell nezni az errorCnt is - de MOST NU.!
     blockedTimeMax: 600 # after 10 minutes will retry again - error counters will reset + SendMail -again
-    sendPacketWarningThreshold: 1600  # hourly max packet MySQL-ben tartom, es onnan is kerdez le
-    sendPacketStopLimit: 1900   # hourly max packet MySQL-ben tartom, es onnan is kerdez le
-    alertRetryAfter: 600       # Resend Alert mail by [alertRetryAfter] seconds
+    alertRetryAfter: 600 # Resend Alert mail by [alertRetryAfter] seconds
+    sendPacketWarningThreshold: 1600 # hourly max packet MySQL-ben tartom, es onnan is kerdez le
+    sendPacketStopLimit:  1900 # hourly max packet MySQL-ben tartom, es onnan is kerdez le
+    #
+    preserveIdleMaster: 600 # degrade master after inactive `preserveIdleMaster` seconds
     enableMasterChallenger: False # TRUE -> Ha automatizalt lesz az Symbol-Unas utemezes, es csak EGY gepnek akarom engedni(IP cim alapjan)
     preserveIdleMaster: 600 #  Ennyi IDLE utan Master status torlodeik es a kovetkezo(vagy utoljara) aktiv lesz a master
+
+    clientChallenge:
+      idleTime: 600  # after this (seconds) client marked as offline
+      machines: [ 192.168.10.6, 192.168.10.2, 192.168.10.4, 192.168.10.11 ] # Az elorebb levonek magasabb a prioritasa!
+      method: Prio # { None | Last | Prio | API }
+                  # None: Current active transaction
+                  # Last (Last active client)
+                  # Prio: Prefer priorityList but only client has activity in `idleTime`
+                  # API : Manually set by operator vi ProxyControl interface
+  #
   #
   customerPaymentMode: "Szerződés szerint"
   priceRules:
@@ -91,6 +103,8 @@ unas:
     cerateMissingCustomer: False
     forceNewState: True
     handleCustomerAddress: False
+    bulkFeedback: False
+
     countries:
       at:  'Ausztria'
       uk:  'Egyesült Királyság'
@@ -137,8 +151,8 @@ firebird:
   dbPass: Bertalan11
 
 ########################################################################
-#
 # Batch
+# atkerul MAJD a proxyba , de ettol meg arre a szkciora szugseg lesz 
 batch:
   granularity: 5
   processes:
@@ -172,11 +186,23 @@ batch:
         name: Unas-Cache-Referesher
         method: refreshUnasCache
 
-    #  - prc1:
-    #      startDelay: 5
-    #      frequency:  11
-    #      name: Process Egy
-    #      method: startProcess1
+    - masterChallenge:
+        startDelay: 600
+        frequency:  1800
+        name: Active machine promoter
+        method: masterChallengeUnas
+
+###    - prc2:
+###        startDelay: 7
+###        frequency:  22
+###        name: Process Ketto
+###        method: startProcess2
+###    - prc3:
+###        startDelay: 9
+###        frequency:  33
+###        name: Process Harom
+###        method: startProcess3
+
 
 # technikai, nekem kellett
 prghelper:

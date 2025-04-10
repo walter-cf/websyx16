@@ -20,6 +20,13 @@ from MySqlUtils import MySqlWrapper as mSqlWrapper
 from MyUtilsTypes import (AlertMailType, MyProgramFlowWarningException,
                           ProxyErrCode, ProxyObjectType, UnasTransactionType)
 
+MunchInstalled = False
+try:
+    from munch import DefaultMunch
+    MunchInstalled = True
+except Exception:
+    MunchInstalled = False
+    
 global GBL_ErrorMessages
 GBL_ErrorMessages = []
 
@@ -85,7 +92,8 @@ def quickStatusChange_NU( ):
         # TODO into Cache and cache handling
 
 def getOrdercacheFromProxy():
-    code, resp = UCH.callProxyControl('qry/unascache/order')
+    # code, resp = UCH.callProxyControl('status/cache/orders')
+    code, resp = UCH.callWebControl('qry/unascache/order')
     return [] if code > 200 else json.loads(resp)
     
 def orderStatusUnasProxy( prc ):
@@ -341,7 +349,14 @@ if __name__ == "__main__":
   threads = []
   try:
     # MU.checkCacheState(force=True) # TODO Ezt at kell hozni a Proxy-bol
-    MU.UnasOrderList = getOrdercacheFromProxy()
+    if MunchInstalled:
+        try:
+            print(MU.UnasOrderList)
+            for f in getOrdercacheFromProxy():
+                f['ordXml'] = None
+                MU.UnasOrderList[f['orderKey']] =  DefaultMunch.fromDict(f)
+        except Exception as e:
+            logging.error('getOrdercacheFromProxy Failed: %s', str(e) if not hasattr(e,'message') else e.message)
     # get Processes
     # ??? bp = MyBatch()
     # ??? myMyslConnection = bp.mSql.getConn()

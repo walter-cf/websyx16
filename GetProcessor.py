@@ -1,4 +1,5 @@
 import datetime as date
+import html as HTML
 import json
 import logging
 import pprint as pp
@@ -91,13 +92,13 @@ def transformGetRequestObject(root, action, xmlPart):
                 email = None if len(ord.Customer.findall('Email')) == 0 else ord.Customer.Email
                 custTaxNo = ord.Customer.Addresses.Invoice.TaxNumber
                 #ucc = MU.getCustomerFormCache(email, custTaxNo, ord.Customer.find('Id'))   joe@20250401 custAzon kivezetes
-                ucc = MU.getCustomerFormCacheByOrder(ord.Customer)
+                ucc = MU.getCustomerFromCacheByOrder(ord.Customer)
                 cust = ord.Customer
                 #
                 ord.symbolVouchersequenceCode = MU.SYMBOLVOUCHERSEQUENCECODE
                 ord.prefixOrderId = MU.SYMBOLORDERIDPREFIX
                 #
-                if cust.find('Id') == None: # ucc == None:
+                if ucc is None or len(cust.findall('Id')) == 0: # ucc == None:
                     cust.CustSymbolCode = MU.CUSTOMER_CODE_PREFIXES["pattern"] % (MU.CUSTOMER_CODE_PREFIXES["unregistered"], ord.Id) # rendeles ID, mert CustId nincs
                     ucc = UCC.UnasCustomerCache(None, email, custTaxNo, cust.CustSymbolCode, None, 'nonRegged' ) # type: ignore
                     MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc
@@ -146,10 +147,10 @@ def transformGetRequestObject(root, action, xmlPart):
         for ord in root.getchildren():
             try:
                 if MU.isLogLevelTrace():
-                    print(ord)
+                    print(HTML.unescape(ET.tostring(ord).decode('utf-8')))        
                 cust = ord.Customer
                 custTaxNo = cust.Addresses.Invoice.TaxNumber
-                ucc = MU.getCustomerFormCacheByOrder(cust)
+                ucc = MU.getCustomerFromCacheByOrder(cust)
                 if ucc == None:
                     ord.CustSymbolCode = MU.CUSTOMER_CODE_PREFIXES["pattern"] % ( MU.CUSTOMER_CODE_PREFIXES["unregistered"],  ord.Id)
                     ucc = UCC.UnasCustomerCache(emil=cust.Email, taxNo=custTaxNo, code=ord.CustSymbolCode, state='nonRegged')
@@ -292,7 +293,7 @@ def transformGetRequestObject(root, action, xmlPart):
     ET.cleanup_namespaces(root) # type: ignore
     obj_xml = ET.tostring(root, encoding='utf-8', pretty_print=True) # type: ignore
     if MU.isLogLevelTrace():
-        print(obj_xml)
+        print(HTML.unescape(obj_xml.decode('utf-8')))        
     return obj_xml
 
 def transformOrderOptions(shipping, payment):
@@ -432,7 +433,7 @@ def transformResponse(xmlResp, action, xmlPart):
         MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E09), level = logging.ERROR, eDescr=sys.exc_info())
         raise MyProgramFlowErrorException(f'a megelozo xml error terminalo exceptionje(uzenetismetles), Azon:-{action}/{MU.getTS()}-')
 
-    preparedXmlStr = preparedXml.decode()
+    preparedXmlStr = preparedXml.decode('utf-8')
     outfileReq = open("xmlfiles/get"+ action +".resp." + str( MU.getTS() ) + ".xml", 'a')
     outfileReq.write(preparedXmlStr)
     outfileReq.close()
@@ -456,9 +457,9 @@ def transformResponse(xmlResp, action, xmlPart):
     outBytes=ET.tostring(newdom, encoding='utf-8', pretty_print=True) # type: ignore
     if outBytes is not None:
         if MU.isLogLevelTrace():
-            print(outBytes.decode())
+            print(HTML.unescape(outBytes.decode('utf-8')))
         outfile = open("xmlfiles/get"+ action + ".symb." + str(MU.getTS()) + ".xml", 'a')
-        outBytesStr = outBytes.decode()
+        outBytesStr = outBytes.decode('utf-8')
         outfile.write(outBytesStr)
         return outBytesStr.replace('<?xml version="1.0"?>',"")
     return None

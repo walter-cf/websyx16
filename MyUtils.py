@@ -483,7 +483,7 @@ def getCustomerFormCache_NU(email, taxnumber, unasId ) -> UCC.UnasCustomerCache:
             ucc.lastmod = 0
     return ucc # type: ignore
 
-def getCustomerFormCacheByOrder( cust ) -> UCC.UnasCustomerCache:
+def getCustomerFromCacheByOrder( cust ) -> UCC.UnasCustomerCache:
     unasId = 0 if len(cust.findall('Id')) == 0 else int(cust.find('Id').text)
     return getCustomerFormCache(unasId)
 

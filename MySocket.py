@@ -19,6 +19,9 @@ class MyControlWebServer(BaseHTTPRequestHandler):
             queryParams = parse_qs( parsedUlParts.query )
             contentType = 'text/html'
             htmlResponseCode = 200
+            if 'favicon.ico' == pPath[1]:
+                self.send_response(404)
+                return
             if 'qry' == pPath[1]:
                 htmlResponseCode = 200
                 contentType = "application/json"
@@ -51,6 +54,10 @@ class MyControlWebServer(BaseHTTPRequestHandler):
                     contentType = 'application/json'
                 elif 'xml' == pPath[-1].lower():
                     contentType = 'text/xml'
+                elif '.md' == pPath[-1][-3:].lower():
+                    contentType = 'text/markdown'
+                elif '.ico' == pPath[-1][-4:].lower():
+                    contentType = 'image/x-icon'
                 else:
                     contentType = 'text/plain'
                 htmlResponseMessage = MPC.doWebPageFile(pPath, queryParams)
@@ -63,7 +70,7 @@ class MyControlWebServer(BaseHTTPRequestHandler):
         self.send_response(htmlResponseCode)
         self.send_header("Content-type", contentType )
         self.end_headers()
-        self.wfile.write(bytes(htmlResponseMessage, 'utf-8'))
+        self.wfile.write( htmlResponseMessage if isinstance(htmlResponseMessage, bytes) else bytes(htmlResponseMessage, 'utf-8'))
         self.wfile.flush()
         
     def do_POST(self):
@@ -111,6 +118,7 @@ mySocketServer:socketserver.TCPServer = None
 def setSocketServer(host, port):
     # Create the server, binding to localhost on port 9999
     try:
+        #socketserver.TCPServer.allow_reuse_address = True
         mySocketServer = socketserver.TCPServer((host,port), MyTCPHandler)
         mySocketServer.serve_forever()
         print('Stopping socket server')
@@ -127,12 +135,13 @@ myControlWebServer:socketserver.ThreadingTCPServer = None
 def setWebServer(host, port):
     global myControlWebServer
     try:
+        #socketserver.ThreadingTCPServer.allow_reuse_address = True
+        ### myControlWebServer = socketserver.ThreadingTCPServer((host, port), MyControlWebServer,  bind_and_activate=False)
+        ### myControlWebServer.allow_reuse_address = False # Prevent 'cannot bind to address' errors on restart
+        ### myControlWebServer.server_bind()     # Manually bind, to support allow_reuse_address
+        ### myControlWebServer.server_activate() # (see above comment)
         myControlWebServer = socketserver.ThreadingTCPServer((host, port), MyControlWebServer)
         myControlWebServer.serve_forever()
-        #with socketserver.TCPServer((host,port), MyTCPHandler) as server:
-            # Activate the server; this will keep running until you
-            # interrupt the program with Ctrl-C
-            # server.serve_forever()
         print('stopping controlServer')
         myControlWebServer.server_close()
     except MUT.ControlProcessWebExit:
