@@ -1,0 +1,96 @@
+<h1>proxyServer.index.html</h1>
+<p style="margin-left: 50">
+    Nincs kifejtve most - csak jelzes, hogy ennyi fele van<br />
+<ul>
+    <li>20%-a mogott nincs kod</li>
+    <li>30%-a duplikacio, amokor kellett valami, nem neztem megirtam-e mar</li>
+    <li>A tobbi azert mukodott, legalabb egyszer :)</li>
+</ul>
+<br />
+ A szekciok - elvileg - kulonbozo celra keszultek.
+ Idoben es funkcioban is elvalasztodnak, ezert is vannak benne az ismetlesek. 
+ Eleinte a tesztekhez irtam a segedeket, aztan kesobb mar vezerelni akartam veluk a proxyt.
+
+</p>
+<hr />
+<p style="margin-left: 50">
+    <div style="margin-top:10; font-size: 1.5em" >Cache ujratoltese UNASbol</div>
+    <a href="http://<PRXT_EVAL>f'{MU.hostName}:{MU.serverPort}'</PRXT_EVAL>/unas/initcache"><strong>initcache</strong></a><br />
+    <div style="margin-top:10; font-size: 1.5em" >Start/Stop WebControl</div>
+    <a href="http://<PRXT_EVAL>f'{MU.hostName}:{MU.serverPort}'</PRXT_EVAL>/unas/proxycontrol/stopwebctrl"><strong>STOP WebControl service</strong></a><br />
+    <a href="http://<PRXT_EVAL>f'{MU.hostName}:{MU.serverPort}'</PRXT_EVAL>/unas/proxycontrol/startwebctrl"><strong>START WebControl service</strong></a><br />
+    <div style="margin-top:10; font-size: 1.5em" >Refresh/Reload Config  </div>
+    <a href="http://<PRXT_EVAL>f'{MU.hostName}:{MU.serverPort}'</PRXT_EVAL>/refresh-config"><strong>Reload YAML config file</strong></a><br />
+</p>
+<hr />
+<p style="margin-left: 50">
+    <h2>proxycontrol</h2>
+    <pre>
+        ::/status/unaspostcnt::
+        ::/status/unaspostfree::
+        ::/status/cache::
+        ::/status/ordercache:: 
+        ::/status/customercache::
+        ::/status/productcache::
+        ::/status/badordercache::
+        ::saveProxyContext::
+        ::saveBatchContext::
+        ::order/getByCustCode::
+        ::order/deleteByUCO:""
+        ::ord/nullparams::
+        ::ord/getnew::
+        ::ord/getnewjs::
+        ::ord/getall::
+        ::ord/getalljs::
+        ::customer/nullparamsJoe::
+        ::customer/nullsymazon::
+        ::customer/deleteByUCO::
+        ::customer/deleteByCacheFDB::
+        ::customer/getAll::
+        ::customer/getby::
+        ::customer/deletebycache::
+        ::initcat::
+        ::initcat/getall::
+        ::initcat/getby::
+        ::initcat/deleteall::
+        ::initcat/deletebyid::
+        ::initcat/getall::
+        ::initcat/getall::
+        ::initcat/getall::
+        ::initprod::
+        ::initprod/getall::
+        ::initprod/getby::
+        ::initprod/nullparam::
+        ::initprod/deleteall::
+        ::initprod/deletebyid::
+        ::initprod/nullparam::
+        ::showerror::
+        ::lasterrors::
+    </pre>
+</p>
+<hr />
+<p style="margin-left: 50">
+    <h2>proxytest</h2>
+    <pre>
+        ::/cust::
+        ::/cust/caddrall::
+        ::/cust/nullparams::
+        ::/cust/nullsymazon::
+        ::/cust/deleteall::
+    </pre>
+</p>
+<hr />
+<p style="margin-left: 50">
+    <h2>test</h2>
+    <pre>
+        ::/cust/nano:: MU.CUSTOMER_TESTDATA_NANO
+        ::/cust/symexOri:: MU.CUSTOMER_TESTDATA_SYMEXORI
+        ::/cust/symex:: MU.CUSTOMER_TESTDATA_SYMEX
+        ::/cust/symex2:: MU.CUSTOMER_TESTDATA_SYMEX2
+        ::/cust/symex3:: MU.CUSTOMER_TESTDATA_SYMEX3
+        ::/cust/akarmi:: MU.CUSTOMER_TESTDATA1
+        ::/ord/1:: MU.ORDERSCUSTOMER_TESTDATA1
+        ::/ord/AKARMIXXX:: MU.ORDERSCUSTOMER_TESTDATA2
+        ::/AKARMIXXX MU.PRODUCT_TESTDATA1
+    </pre>
+</p>

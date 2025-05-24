@@ -1,15 +1,15 @@
 logLevel: Trace
 proxy:
   # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
-  hostName: syxproxy
+  hostName: syxproxy.lan
   serverPort: 3301
 
 mail:
-  server: localhost
+  server: 192.168.10.4
   sender: web6proxy-alert@ledsound.hu
   operator: web6proxy-operator@ledsound.hu
 #
-# Control socket
+# Control socket elavult , ki kellene szednem
 controlSocket:
   enabled: False
   host: 0.0.0.0
@@ -18,7 +18,7 @@ controlSocket:
 # Control WebServer
 controlWeb:
   enabled: True
-  host: 0.0.0.0
+  host: syxproxy.lan 
   port: 3307
 
 unas:
@@ -26,13 +26,13 @@ unas:
   apiUrl: https://api.unas.eu/shop
   feedbackUrl: "'http://' + hostName + ':' + str(serverPort) + '/fbunas'"
   # a WewbShopban kell generalni a hozzaferesi kulcsot
-  apiKey: 9ec1518e8c685c1c26fbc548b029ea78e4435ef8
+  apiKey: fa77a4c391b513ead26efce83180576f89fa79cb
   # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
   webcategory:
     # id: 880790
     name: Webáruházba
   # technikai, nekem kellett, Amikor mexaladt a prg es kitiltottam magamat, akkor default ertekeket adtam vissza magamnak az UNAS hivasokkor(HA ez TRUE)
-  ignoreBlockedClient: false
+  ignoreBlockedClient: false # szerinem elavult, ki kellenne szednem
   cacheForceReload: 10000 # force cahce reload after this period
   #
   # Comm stat:
@@ -41,9 +41,10 @@ unas:
     maxloginerr: 3 # Not Used Yet - a Login es a POST - kulon kezelem , hatha kulon kell nezni az errorCnt is - de MOST NU.!
     blockedTimeMax: 600 # after 10 minutes will retry again - error counters will reset + SendMail -again
     alertRetryAfter: 600 # Resend Alert mail by [alertRetryAfter] seconds
-    sendPacketWarningThreshold: 1600 # hourly max packet MySQL-ben tartom, es onnan is kerdez le
-    sendPacketStopLimit:  1900 # hourly max packet MySQL-ben tartom, es onnan is kerdez le
+    sendPacketWarningThreshold: 5000 # hourly max packet MySQL-ben tartom, es onnan is kerdez le
+    sendPacketStopLimit:  5500 # hourly max packet MySQL-ben tartom, es onnan is kerdez le
     #
+    # Mar elavultak az alabbiak, ki kellene szedenem
     preserveIdleMaster: 600 # degrade master after inactive `preserveIdleMaster` seconds
     enableMasterChallenger: False # TRUE -> Ha automatizalt lesz az Symbol-Unas utemezes, es csak EGY gepnek akarom engedni(IP cim alapjan)
     preserveIdleMaster: 600 #  Ennyi IDLE utan Master status torlodeik es a kovetkezo(vagy utoljara) aktiv lesz a master
@@ -82,11 +83,11 @@ unas:
 
     # Order params - statuses
     status:
-        new:      5785605 # Feldolgozasra var
-        accepted: 5785610 # Visszaigazolva
-        prepared: 5785615 # Keszletezes alatt
+        new:      805088 # Feldolgozasra var
+        accepted: 805092 # Visszaigazolva
+        prepared: 805096 # Keszletezes alatt
         shipping: 0       # NU.? 
-        closed:   5785625 # Lezarva
+        closed:   805104 # Lezarva
         returned: 0       # NU. in UNAS (yet)
         cancel:   0       # NU. in UNAS (yet)
     autoAcknowledge: False
@@ -143,25 +144,36 @@ mysql:
   dbUser: w6pusr
   dbPass: w6p-Abc+123
 
+#firebird:
+#  dbRoot: /opt/firebird/data
+#  dbFile: default_a.database
+#  dbHost: localhost
+#  dbUser: SYSDBA
+#  dbPass: Bertalan11
+
 firebird:
-  dbRoot: /opt/firebird/data
-  dbFile: default_d.database
-  dbHost: localhost
+  dbRoot: "C:\\SymbolUgyvitelDB"
+  dbFile: default_a.database
+  dbHost: 192.168.10.110
   dbUser: SYSDBA
-  dbPass: Bertalan11
+  dbPass: masterkey
+
 
 ########################################################################
 # Batch
 # atkerul MAJD a proxyba , de ettol meg arre a szkciora szugseg lesz 
 batch:
   granularity: 5
+  enabled: False
   processes:
     - orderStatus:
         startDelay: 10                     # initial delay after start BatchScheduler
         frequency: 30                     # Batch thread raise/trigger interval
         name: Rendeles Statusz - UNAS      # Batch threadName
-        method: orderStatusUnas            # called Entry point
-        orderStatusCheckInterval: 864000    # RovModified > NOW -orderStatusCheckInterval(seconds)
+        method: orderStatusUnasProxy       # called Entry point
+        orderStatusCheckInterval: 200      # RovModified > NOW -orderStatusCheckInterval(seconds)
+        setStatusSafetyInterval: 0       # Ha ez >0 akkor a RovModified > context.lastSetOrderstatus - setStatuSafetyInterval a viszonyitasi alap!!
+
         checkVoucherSequence: 42           # UNAS order type identifier
         defaultClosedStatus: "Megrendelés lezárva" # IF  closed, manuallyClosed, canceled is 1 and can nto find in statuses? elvileg nem lehet
         statuses:

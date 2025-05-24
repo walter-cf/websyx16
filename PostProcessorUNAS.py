@@ -141,10 +141,11 @@ def transformUnasRequestObject(root, xsltFilename):
                 # TODO Ha tobb raktar lesz, akkor raktarankent kell nyilvantartanom a upc.stocks -ban
                 if prod.Warehouse == -1:
                     upc.qty = prod.Quantity
-                prod.CurrentQuantity = str(int( prod.Quantity 
+                _Quant = int( prod.Quantity 
                                         - ( 0 if prod.find('StrictAllocate') is None else prod.StrictAllocate ) 
                                         - ( 0 if prod.find('NonStrictAllocate') is None else prod.NonStrictAllocate)
-                                        ))
+                                        )
+                prod.CurrentQuantity = '0' if _Quant <= 0 else str(_Quant)
                 prod.retValValid = 2
     elif xsltFilename == 'BilledOrder':
         # <CustomerOrder> <Id>8</Id> <VoucherNumber>RECW2024/00004</VoucherNumber> <PrimeVoucherNumber>H24-75175-100004</PrimeVoucherNumber> <VoucherSequenceCode>B2C</VoucherSequenceCode> </CustomerOrder>            

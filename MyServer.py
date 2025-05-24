@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import threading
+import time
 import traceback as SysTB
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
@@ -22,9 +23,22 @@ from MyUtilsTypes import *
 
 global GBL_ErrorMessages
 GBL_ErrorMessages = []
+
+def stopControlWebThread():
+    if controlWebThread is not None:
+        if MySocket.myControlWebServer is not None:
+            MySocket.myControlWebServer.shutdown()
+            time.sleep(2)
+            controlWebThread.join()
+            logging.info('controlWebThread - stopped %s', MySocket.myControlWebServer )
+        else:
+          logging.info('controlWebThread(!) - already stopped? %s', MySocket.myControlWebServer )
+    else:
+        logging.info('controlWebThread is zero? Already stopped?' )
+
  
 def aboutProxy():
-  return MU.mdConverter( 'ABOUT' )
+  return MU.mdConverter( 'WebContent/dox/ABOUT' )
 
 def logrotate(fn:str):
   if os.path.exists(fn):
@@ -103,7 +117,7 @@ class MyServer(BaseHTTPRequestHandler):
           retData = 'NoData'
           try:
             resp = MU.doMySql(pPath[2:], ())
-            retData = ','.join(resp)
+            retData = ','.join(resp or [])
             retData = "%s" % ('[]' if retData is None else "[" + retData + "]")
             self.send_response(200)
           except Exception as e:
@@ -126,11 +140,20 @@ class MyServer(BaseHTTPRequestHandler):
         elif (pPath[1] == "returnEmptyTag"):
           retData = '<{0}></{0}>'.format(pPath[2])
         elif (pPath[1] == "favicon.ico"):
-          self.send_response(404)
-          self.wfile.flush()
+          contentType = ''
+          try:
+            if MU.FaviconData is None:
+              with open('WebContent/dox/favicon.ico', 'rb') as img:
+                  MU.FaviconData = img.read()
+            self.send_header('Content-type', 'image/x-icon')
+            self.end_headers()
+            self.wfile.write(MU.FaviconData or b'') # type: ignore
+          except:
+            self.send_response(404)
+            MU.FaviconData = None
           return
         else:
-          raise MyProgramFlowWarningException("Bad (GET) request: " + self.path)
+          raise MyProgramFlowWarningException("Bad (GET) request: " + self.path) # @IgnoreException
       else:
           retData = "[[HTML]]" + aboutProxy()
       #
@@ -174,7 +197,7 @@ class MyServer(BaseHTTPRequestHandler):
         
     except Exception as e:
         htmlResponseCode = 500
-        htmlResponseMessage = str(e) if not hasattr(e, 'message') else e.message
+        htmlResponseMessage = str(e) if not hasattr(e, 'message') else f"type:{type(e)}, message:{e}"
         retData = htmlResponseMessage
         if not isinstance(e, MyProgramFlowErrorException):
           MU.errorHandler(htmlResponseMessage, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E04), level = logging.ERROR, eDescr=sys.exc_info())
@@ -208,7 +231,7 @@ class MyServer(BaseHTTPRequestHandler):
     #
     self.end_headers()
     self.flush_headers()
-    self.wfile.write(bytes(htmlResponseMessage, "utf-8"))
+    self.wfile.write(bytes(htmlResponseMessage, "utf-8")) # type: ignore
     self.wfile.flush()
     if MU.isLogLevelTrace():
       logging.debug("GET Request response: %s",  'NONE' if htmlResponseMessage is None else html.unescape(htmlResponseMessage) )
@@ -334,7 +357,7 @@ class MyServer(BaseHTTPRequestHandler):
     except Exception as e:
         logging.error("Fatal ERROR-POST Referrer: %s, Request: %s" , clientReferrer, self.path)
         htmlResponseCode = 500
-        htmlResponseMessage = str(e) if not hasattr(e, 'message') else e.message
+        htmlResponseMessage = str(e) #if not hasattr(e, 'message') else e.message
         if not isinstance(e, MyProgramFlowErrorException):
           MU.errorHandler(htmlResponseMessage, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E07), level = logging.ERROR, eDescr=sys.exc_info())
     #########################################
@@ -436,35 +459,37 @@ class MyServer(BaseHTTPRequestHandler):
     if parsedUlParts.path == '/stopcontrol':
       try:
         if controlWebThread is not None:
-          MySocket.myControlWebServer.shutdown()
+          if MySocket.myControlWebServer is not None:
+            MySocket.myControlWebServer.shutdown()
           #threading.sleep(2)
           #controlWebThread.join()
           logging.info('controlWebThread - stopped? %s', MySocket.myControlWebServer )
         #
       except Exception as e:
         responseCode = 400
-        response = str(e) if not e.hasattr('message') else e.message
+        response = str(e) #if not e.hasattr('message') else e.message
     elif parsedUlParts.path == '/startcontrol':
       try:
         startControlWebThread()
       except Exception as e:
         responseCode = 400
-        response = str(e) if not e.hasattr('message') else e.message
+        response = str(e) #if not e.hasattr('message') else e.message
     elif parsedUlParts.path == '/stopsocket':
       try:
         if controlSocketThread is not None:
           logging.error('Beragadt, Ki kellene loni')
-          MySocket.mySocketServer.shutdown()
+          if MySocket.mySocketServer is not None:
+            MySocket.mySocketServer.shutdown()
         #
       except Exception as e:
         responseCode = 400
-        response = str(e) if not e.hasattr('message') else e.message
+        response = str(e) # if not e.hasattr('message') else e.message
     elif parsedUlParts.path == '/startsocket':
       try:
         startSocketThread()
       except Exception as e:
         responseCode = 400
-        response = str(e) if not e.hasattr('message') else e.message
+        response = str(e) # if not e.hasattr('message') else e.message
     else:
       responseCode = 200
       contentType = "text/html"
@@ -481,7 +506,7 @@ def new_controlSocketClient(srv):
 
 YAML_CONFIG_FILE = 'web6proxy.yaml'
 
-controlWebThread:threading.Thread = None
+controlWebThread:typing.Optional[threading.Thread] = None
 def startControlWebThread():
     global controlWebThread
     try:
@@ -493,7 +518,7 @@ def startControlWebThread():
     except Exception as x:
       logging.info('Websocket Server closing:', x)
 
-controlSocketThread:threading.Thread = None
+controlSocketThread:typing.Optional[threading.Thread] = None
 def startSocketThread():
     global controlSocketThread
     try:
@@ -504,6 +529,18 @@ def startSocketThread():
       MSG_serverStarting.append(f'TCP-SocketServer started on => {MU.SOCKET_CONTROL_HOST}:{MU.SOCKET_CONTROL_PORT}')
     except Exception as x:
       logging.info('socket Server closing:', x)
+
+batchThread:typing.Optional[threading.Thread] = None
+def startBatchThread():
+    global batchThread
+    try:
+      batchThread = threading.Thread( target = MB.startService, name = "controlWeb", args=(MU.WEB_CONTROL_HOST, MU.WEB_CONTROL_PORT ), daemon=True )
+      batchThread.start()
+      MSG_serverStarting.append(f'BATCH-Server started (inline)')
+      logging.info('BATCH-Server started (inline)')
+      print('BATCH-Server started (inline)')
+    except Exception as x:
+      logging.info('BATCH Server closing:', x)
 
 if __name__ == "__main__":
   configPath = YAML_CONFIG_FILE
@@ -530,22 +567,27 @@ if __name__ == "__main__":
   MSG_serverStarting = []
   MSG_serverStarting.append(f'Server starting on => {MU.hostName}:{MU.serverPort}')
   #
-  controlSocketThread:threading.Thread = None
+  controlSocketThread:typing.Optional[threading.Thread] = None
   if MU.SOCKET_CONTROL_ENABLED:
     startSocketThread()
 
   if MU.WEB_CONTROL_ENABLED:
     startControlWebThread()
 
+  if MU.BATCH_INLINE_ENABLED:
+    MB.startBatchService()
+
   uts = MU.createTransactionId( UnasTransactionType.STARTPROXY )
   # TODO DB Connect TEST-eket kellene vegezni es ha nincs, akkor leallni vagy varni 5 percet 3x ujraprobalni es utana fatalExit
   logger.info( 'Test FB connect; Customer table rowCount: %s' % FBU.testDbConnect() )
   FBU.insertDummyCustomer()
   FBU.dbClose()
-  
+
+  MU.mySqlCheckConnection()
   MU.loadUnasProxyContext()
   if not MU.JOETESTCustomer:
     MU.checkCacheState(force=True)
+    # MU.UnasOrderList.clear()
 
   if MU.isLogLevelWarn():
       print("Server started http://%s:%s, PID: %d" % (MU.hostName, MU.serverPort, os.getpid()))  #Server starts
@@ -553,7 +595,7 @@ if __name__ == "__main__":
 
   try:
       webServer = HTTPServer((MU.hostName, MU.serverPort), MyServer)
-      webServer.serve_forever()
+      webServer.serve_forever() #@IgnoreException
   except KeyboardInterrupt:
       # FBU.dbClose()
       logging.info('Server closing...')
@@ -562,7 +604,7 @@ if __name__ == "__main__":
       MySocket.mySocketWebServer.shutdown()
       controlSocketThread.join()
     
-  if controlWebThread is not None:
+  if controlWebThread is not None and MySocket.myControlWebServer is not None:
       MySocket.myControlWebServer.shutdown()
       controlWebThread.join()
 

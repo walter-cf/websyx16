@@ -1,0 +1,45 @@
+<h1>proxyWebControl.index.html</h1>
+<p style="margin-left: 50">
+    Azert ezeket mar az utobbi harom hetben csinaltam, konzekvensebbek es ezek mukodnek is :)
+<ul>
+    <li>Bepitett webserver - semmi ertelme, de van</li>
+    <li>templatelheto. (comment, eval) Tervezem: pyScript table , dataTable, img, xml, json tageket</li>
+</ul>
+<br />
+ A szekciok itt is kulonbozo celra keszultek.
+</p>
+<hr />
+<div style="margin-left: 50">
+    <div>InitCache</div>
+        <a href="http://<PRXT_EVAL>f'{MU.hostName}:{MU.serverPort}'</PRXT_EVAL>/unas/initcache"><strong>initcache</strong></a><br /><br />
+    <div>Refresh/Reload Config</div>
+        <a href="http://<PRXT_EVAL>f'{MU.hostName}:{MU.serverPort}'</PRXT_EVAL>/refresh-config"><strong>reload config yaml</strong></a><br />
+</div>
+<hr />
+<div style="margin-left: 50">
+    <h3>doWebControlQuery - Lekerdezesek</h3>
+    <div>Egy oran belul elkuldott/elkuldheto hivasok szama:</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/qry/getpacketcount"><strong>::getpacketcount</strong></a><br /><br />
+    <div>Proxy Context: szamlalok, utolso akciok, hibak</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/qry/getunascontext"><strong>::getunascontext</strong></a><br /><br />
+    <div>Blokkositott Feedback lista<br/>config.Yaml::bulkFeedback: True:: eseten csak a kovetkezo GET-ig nem kuldi el a generalt kereseket - ebben a listaban tartja.</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/qry/getunascontext"><strong>::getunascontext</strong></a><br /><br />
+    <div>Cache adatok - MIND</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/qry/unascache/all"><strong>::unascache</strong></a><br /><br />
+    <div>Cache adatok - Vevok</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/qry/unascache/customer"><strong>::unascache/customer</strong></a><br /><br />
+    <div>Cache adatok - Termekek</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/qry/unascache/product"><strong>::unascache/product</strong></a><br /><br />
+    <div>Cache adatok - Rendelesek</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/qry/unascache/order"><strong>::unascache/order</strong></a><br /><br />
+    <div>Cache adatok - Statuskezelesbol kizart rendelesek</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/qry/unascache/badorder"><strong>::unascache/badorder</strong></a><br /><br />
+</div>
+<hr />
+<div style="margin-left: 50">
+    <h3>doWebControlCommand - Ezek mar Akciok</h3>
+    <div>BlokkositottFeedbackKeresek lists elkuldese</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/ctrl/dofeedback"><strong>::dofeedback</strong></a><br /><br />
+    <div>Symbol:Customer:Id -> Unas:Customer:Params[symbolId]<br/>Teszteleshez kellett; a symbol:Customer.Id visszairta az Unasba, a Customer:Code: [UCO-&ltunasId&gt] alapjan</div>
+        <a href="http://<PRXT_EVAL>f'{MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}'</PRXT_EVAL>/ctrl/customer/setsymbolid"><strong>::customer/setsymbolid</strong></a><br /><br />
+</div>

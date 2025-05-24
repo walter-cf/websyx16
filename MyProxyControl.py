@@ -1,4 +1,5 @@
 import json
+import xmltodict
 
 import MyUtils as MU
 import UnasConnectHelper as UCH
@@ -6,27 +7,45 @@ import UnasCustomerCache as UCC
 import UnasOrderCache as UOC
 import UnasProductCache as UPC
 
+from lxml import objectify
+
 BASEDIR = 'WebContent'
 
+def processProxyTpl(ct, tplTag):
+    # Top level TAGs, az Embed tageket kulon kell kiertekelni -felek nem tudom recursive modon
+    startTag = f'<PRXT_{tplTag}>'
+    endTag = f'</PRXT_{tplTag}>'
+    if 'COMMENT' == tplTag:
+        ct = f"{ct[0:ct.index(startTag)]}{ ct[len(endTag) + ct.index(endTag):]}"
+    elif 'EVAL' == tplTag:
+        expr = f"{ct[len(startTag) + ct.index('<PRXT_EVAL>'):ct.index('</PRXT_EVAL>')]} "
+        exprValue = eval(expr)
+        ct = f"{ct[0:ct.index(startTag)]}{exprValue}{ ct[len(endTag) + ct.index(endTag):]}"
+    else:
+        pass
+    return ct
+        
+TplTagList = ['COMMENT', 'EVAL']
 def replaceTplTags(ct:str) ->str:
-    ct.replace()
+    for tplTag in TplTagList:
+        while f'<PRXT_{tplTag}>' in ct:
+            ct = processProxyTpl(ct, tplTag)
     return ct
 
 def doWebPageTemplate(pPath, queryParams):
-    path = BASEDIR + '/tpl' + '/'.join(pPath)
+    path = BASEDIR + '/tpl/' + '/'.join(pPath)
     with open(path) as dox:
         content = dox.read()
     content = replaceTplTags(content)
     return content
 
-def doWebPageMD(pPath, queryParams):
-    path = f"{BASEDIR}/pg{'/'.join(pPath)}.md"
-    with open(path) as dox:
-        content = dox.read()
-    return content
+def doWebPageMD(pPath, queryParams=()):
+    path = BASEDIR + '/dox/' + '/'.join(pPath)
+    return MU.mdConverter(path)
+
 
 def doWebPageHTML(pPath, queryParams):
-    path = f"{BASEDIR}/pg{'/'.join(pPath)}.html"
+    path = f"{BASEDIR}/pg/{'/'.join(pPath)}.html"
     with open(path) as dox:
         content = dox.read()
     return content
@@ -37,15 +56,17 @@ def doWebPageJS(pPath, queryParams):
         content = dox.read()
     return content
 
-def doWebPageFile(pPath, queryParams):
-    path = f"{BASEDIR}{'/'.join(pPath)}"
-    with open(path, 'rb') as dox:
+# TODO Ext meg azert at kell nezni, kell-e a binaris read egyaltalan?
+def doWebPageFile(pPath, queryParams, binaryRead = False):
+    docPath = '/'.join(pPath)
+    path = f"{BASEDIR}/{ 'index.html' if '/' == docPath else '/'.join(pPath).lstrip('/')}"
+    with open(path, 'rb' if binaryRead else 'r') as dox:
         content = dox.read()
     return content
 
    
 def doWebControlQuery(pPath, queryParams):
-    if 'getpacketcount' == pPath[1]:
+    if 'getpacketcount' == pPath[0]:
         resp = {}
         resp['maxPcktsHourly'] = MU.UNASCOMM_SENDPACKETMAX
         resp['warningAtCnt']   = MU.UNASCOMM_SENDPACKETWARN
@@ -62,17 +83,19 @@ def doWebControlQuery(pPath, queryParams):
         resp['free40']          = MU.UNASCOMM_SENDPACKETMAX - MU.getPacketLastIntervalCnt(20)
         resp['free50']          = MU.UNASCOMM_SENDPACKETMAX - MU.getPacketLastIntervalCnt(10)
         return json.dumps(resp)
-    elif 'getunascontext' == pPath[1]:
+    elif 'getunascontext' == pPath[0]:
         return MU.getUnasContext().toJson()
-    elif 'unascache' == pPath[1]:
+    elif 'dofeedback' == pPath[0]:
+        return '{"x":"Igazibol, nem csinaltasm meg, egyelore nem volt kedvemn hozza, mert ugysem kell"}'
+    elif 'unascache' == pPath[0]:
         resp = []
-        if 'customer' == pPath[2] or 'all' == pPath[2]:
+        if 'customer' == pPath[1] or 'all' == pPath[1]:
             return json.dumps(list(MU.UnasCustomerList.values()), indent=3, cls=UCC.UnasCustomerCacheEncoder)
-        if 'product' == pPath[2] or 'all' == pPath[2]:
+        if 'product' == pPath[1] or 'all' == pPath[1]:
             return json.dumps(list(MU.UnasProductList.values()), indent=3, cls=UPC.UnasProductCacheEncoder)
-        if 'order' == pPath[2] or 'all' == pPath[2]:
+        if 'order' == pPath[1] or 'all' == pPath[1]:
             return json.dumps(list(MU.UnasOrderList.values()), indent=3, cls=UOC.UnasOrderCacheEncoder)
-        if 'badorder' == pPath[2] or 'all' == pPath[2]:
+        if 'badorder' == pPath[1] or 'all' == pPath[1]:
             return json.dumps(list(MU.UnasBadOrderList.values()), indent=3, cls=UOC.UnasOrderCacheEncoder)
         return json.dumps(resp)
     else:
@@ -80,12 +103,12 @@ def doWebControlQuery(pPath, queryParams):
     return '{%s}' % f'"path" : "{"/".join(pPath)}", "prms" : {queryParams},  "msg": "Ez meg az uzenet"'
 
 def doWebControlCommand(pPath, queryParams):
-    if 'dofeedback' == pPath[1]:
+    if 'dofeedback' == pPath[0]:
         resp = UCH.updateCustomerSymbolIdList(MU.UnasCustomerFeedbackList)
         return resp or '[]', 'text/plain' # TODO Ki kellene elemezni a valaszt Jo/Rossz
-    elif 'customer' == pPath[1]:
+    elif 'customer' == pPath[0]:
         resp = None
-        if 'setsymbolid' == pPath[2]:
+        if 'setsymbolid' == pPath[1]:
             custList = {}
             for sc in MU.getSymbolCustomerList():
                 item = (sc[0] , sc[1] , sc[2] )
@@ -95,6 +118,32 @@ def doWebControlCommand(pPath, queryParams):
         else:
             pass
         return ('[]', 'text/plain') if resp is None else (json.dumps(resp), 'application/json')
+    elif 'order' == pPath[0]:
+        resp = None
+        if 'clearsymbolid' == pPath[1]:
+            xmlResp = UCH.unasGetOrderNew()
+            if xmlResp is None:
+                return None
+            xmlEnc='utf-8'
+            if xmlResp[30:36] == 'utf-16':
+                xmlEnc='utf-16'            
+            xml = bytes(bytearray(xmlResp, encoding=xmlEnc))
+            # 
+            xmlArray = []
+            root = objectify.fromstring(xml,None)
+            for ord in root.getchildren():
+                xmlArray.append(UCH.UNAS_SETORDERSYMBOLID_XML % (ord.Key, '') )
+            resp = '<error>No Data</error>'
+            if len(xmlArray) > 0:
+                xmlReq = "\n".join(xmlArray)
+                resp = UCH.unasOrder_Direct(xmlReq)
+                # python_dict=xmltodict.parse(resp)
+                # return json.dumps(python_dict)
+                return resp, 'application/xml'
+            else:
+                return "Nincs modositando ", 'text/text'
+        else:
+            pass
     else:
         pass
     return '{%s}' % f'"path" : "{"/".join(pPath)}", "prms" : {queryParams},  "msg": "Ez meg az uzenet"', 'application/json'

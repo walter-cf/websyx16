@@ -29,8 +29,11 @@
                             <xsl:if test="County != ''"><region><xsl:value-of select="County"/></region></xsl:if><!-- Számlázási megye (Customer.InvoiceRegion) -->
                             <zip><xsl:value-of select="ZIP"/></zip><!-- Számlázási irányítószám (Customer.InvoiceZip) -->
                             <city><xsl:value-of select="City"/></city><!-- Számlázási város (Customer.InvoiceCity) -->
-                            <street><xsl:value-of select="StreetName"/></street><!-- Számlázási utca (Customer.InvoiceStreet) -->
-                            <housenumber><xsl:value-of select="StreetNumber"/></housenumber><!-- Számlázási házszám (Customer.InvoiceHouseNumber) -->
+                            <street><xsl:value-of select="Street"/></street><!-- Számlázási utca (Customer.InvoiceStreet) -->
+                            <!-- 
+                                <street><xsl:value-of select="StreetName"/></street>< ! - - Számlázási utca (Customer.InvoiceStreet) - - >
+                                <housenumber><xsl:value-of select="StreetNumber"/></housenumber>< ! - - Számlázási házszám (Customer.InvoiceHouseNumber) - - >
+                            -->
                         </xsl:for-each>
                         <xsl:for-each select="Shipping">
                             <!-- <transportid>43575</transportid> --> <!-- Telephely Symbol belső azonosító (CustomerAddress.Id) -->
@@ -40,8 +43,12 @@
                             <xsl:if test="County != ''"><transportregion><xsl:value-of select="County"/></transportregion></xsl:if> <!-- Telephely megye (CustomerAddress.Region) -->
                             <transportzip><xsl:value-of select="ZIP"/></transportzip><!-- Telephely irányítószám (CustomerAddress.Zip) -->
                             <transportcity><xsl:value-of select="City"/></transportcity><!-- Telephely város (CustomerAddress.City) -->
-                            <transportstreet><xsl:value-of select="StreetName"/></transportstreet><!-- Telephely utca (CustomerAddress.Street) -->
-                            <transporthousenumber><xsl:value-of select="StreetNumber"/></transporthousenumber><!-- Telephely házszám (CustomerAddress.HouseNumber) -->
+			    <transportstreet><xsl:value-of select="Street"/></transportstreet><!-- Telephely utca (CustomerAddress.Street) -->
+			    <transportcontactname><xsl:value-of select="Name"/></transportcontactname><!-- Telephely kapcsolattartó (CustomerAddress.ContactName) -->
+                            <!-- 
+                            <transportstreet><xsl:value-of select="StreetName"/></transportstreet>< ! - - Telephely utca (CustomerAddress.Street) - - >
+                            <transporthousenumber><xsl:value-of select="StreetNumber"/></transporthousenumber><! - - Telephely házszám (CustomerAddress.HouseNumber) - - >
+                            -->
                         </xsl:for-each>
                     </xsl:for-each>
             
@@ -83,14 +90,17 @@
                 <xsl:if test="not(Sku='shipping-cost')">
                     <detail>
                         <productcode><xsl:value-of select="Sku"/></productcode>
-                        <productname><xsl:value-of select="Name"/></productname>
                         <quantity><xsl:value-of select="Quantity"/></quantity>
-                        <vat><xsl:value-of select="substring-before(Vat, '%')" /></vat>
                         <unipricenet><xsl:value-of select="PriceNet" /></unipricenet>
+                        <grossvalue><xsl:value-of select="computedPriceGross" /></grossvalue>
+
+                        <!-- 
+                        <vat><xsl:value-of select="substring-before(Vat, '%')" /></vat>
+                        <productname><xsl:value-of select="Name"/></productname>
                         <uniprice><xsl:value-of select="PriceGross" /></uniprice>
 
                         <netvalue><xsl:value-of select="PriceNet" /></netvalue>
-                        <grossvalue><xsl:value-of select="PriceGross" /></grossvalue>
+                        -->
 
                     </detail>
                 </xsl:if>

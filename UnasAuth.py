@@ -7,8 +7,8 @@ import requests
 
 import MySmtpClient as SM
 import MyUtils as MU
-from MyUtilsTypes import AlertMailType, MyProgramFlowErrorException
-from MyUtilsTypes import UnasTransactionType as UTSTYPE
+from MyUtilsTypes import (AlertMailType, MyProgramFlowErrorException,
+                          ProxyErrCode, UnasTransactionType)
 
 unasToken : str = 'x'
 unasTokenTime = time.time()
@@ -39,7 +39,7 @@ def doLogin() -> str:
         if _tkn is not None:
           currToken = _tkn.text
           logging.debug("Token: %s, Status: %s", currToken, currStatus)
-          MU.createStatEntryOK(currToken)
+          MU.createStatEntryOK(currToken or '')
           return str(currToken)
       else:
         alertMessage = "Login response:%s not OK:%s" % (  str(currStatus) , x.text )
@@ -51,8 +51,8 @@ def doLogin() -> str:
     alertMessage = 'Login err:%s' % x.text
     MU.createStatEntryERR(x.status_code, alertMessage)
   #
-  SM.sendProxyMail( alertMessage, AlertMailType(UTSTYPE.UNAS_COMM_ERROR), 'UNAS LOGIN ERROR' )
-  raise MyProgramFlowErrorException("Login err:" + str(x.status_code) + "\n" + x.text,x.status_code )
+  SM.sendProxyMail( alertMessage, AlertMailType(UnasTransactionType.UNAS_COMM_ERROR), 'UNAS LOGIN ERROR' )
+  raise MyProgramFlowErrorException("Login err:" + str(x.status_code) + "\n" + x.text, ProxyErrCode.UNKNOWN )
 
 def doAuth(force=False) -> str:
     global unasToken

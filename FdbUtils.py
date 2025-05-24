@@ -402,9 +402,9 @@ def getPaymentMethodByCustomerCode(custCode:str):
 def getOrderById(id:int):
     if id < 1:
         return None
-    cur = doSql('select Name from "PaymentCustomerOrder" where "Id" = ?', (id,) )
+    cur = doSql('select "Id", "Customer","PrimeVoucherNumber" from "CustomerOrder" where "Id" = ?', (id,) )
     row = cur.fetchone()
-    return None if row == None else row[0]
+    return None if row == None else row
     
 def getModTime( id, tableName = "Customer"):
     if id < 1:

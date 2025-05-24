@@ -1,6 +1,7 @@
 import logging
 import socketserver
 import threading
+import typing
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
 
@@ -19,48 +20,78 @@ class MyControlWebServer(BaseHTTPRequestHandler):
             queryParams = parse_qs( parsedUlParts.query )
             contentType = 'text/html'
             htmlResponseCode = 200
+            htmlResponseMessage = None
+            binaryRead = False
+            if ['',''] == pPath:
+                 pPath[1] = "index.html"
+                #
             if 'favicon.ico' == pPath[1]:
-                self.send_response(404)
-                return
-            if 'qry' == pPath[1]:
+                 try:
+                    with open('WebContent/dox/favicon.ico', 'rb') as img:
+                        htmlResponseMessage = img.read()
+                    contentType = 'image/x-icon'
+                 except:
+                    self.send_response(404)
+                    htmlResponseMessage = ''
+                    return
+            elif 'qry' == pPath[1]:
                 htmlResponseCode = 200
                 contentType = "application/json"
-                htmlResponseMessage = MPC.doWebControlQuery(pPath[1:], queryParams)
+                htmlResponseMessage = MPC.doWebControlQuery(pPath[2:], queryParams)
             elif 'ctrl' == pPath[1]:
                 htmlResponseCode = 200
-                htmlResponseMessage, content_type = MPC.doWebControlCommand(pPath[1:], queryParams)
+                htmlResponseMessage, content_type = MPC.doWebControlCommand(pPath[2:], queryParams)
                 contentType = content_type or "application/json"
             elif 'tpl' == pPath[1]:
                 contentType = 'text/html'
-                htmlResponseMessage = MPC.doWebPageTemplate(pPath[1:], queryParams)
+                htmlResponseMessage = MPC.doWebPageTemplate(pPath[2:], queryParams)
             elif 'md' == pPath[1]:
                 # contentType = 'text/x-markdown'
+                contentType = 'text/html'
+                _doc = MPC.doWebPageMD(pPath[2:], queryParams)
+                htmlResponseMessage = f'<html><head><meta charset="UTF-8"></head><body>{_doc}</body></html>'
+            elif 'ffmd' == pPath[1]:
+                # contentType = 'text/x-markdown'
                 contentType = 'text/markdown'
-                htmlResponseMessage = MPC.doWebPageMD(pPath[1:], queryParams)
+                _doc = MPC.doWebPageFile(pPath[2:], queryParams, binaryRead=False )
+                htmlResponseMessage = bytes( _doc, 'cp1252', errors='replace') 
             elif 'js' == pPath[1]:
-                htmlResponseMessage = MPC.doWebPageJS(pPath[1:], queryParams)
-                contentType = "application/javascript"
-                htmlResponseCode = 200
-            elif 'js' == pPath[1]:
-                htmlResponseMessage = MPC.doWebPageJS(pPath[1:], queryParams)
+                htmlResponseMessage = MPC.doWebPageJS(pPath[2:], queryParams)
                 contentType = "application/javascript"
                 htmlResponseCode = 200
             elif 'html' == pPath[1]: # Ez nar ELSE ag , csak kiterjesztes szerint mas a mediaType
-                htmlResponseMessage = MPC.doWebPageHTML(pPath[1:], queryParams)
+                htmlResponseMessage = MPC.doWebPageHTML(pPath[2:], queryParams)
                 contentType = "text/html"
                 htmlResponseCode = 200
             else:
-                if 'json' == pPath[-1].lower():
+                if '.json' == pPath[-1][:-5].lower():
                     contentType = 'application/json'
-                elif 'xml' == pPath[-1].lower():
+                elif '.xml' == pPath[-1][:-4].lower():
                     contentType = 'text/xml'
+                elif '-1252.md' == pPath[-1][-8:].lower():
+                    contentType = 'text/markdown'
+                    binaryRead = True
                 elif '.md' == pPath[-1][-3:].lower():
                     contentType = 'text/markdown'
+                elif '.js' == pPath[-1][-3:].lower():
+                    contentType = 'text/javascript'
+                elif pPath[-1][-4:].lower() in ['.jpg', 'jpeg'] :
+                    contentType = 'image/jpeg'
+                    binaryRead = True
                 elif '.ico' == pPath[-1][-4:].lower():
                     contentType = 'image/x-icon'
+                    binaryRead = True
+                elif '.png' == pPath[-1][-4:].lower():
+                    contentType = 'image/png'
+                    binaryRead = True
+                elif pPath[-1][-4:].lower() in ['.jpg', 'jpeg'] :
+                    contentType = 'image/jpeg'
+                    binaryRead = True
+                elif '.html' == pPath[-1][-5:].lower():
+                    contentType = 'text/html'
                 else:
                     contentType = 'text/plain'
-                htmlResponseMessage = MPC.doWebPageFile(pPath, queryParams)
+                htmlResponseMessage = MPC.doWebPageFile(pPath, queryParams, binaryRead )
                 htmlResponseCode = 200
 
         except Exception as e:
@@ -70,8 +101,10 @@ class MyControlWebServer(BaseHTTPRequestHandler):
         self.send_response(htmlResponseCode)
         self.send_header("Content-type", contentType )
         self.end_headers()
-        self.wfile.write( htmlResponseMessage if isinstance(htmlResponseMessage, bytes) else bytes(htmlResponseMessage, 'utf-8'))
-        self.wfile.flush()
+        if htmlResponseMessage is not None:
+            respBytes = htmlResponseMessage if isinstance(htmlResponseMessage, bytes) else bytes(str(htmlResponseMessage),'utf-8')
+            self.wfile.write( respBytes )
+            self.wfile.flush()
         
     def do_POST(self):
         # Handle GET requests here
@@ -114,7 +147,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         self.request.sendall(bytes(response, 'utf-8'))
         # after we return, the socket will be closed.
 
-mySocketServer:socketserver.TCPServer = None
+mySocketServer: typing.Optional[socketserver.TCPServer] = None
 def setSocketServer(host, port):
     # Create the server, binding to localhost on port 9999
     try:
@@ -131,7 +164,7 @@ def setSocketServer(host, port):
 ###########################################################
 # https://github.com/r66ff/multithreaded-server/blob/master/src/server.py
 ###########################################################
-myControlWebServer:socketserver.ThreadingTCPServer = None
+myControlWebServer: typing.Optional[socketserver.ThreadingTCPServer] = None
 def setWebServer(host, port):
     global myControlWebServer
     try:
@@ -142,6 +175,10 @@ def setWebServer(host, port):
         ### myControlWebServer.server_activate() # (see above comment)
         myControlWebServer = socketserver.ThreadingTCPServer((host, port), MyControlWebServer)
         myControlWebServer.serve_forever()
+        #with socketserver.TCPServer((host,port), MyTCPHandler) as server:
+            # Activate the server; this will keep running until you
+            # interrupt the program with Ctrl-C
+            # server.serve_forever()
         print('stopping controlServer')
         myControlWebServer.server_close()
     except MUT.ControlProcessWebExit:

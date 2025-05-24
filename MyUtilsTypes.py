@@ -163,7 +163,9 @@ class MyProgramFlowErrorException(Exception):
 
 class MyWarningBreakException(Exception):
     def __init__(self, msg="Continuable program break", code:ProxyErrCode=ProxyErrCode.UNKNOWN ):
-        self.code = code
+        self.responseCode = code
+        self.responseMessage = msg
+        self.message = msg
         super().__init__(msg)
 
     def __str__(self):
@@ -180,15 +182,15 @@ class MyProgramFlowWarningException(MyWarningBreakException):
 
 class UnasCommErrException(Exception):
     def __init__(self, code, text):
-        self.text = text
-        self.code = code
+        self.responseMessage = text
+        self.responseCode = code
         super().__init__("Unhandled communication error")
 
     def __str__(self):
         return f'{self.responseCode} -> {self.responseMessage}'
 
 class UnasCommIpDisabledException(Exception):
-    def __init__(self, client=(None, 0), msg:str=None):
+    def __init__(self, client=(None, 0), msg:typing.Optional[str]=None):
         ip, port = client 
         self.ip = ip or MU.getUnasContext().lastIpAddress
         self.message = msg or f'Client IP:{self.ip} is disabled'
@@ -277,15 +279,15 @@ class UnasContext:
     lastUnasOrderStatus : int
     # saved context
     lastLogin:int
-    lastAction: str
-    lastIpAddress: str
+    lastAction: typing.Optional[str]=None
+    lastIpAddress: typing.Optional[str]=None
     commBlocked: int
     lastBlockMailSent: int
     lastYarnMailSent: int
     lastAlertMailSent: typing.List[AlertMailType]
     statEntryMySqlId: int
     #
-    masterClient : ProxyClient
+    masterClient : typing.Optional[ ProxyClient]=None
     clientList: typing.Dict[str, ProxyClient ]
     
     def __init__(self, procName = 'Proxy'):

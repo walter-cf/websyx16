@@ -1,6 +1,7 @@
 import json
 import logging
 import traceback as SysTB
+import typing
 from datetime import datetime, timezone
 from time import time
 from typing import Dict, List
@@ -10,7 +11,7 @@ import yaml
 # import xml.etree.ElementTree as ET
 from lxml import etree as ET
 from lxml import objectify
-from markdown2 import Markdown as markdown
+from markdown2 import Markdown
 
 import FdbUtils as FBU
 import MyBatch
@@ -25,6 +26,7 @@ from UnasProductCache import UnasProductCache as UPC
 #
 
 CONFIG_FILE = None
+FaviconData = None
 def reReadYaml():
     return readYaml(CONFIG_FILE)
 
@@ -61,9 +63,12 @@ def nullSafeStru(obj, tagList:List,  defa):
     return defa if item is None else item
 
 def setConstants(cfg):
-    global BATCH_PROCESSES, BATCH_GRANULARITY
-    BATCH_PROCESSES   = valDef(cfg["batch"]["processes"], [])
-    BATCH_GRANULARITY = valDef(cfg["batch"]["granularity"], 10)
+    global BATCH_PROCESSES, BATCH_GRANULARITY, BATCH_INLINE_ENABLED
+    if (cfg["batch"]):
+        cfgItm = cfg["batch"]
+        BATCH_PROCESSES   = cfgItm.get("processes") or []
+        BATCH_GRANULARITY = cfgItm.get("granularity") or 10
+        BATCH_INLINE_ENABLED = cfgItm.get("enabled") or False
 
     global FB_HOST, FB_USER, FB_PASSWORD, FB_DBDATA_ROOT, FB_DBDATA_DEFAULT
     FB_HOST              = valDef(cfg["firebird"]["dbHost"], FB_HOST          )
@@ -129,11 +134,15 @@ def setConstants(cfg):
 
     #global GETORDER_INTERVAL
     #GETORDER_INTERVAL = cfg["order"]["getInterval"]
-    global SYMBOLVOUCHERSEQUENCECODE, SYMBOLORDERIDPREFIX, SYMBOLORDERSTATUS,ORDER_STATUS_SENDMAIL
-    SYMBOLVOUCHERSEQUENCECODE  = cfg["unas"]["order"]["vouchersequencecode"]
-    SYMBOLORDERIDPREFIX        = cfg["unas"]["order"]["symbolOrderPrefix"]
-    SYMBOLORDERSTATUS          = cfg["unas"]["order"]["symbolOrderStatusNew"]
-    ORDER_STATUS_SENDMAIL      = cfg["unas"]["order"]["sendOrderStatusEmail"]
+    global SYMBOLVOUCHERSEQUENCECODE, SYMBOLORDERIDPREFIX, SYMBOLORDERSTATUS,ORDER_STATUS_SENDMAIL, ORDER_ITEM_FROMDB_ON_MISSING, ORDER_ITEM_FROMDB_FORCE
+    if (cfg["unas"]["order"]):
+        cfgItm = cfg["unas"]["order"]
+        SYMBOLVOUCHERSEQUENCECODE  = cfgItm.get("vouchersequencecode")
+        SYMBOLORDERIDPREFIX        = cfgItm.get("symbolOrderPrefix")
+        SYMBOLORDERSTATUS          = cfgItm.get("symbolOrderStatusNew")
+        ORDER_STATUS_SENDMAIL      = cfgItm.get("sendOrderStatusEmail")
+        ORDER_ITEM_FROMDB_FORCE    = cfgItm.get("itemFromDbForce") or False          # TODO Elavult, mar nem kell
+        ORDER_ITEM_FROMDB_ON_MISSING=cfgItm.get("itemFromDbOnMissing") or False    # TODO Elavult, mar nem kell
     # Intervals
     global GETPRODUCT_INTERVAL, GETCUSTOMER_INTERVAL, CUSTOMER_CYCLIC_INTERVAL
     GETPRODUCT_INTERVAL      = cfg["unas"]["product"]["getInterval"]
@@ -170,6 +179,7 @@ def setConstants(cfg):
     ORDER_getMissingCust      = cfg["unas"]["order"]["flow"]['getMissingCust']
     ORDER_autoAcknowledge     = cfg["unas"]["order"]['autoAcknowledge']
 
+
     global PRICERULE_TRANSPORTMODES, PRICERULE_PAYMENTMETHODS
     PRICERULE_TRANSPORTMODES = cfg["unas"]["priceRules"]['transportModes']
     PRICERULE_PAYMENTMETHODS = cfg["unas"]["priceRules"]['paymentMethods']
@@ -187,7 +197,7 @@ def setConstants(cfg):
     UNASCOMM_BLOCKEDTIME     = cfgItm.get("blockedTimeMax") or 1800
     UNASCOMM_ALERTRETRYAFTER = cfgItm.get("alertRetryAfter") or 600
     UNASCOMM_SENDPACKETWARN  = cfgItm.get("sendPacketWarningThreshold") or 1600
-    UNASCOMM_SENDPACKETMAX   = cfgItm.get("sendPacketStopLimit")
+    UNASCOMM_SENDPACKETMAX   = cfgItm.get("sendPacketStopLimit") or 1900
     UNASCOMM_MASTER_CHALLENGE= cfgItm.get("enableMasterChallenger") or False
     UNASCOMM_MASTER_IDLE     = cfgItm.get("preserveIdleMaster") or 300
     UNASCOMM_CLIENT_CHALLENGE= cfgItm.get("clientChallenge") or  {'idleTime': 100, 'machines': [], 'method': 'None'}
@@ -266,7 +276,8 @@ def collectCustItems(xml):
                 logging.error(f"UnasCustomerCache corrupted! tripled, unasId:{custId}")
         #
         else:
-            _m = "xmlData: %s" % ET.tostring(cust , encoding='utf-8', pretty_print=True)
+            #_m = "xmlData: %s" % ET.tostring(cust , encoding='utf-8', pretty_print=True)
+            _m = "xmlData: %s" % ET.tostring(cust)
             SM.sendProxyMail(_m, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR), "initCustomerCache: UNAS-data corrupted (Customer:unasId missing)")
     return UnasCustomerList
 
@@ -401,11 +412,12 @@ def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObje
         if typ == MUT.ProxyObjectType.ALL:
             LastCacheUpdated = UtcNow()
     if force or typ == MUT.ProxyObjectType.ORDER: # Rendelesnek nem kell a minimum delay, az lehet ures
-        UnasOrderList.clear()
-        retV = UCH.unasGetActiveOrders()
-        UnasOrderList = collectOrderItems(retV)
-        if typ == MUT.ProxyObjectType.ALL:
-            LastCacheUpdated = UtcNow()
+        pass # Megyeztunk, hogy a cache-t a programlogika tolti, uriti polah@20250519
+        ## UnasOrderList.clear()
+        ## retV = UCH.unasGetActiveOrders()
+        ## UnasOrderList = collectOrderItems(retV)
+        ## if typ == MUT.ProxyObjectType.ALL:
+        ##     LastCacheUpdated = UtcNow()
     #
     UNASCOMM_SENDPACKETMAX =  saved_SENDPACKETMAX
     #
@@ -459,11 +471,13 @@ def dateStrToTs(date:str):  # '2024.03.04 12:51:08'
     else:
         return int(datetime.strptime(date, '%Y.%m.%d %H:%M:%S').timestamp())
 
-def mdConverter( fileName ):
+def mdConverter( fileName: str ):
     try:
-        with open(fileName + '.md', 'r') as f:
-            text = f.read()
-            return  markdown(text)
+        markdowner = Markdown()
+        fn = fileName if fileName.endswith('.md') else fileName + '.md'
+        with open(fn, 'r') as f:
+            txt = f.read()
+            return  '' if txt is None else markdowner.convert(txt)
     except OSError as e:
         return "document %s not found! Try <a href='/about'>this</a>" % fileName
 
@@ -472,16 +486,16 @@ def mkCustomerCode( ucc : UCC.UnasCustomerCache, prefix : str = 'unregistered'):
     return f"{prfx}-{ucc.unasId}"
 
 #                
-def getCustomerFormCache_NU(email, taxnumber, unasId ) -> UCC.UnasCustomerCache:
-    ucc = UnasCustomerList.get( UCC.buildAzonData( email, taxnumber ))
-    if ucc is None:
-        ucc = UnasCustomerList.get( UCC.buildCustAzonById(unasId))
-    if ucc is not None:
-        if ucc.symbolId is None:
-            ucc.symbolId = 0
-        if ucc.lastmod is None:
-            ucc.lastmod = 0
-    return ucc # type: ignore
+# def getCustomerFormCache_NU(email, taxnumber, unasId ) -> UCC.UnasCustomerCache:
+#     ucc = UnasCustomerList.get( UCC.buildAzonData( email, taxnumber ))
+#     if ucc is None:
+#         ucc = UnasCustomerList.get( UCC.buildCustAzonById(unasId))
+#     if ucc is not None:
+#         if ucc.symbolId is None:
+#             ucc.symbolId = 0
+#         if ucc.lastmod is None:
+#             ucc.lastmod = 0
+#     return ucc # type: ignore
 
 def getCustomerFromCacheByOrder( cust ) -> UCC.UnasCustomerCache:
     unasId = 0 if len(cust.findall('Id')) == 0 else int(cust.find('Id').text)
@@ -496,23 +510,23 @@ def getCustomerFormCache(unasId:int ) -> UCC.UnasCustomerCache:
             ucc.lastmod = 0
     return ucc # type: ignore
 
-def putCustomerIntoCache_NU(ucc : UCC.UnasCustomerCache, cc:str):
-    azon = ucc.custAzon if cc is None else cc
-    u = UnasCustomerList.get( azon )
-    if u is None: # Remek hely a programhiba ellenorzesere!!!!!
-        ucc.custAzon = azon
-        UnasCustomerList[azon] = ucc
-    elif u.email == ucc.email and u.unasId == ucc.unasId and u.symbolId == ucc.symbolId:
-        ucc.custAzon = azon
-        UnasCustomerList[azon] = ucc
-    elif u.symbolId == 0 and u.email == ucc.email and u.unasId == ucc.unasId and u.azon == cc:
-        ucc.custAzon = azon
-        UnasCustomerList[azon] = ucc
-    else:
-        _m = f'Figyelmen kivul hagyott CustomerCache hiba!\r\n[CacheItem] {u.toStr()}\r\n[Duplicate] {ucc.toStr()}'
-        errorHandler( _m , MUT.AlertMailType(MUT.UnasTransactionType.UNKNOWN_MAX, code=MUT.ProxyErrCode.E20),
-                     level=logging.WARNING, subject='[putCustomerIntoCache] -+- Duplicate item')
-        raise MUT.MyProgramFlowErrorException( '[putCustomerIntoCache]:Duplicate item:' + u.toStr() + ' :*-*: '+ ucc.toStr() )
+#def putCustomerIntoCache_NU(ucc : UCC.UnasCustomerCache, cc:int):
+#    azon = ucc.custAzon if cc is None else cc
+#    u = UnasCustomerList.get( azon )
+#    if u is None: # Remek hely a programhiba ellenorzesere!!!!!
+#        ucc.custAzon = azon
+#        UnasCustomerList[azon] = ucc
+#    elif u.email == ucc.email and u.unasId == ucc.unasId and u.symbolId == ucc.symbolId:
+#        ucc.custAzon = azon
+#        UnasCustomerList[azon] = ucc
+#    elif u.symbolId == 0 and u.email == ucc.email and u.unasId == ucc.unasId and u.azon == cc:
+#        ucc.custAzon = azon
+#        UnasCustomerList[azon] = ucc
+#    else:
+#        _m = f'Figyelmen kivul hagyott CustomerCache hiba!\r\n[CacheItem] {u.toStr()}\r\n[Duplicate] {ucc.toStr()}'
+#        errorHandler( _m , MUT.AlertMailType(MUT.UnasTransactionType.UNKNOWN_MAX, code=MUT.ProxyErrCode.E20),
+#                     level=logging.WARNING, subject='[putCustomerIntoCache] -+- Duplicate item')
+#        raise MUT.MyProgramFlowErrorException( '[putCustomerIntoCache]:Duplicate item:' + u.toStr() + ' :*-*: '+ ucc.toStr() )
 
 def putCustomerIntoCache(ucc : UCC.UnasCustomerCache):
     u = UnasCustomerList.get( ucc.unasId )
@@ -523,7 +537,7 @@ def putCustomerIntoCache(ucc : UCC.UnasCustomerCache):
     else:
         _m = '[putCustomerIntoCache]:Duplicate item:' + u.toStr() + ' :*-*: '+ ucc.toStr()
         logging.error( _m, u, ucc)
-        raise MUT.MyProgramFlowErrorException( _m, ucc.unasId )
+        raise MUT.MyProgramFlowErrorException( _m, MUT.ProxyErrCode.E40 )
 #
 # Constants
 #
@@ -538,10 +552,10 @@ UNASACTION_delete  = "delete"
 #
 # CACHE
 UnasProductList : Dict[str, UPC] = dict({})
-UnasCustomerList = dict({})
+UnasCustomerList: Dict[int, UCC.UnasCustomerCache] = dict({})
 #UnasOrderList    = dict({})
 UnasOrderList : Dict[str, UOC.UnasOrderCache] = dict({})
-UnasBadOrderList : Dict[str, UOC.UnasOrderCache] = dict({})
+UnasBadOrderList : Dict[int, UOC.UnasOrderCache] = dict({})
 UnasProductWebCategoryId = 0
 UnasProductWebCategoryName = "WebCat"
 UnasCustomerCategoryName = "UNAS vevo"
@@ -587,6 +601,7 @@ SOCKET_CONTROL_ENABLED = False
 WEB_CONTROL_HOST    = "127.0.0.1"
 WEB_CONTROL_PORT    = 3306
 WEB_CONTROL_ENABLED = False
+BATCH_INLINE_ENABLED = False
 
 # ProductPriceCat
 PRODUCT_PRICECAT_BASE = -1
@@ -1574,7 +1589,7 @@ def getTS():
     return getUnasContext().lastTS
 
 def createStatEntry(action:str, xmlParam:str): # login, getXXX , setXXX, procycontrol, test, TEST ???
-    unasContext.statEntryMySqlId = createStatEntrySql(action, xmlParam )
+    unasContext.statEntryMySqlId = createStatEntrySql(action, xmlParam ) or 0
     updateStatEntry(action)
 
 def createStatEntryOK(resp:str = ''):
@@ -1592,7 +1607,7 @@ def getUnasContext() -> MUT.UnasContext:
 
 def loadUnasProxyContext():
     sql = 'SELECT * FROM proxy_context'
-    ctxRow = mySqlIntance.getRow(sql)
+    ctxRow = mySqlIntance.getRow(sql) or {}
     ctx = getUnasContext()
     ctx.lastGetCustomer = 0 if ctxRow['lastGetCustomer'] is None else ctxRow['lastGetCustomer']
     ctx.lastGetOrder    = 0 if ctxRow['lastGetOrder'   ] is None else ctxRow['lastGetOrder'   ]
@@ -1601,9 +1616,9 @@ def loadUnasProxyContext():
 
 def loadUnasBatchContext():
     sql = 'SELECT * FROM proxy_context'
-    ctxRow = mySqlIntance.getRow(sql)
+    ctxRow = mySqlIntance.getRow(sql) or {}
     ctx = getUnasContext()
-    ctx.lastUnasOrderStatus = ctxRow['lastUnasOrderStatus']
+    ctx.lastUnasOrderStatus = 0 if len(ctxRow) == 0 else ctxRow['lastUnasOrderStatus']
 
 def saveUnasProxyContext():
     ctx = getUnasContext()
@@ -1638,7 +1653,7 @@ def updateStatEntryERR(retCode:int):
 def clearCommError():
     unasContext.commBlocked = 0
     unasContext.commErrCnt = 0
-    unasContext.lastAlertMailSent = dict({})
+    unasContext.lastAlertMailSent = []
 
 UNASCOMM_MAXERRCNT = 3
 UNASCOMM_MAXLOGINERRCNT = 3
@@ -1715,7 +1730,15 @@ def checkCommError():
 # MySQL wrapper funtions
 #########################################################################################
 mySqlIntance = MySqlWrapper()
-def doMySql(sql, params):
+def mySqlCheckConnection() -> bool :
+    try:
+        conn = mySqlIntance.getConn()
+        return doMySql('select 1') or False
+    except:
+        conn = mySqlIntance.getConn()
+        return conn or False
+
+def doMySql(sql, params = ()):
     return mySqlIntance.doSql( sql, params)
 
 def execMySql(sql, params):
@@ -1744,12 +1767,12 @@ def getPacketLastHourCnt(fromTime:int=0, toTime:int = 0):
     result =  mySqlIntance.doSql(
             "SELECT count(*) cnt from commstats WHERE createdAt between %s and %s", (
                 tsToDateSql( fromTime if fromTime > 0 else UtcNow(3600)),
-                tsToDateSql( toTime if toTime > 0 else getCurrTime())     ))
-    return result[0]['cnt']
+                tsToDateSql( toTime if toTime > 0 else getCurrTime())     ))  or []
+    return 0 if len(result) == 0 else result[0]['cnt']
 # Modositott  verzio: count last 10,20,40 60 minutes
 def getPacketLastIntervalCnt(interval:int=60):
-    result =  mySqlIntance.doSql(f"SELECT count(*) cnt from commstats WHERE createdAt > DATE_SUB(NOW(), interval {interval} MINUTE)")
-    return result[0]['cnt']
+    result =  mySqlIntance.doSql(f"SELECT count(*) cnt from commstats WHERE createdAt > DATE_SUB(NOW(), interval {interval} MINUTE)") or []
+    return 0 if len(result) == 0 else result[0]['cnt']
 
 
 def getQueryParamInt(queryParams, name:str):
@@ -1759,7 +1782,7 @@ def getQueryParamInt(queryParams, name:str):
 def getQueryParam(queryParams, name:str):
     return None if queryParams.get(name) is None else None if len(queryParams.get(name)) == 0 else queryParams.get(name)[0]
 
-def errorHandler(errMsg:str, alertType:MUT.AlertMailType, level = logging.INFO, subject:str=None, eDescr=None):
+def errorHandler(errMsg:str, alertType:MUT.AlertMailType, level = logging.INFO, subject:typing.Optional[str] = None, eDescr=None, lastFrameStr:typing.Optional[str] = None):
     if subject is None:
         if level == logging.WARNING:
             _subj = f'WARNING - unexpected but ignored error ({alertType.errCode})'
@@ -1810,10 +1833,10 @@ def isClientIpDisabled( clientIp ):
     if not UNASCOMM_MASTER_CHALLENGE:
         return False # Challenge not enabled
     mc = challengeMasterPromoter(ip)
-    return unasContext.masterClient.ip != ip
+    return True if unasContext.masterClient is None else  unasContext.masterClient.ip != ip # TODO ez igy nem jo! Elobb biztosan tudnom kellene miert nics masterclienta promoter miatt
 
 # TODO Not Ready Yet! Under development !!!
-def challengeMasterPromoter(ip:str = None):
+def challengeMasterPromoter(ip:str):
     if unasContext.masterClient is None:
         unasContext.masterClient = unasContext.clientList[ip]
         unasContext.masterClient.isMaster = True
@@ -1827,7 +1850,7 @@ def putIntoClientList(ip:str):
         clients[ip] = client
     else:
         pass
-    client.lastAction = getCurrTime()
+    client.lastActive = getCurrTime()
 
 def trimXmlItem(itm, tag):
     if len(itm.findall(tag)) > 0:

@@ -1,5 +1,5 @@
 import json
-from typing import Any, TypedDict
+import typing
 
 from lxml import etree as ET
 
@@ -10,14 +10,14 @@ class UnasOrderCache:
     orderKey    : str
     unasId      : int
     symbolId    : int
-    code        : str
+    code        : typing.Optional[str]
     symbolCustId: int
     unasCustId  : int
     orderStatus : str
     acknowledged: bool
     lastmod     : int
     badCounter  : int
-    ordXml      : Any
+    ordXml      : typing.Any
     
     def __init__(self, ordKey:str, sid:int = 0, ordcode:str = None, symbCustid:int = 0, status:str = None, lastmod:int = 0): # type: ignore
         self.orderKey = ordKey
@@ -30,6 +30,19 @@ class UnasOrderCache:
         self.unasCustId = 0
         self.acknowledged = False
         self.badCounter = 0
+
+    def fromMunch(self, mObj):
+        self.orderKey     = mObj.orderKey
+        self.symbolId     = mObj.symbolId
+        self.code         = mObj.code
+        self.symbolCustId = mObj.symbolCustId
+        self.orderStatus  = mObj.orderStatus
+        self.lastmod      = mObj.lastmod
+        self.unasId       = mObj.unasId
+        self.unasCustId   = mObj.unasCustId
+        self.acknowledged = mObj.acknowledged
+        self.badCounter   = mObj.badCounter
+        self.ordXml       = None
 
     def toJson(self):
         return json.dumps(self, default=lambda o: o.__dict__)

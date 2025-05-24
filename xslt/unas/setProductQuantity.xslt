@@ -49,7 +49,7 @@
                     <Stocks>
                         <Status>
                             <Active>1</Active>
-                            <Empty>1</Empty>
+                            <Empty>0</Empty>
                             <Variant>0</Variant> <!-- ???? Mi a Variant-->
                         </Status>
                         <Stock>

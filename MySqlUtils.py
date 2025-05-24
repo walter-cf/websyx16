@@ -12,14 +12,14 @@ class MySqlWrapper():
     RowCount = 0
     
     def __init__(self):
-        self.MyDB = self.connect()
+        # self.MyDB = self.connect()
         self.RowCount = 0
     
     def rowCount(self) -> int:
         return self.RowCount
     
-    def getConn(self):
-        if self.MyDB is None:
+    def getConn(self, force=False):
+        if force or self.MyDB is None:
             self.MyDB = self.connect()
         return self.MyDB
     
@@ -45,7 +45,11 @@ class MySqlWrapper():
         return self.MyDB
     
     def getCursor(self):
-        return self.MyDB.cursor(buffered=True, dictionary=True) # type: ignore
+        try:
+            return self.MyDB.cursor(buffered=True, dictionary=True)
+        except mysql.connector.errors.OperationalError:
+            self.MyDB = self.getConn(True)
+            return self.MyDB.cursor(buffered=True, dictionary=True)
 
     def doSql(self, sql, params = () ):
         crsr = self.getCursor()
