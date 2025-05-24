@@ -17,7 +17,6 @@ import MyBatch as MB
 import MySmtpClient as SM
 import MySocket
 import MyUtils as MU
-import PostProcessorEMAG as PPE
 import PostProcessorUNAS as PPU
 from MyUtilsTypes import *
 
@@ -253,8 +252,8 @@ class MyServer(BaseHTTPRequestHandler):
     htmlResponseCode = 404
     try:
       if (len(pPath) > 0): ### POST
-        if (pPath[1] == "symbol"):
-          htmlResponseMessage = PPE.doSymbolRequest(self.path, 'dummyData')
+        if (pPath[1] == "symbol Noy Udsed Blaaaa"):
+          pass # htmlResponseMessage = PPE.doSymbolRequest(self.path, 'dummyData')
         elif (pPath[1] == "proxycontrol"):
           postParams = post_data.decode('utf-8')
           # parsedFields = parse_qs( postParams )
@@ -306,14 +305,15 @@ class MyServer(BaseHTTPRequestHandler):
             except Exception as e:
               logging.error('DB-Close error X:%s', e)
           # end try UnasPostProcess
-        elif (pPath[1] == "emag"):
-          htmlResponseMessage = PPE.doEmagRequest(self.path, 'DummyData')
-        elif (pPath[1] == "synclog"):
+        elif (pPath[1] == "emag Not Used Blaaaa"):
+          pass # htmlResponseMessage = PPE.doEmagRequest(self.path, 'DummyData')
+        elif (pPath[1] == "synclog Not Used Blaaaa"):
           #logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n"
           #      ,str(self.path), str(self.headers), post_data.decode('utf-8'))
           postParams = post_data.decode('utf-8')
           parsedFields = parse_qs( postParams )
-          htmlResponseMessage = PPE.symbolSynclog(parsedFields['xmldata'][0])
+          logging.debug(parsedFields['xmldata'][0])
+          htmlResponseMessage = 'OK'
         else:
           GBL_ErrorMessages.append( "Unhandled (POST) request: " + self.path )
           raise MyProgramFlowWarningException("Bad (POST) request: " + self.path)
