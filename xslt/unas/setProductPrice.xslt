@@ -5,10 +5,11 @@
     <xsl:for-each select="ProductPrice">
         <xsl:variable name="ProductCode" select="productcode"/>
         <xsl:variable name="SymbolIdIsNull" select="symbolIdIsNull"/>
+        <!-- 
         <xsl:variable name="RetValProduct" select="retValProduct"/>
-        <!-- xsl:if test="$RetValProduct > 0 or $SymbolIdIsNull > 0" -->
-
-        <xsl:if test="product > 0">
+        <! - - xsl:if test="$RetValProduct > 0 or $SymbolIdIsNull > 0" - - >
+        -->
+        <xsl:if test="product > 0"> <!-- symbolId -->
         <xsl:if test="not(SkipThisItem)">
             <Product>
                 <Action>modify</Action>

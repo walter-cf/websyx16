@@ -93,25 +93,25 @@ def transformUnasRequestObject(root, xsltFilename):
                 else:  # UNAS-ban azonositottam SKU alapjan es LIVE
                     prod.unasProductId = upc.unasId
                     prod.symbolIdIsNull = 1 if upc.symbolId == 0 else 0
-                    prod.retValProduct = 0
+                    # 20250529@joe prod.retValProduct = 0
                     isPriceFound = False
                     foundCat = -99999
                     for pi in prod.price:
-                        prod.retValProduct = 1
+                        # 20250529@joe prod.retValProduct = 1
                         if pi.pricecategory == MU.PRODUCT_PRICECAT_BASE and pi.priceCurrency == 'HUF':
                             isPriceFound = True
                             pi.retValValid = 2
                             pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
                             foundCat = int(pi.pricecategory.text)
-                        elif isPriceFound == False and pi.pricecategory == MU.PRODUCT_PRICECAT_FALLBACK and pi.priceCurrency == 'HUF':
-                            foundCat = int(pi.pricecategory.text)
-                            pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
-                        elif isPriceFound == False and pi.pricecategory == MU.PRODUCT_PRICECAT_FALLBACK2 and pi.priceCurrency == 'HUF':
-                            foundCat = int(pi.pricecategory.text)
-                            pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
-                        elif isPriceFound == False and foundCat < 0 and pi.priceCurrency == 'HUF':
-                            foundCat = int(pi.pricecategory.text)
-                            pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                        # 20250529@joe  elif isPriceFound == False and pi.pricecategory == MU.PRODUCT_PRICECAT_FALLBACK and pi.priceCurrency == 'HUF':
+                        # 20250529@joe      foundCat = int(pi.pricecategory.text)
+                        # 20250529@joe      pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                        # 20250529@joe  elif isPriceFound == False and pi.pricecategory == MU.PRODUCT_PRICECAT_FALLBACK2 and pi.priceCurrency == 'HUF':
+                        # 20250529@joe      foundCat = int(pi.pricecategory.text)
+                        # 20250529@joe      pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                        # 20250529@joe  elif isPriceFound == False and foundCat < 0 and pi.priceCurrency == 'HUF':
+                        # 20250529@joe      foundCat = int(pi.pricecategory.text)
+                        # 20250529@joe      pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
                         else:
                             pass # pi.retValValid = 0
                         #
@@ -119,7 +119,7 @@ def transformUnasRequestObject(root, xsltFilename):
                         for pi in prod.price:
                             if foundCat == int(pi.pricecategory.text):
                                 pi.retValValid = 4
-                                foundCat = -1234567
+                                foundCat = -1234567 # clear found Flag
                     elif not isPriceFound:
                         pi.retValValid = 0
                     else:
