@@ -5,7 +5,7 @@ proxy:
   serverPort: 3301
 
 mail:
-  server: 192.168.10.4
+  server: 192.168.10.6
   sender: web6proxy-alert@ledsound.hu
   operator: web6proxy-operator@ledsound.hu
 #
