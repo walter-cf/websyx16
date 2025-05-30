@@ -558,6 +558,19 @@ def startBatchThread():
     except Exception as x:
       logging.info('BATCH Server closing:', x)
 
+logger = None
+def changeLogFile():
+  logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
+  logrotate(logFileName)
+  logging.basicConfig(filename=logFileName,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
+  logger=logging.getLogger(__name__)
+  return logger
+
+if __name__ == "__main__":
+  configPath = YAML_CONFIG_FILE
+  if (len(sys.argv)>1):
+    configPath = sys.argv[1]
+  MU.readYaml(configPath)
 
 def getGlobalLogLevel():
   if MU.LOGLEVEL[0].upper() == 'I':
