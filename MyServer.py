@@ -648,6 +648,7 @@ def changeLogFile():
   MU.setLogger(logger)
   return logger
 
+
 if __name__ == "__main__":
   configPath = YAML_CONFIG_FILE
   if (len(sys.argv)>1):
