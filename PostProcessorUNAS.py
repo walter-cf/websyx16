@@ -453,7 +453,8 @@ def prepareUnasReply(xmlReq, xsltFilename):
     newdom = transform( dom )
 
     if xsltFilename == 'ProductPrice':
-        new_fileDescriptor, filename = tempfile.mkstemp()
+        # new_fileDescriptor, filename = tempfile.mkstemp()
+        filename = f"xmlfiles/set{xsltFilename}.unas.{str(MU.getTS())}.xml"
         newdom.write_output(filename)
         content = open(filename).read()
 
