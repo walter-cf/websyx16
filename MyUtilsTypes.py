@@ -81,6 +81,8 @@ class UnasTransactionType(IntEnum):
     TESTGET = 25
     TESTJOE = 26
     ORDERSTATUS = 27
+    LOGROTATE = 28
+    XMLROTATE = 29
     #
     # Post
     PRODUCT = 41

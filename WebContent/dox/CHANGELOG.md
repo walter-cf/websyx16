@@ -1,4 +1,10 @@
-## web6Proxy - valtozaslista joe @ 2025.04.09
+## web6Proxy - valtozaslista joe @ 2025.05.31
+
+### - 2025.05.31
+- log/xmlfiles rotate & archive /  add batch-func
+- xmlfiles - ProductPrice.UNAS - save: missed (3dbd207710ae96827f1955d4a2764b3549dbd8a7)
+- DOX:webSocks: add new api entry (d51df661e67778aab914e0f950a6a8eacd570e13)
+- Remove unused Py files (27d3c02da933537a2d778b523324a233c3e8d78b)
 
 ### - 2025.04.10
 - *Dokumentaciot keszitek, amig van hozza ize... (index README, CHANGELOG,TODO)
