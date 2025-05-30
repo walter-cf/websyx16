@@ -40,59 +40,6 @@ Interrupted = False
 def masterChallengeUnas(prc):
     raise MyProgramFlowWarningException("Not Usable Yet, under developed until... faszomTuggya ",1234321)
 
-# Elavult notUsed! 
-def quickStatusChange_NU( ):
-    # get Orders
-    setStatusInterval = -14*86400 if MU.getUnasContext().lastUnasOrderStatus < 10000000 else (
-            MU.getUnasContext().lastUnasOrderStatus - MU.UtcNow() - MU.ORDER_setStatuSafetyInterval)
-    orders = FBU.getModifiedOrders(ORDSTATCOLUMNS,  setStatusInterval if setStatusInterval > 0 else -14*86400) # ket hettel elottte a default
-    # foreach Orders
-    for ord in orders:
-        # set status if not Set? Visszaigazolva, , Megrendelés lezárva
-        #status = None
-        if 1 == ord[ ORDSTATCOLUMNS.index("Cancelled")]:
-            #status = 'canceled'
-            ordStatusStr =  "Megrendelés lezárva"
-        elif 1 == ord[ ORDSTATCOLUMNS.index("Closed") ]:
-            #status = 'closed'
-            ordStatusStr = "Megrendelés lezárva"
-        elif 1 == ord[ ORDSTATCOLUMNS.index("ClosedManually") ]:
-            #status = 'manuallyClosed'
-            ordStatusStr = "Megrendelés lezárva"
-        else:
-            st = ord[ ORDSTATCOLUMNS.index("CustomerOrderStatus") ]
-            if st  == 2:
-                ordStatusStr = "Visszaigazolva"
-            elif st  == 3:
-                ordStatusStr = "Készletezés alatt"
-        #    ucc = next((x for x in  MU.UnasCustomerList.values() if x.unasId == unasId), None )
-        if ordStatusStr is not None:
-            # prc["statuses"]
-            ordKey = ord[ ORDSTATCOLUMNS.index("PrimeVoucherNumber") ][ 1+len(MU.SYMBOLORDERIDPREFIX):]
-            symbolId = int(ord[ORDSTATCOLUMNS.index("Id")]  )
-            uoc = None if ordKey not in MU.UnasOrderList.keys() else MU.UnasOrderList[ordKey]
-            if not uoc:
-                ordXml = UCH.unasGetOrderBy("Key", ordKey)
-                uoc = MU.putOrderXmlIntoCache(ordKey, ordXml)
-            if uoc:
-                if symbolId > 0  and symbolId != uoc.symbolId:
-                    logging.error("Set statusnal UOC symbolId kulonbozott!!! Ori-UOC-id:{uoc.symbolId} symb:orderId:{symbolId}")
-                    # uoc.symbolId = symbolId
-                elif (ordStatusStr == uoc.orderStatus):
-                    logging.debug("Skipping:%s", ordKey)
-                else:
-                    xmlResp = UCH.unasSetOrderStatus( ordKey,  ordStatusStr, symbolId)
-                    logging.debug(f'SetOrder:[{ordKey}] set Status: {ordStatusStr}')
-                    logging.debug(f'SetOrder response:{xmlResp}')
-                    print(xmlResp)
-                    # TODO meg kellene vizsgalni, hogy xml valos-e
-                    if xmlResp.find('<Status>ok</Status>') > 0:
-                        uoc.orderStatus = ordStatusStr
-            else:
-                logging.error("ordKEY missing Missing from UNAS Skipping:%s", ordKey)
-            #
-        # TODO into Cache and cache handling
-
 def getOrdercacheFromProxy():
     # code, resp = UCH.callProxyControl('status/cache/orders')
     code, resp = UCH.callWebControl('qry/unascache/order')

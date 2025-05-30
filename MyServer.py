@@ -110,8 +110,23 @@ class MyServer(BaseHTTPRequestHandler):
         elif (pPath[1] == "batch"): # Ki kellene innen torolni - csak a Batch hivhassa?
           if pPath[2] == "orderStatusUnas":
             uts = MU.createTransactionId( UnasTransactionType.ORDERSTATUS )
-            MB.orderStatusUnasProxy(MU.BATCH_PROCESSES[0]['orderStatus'])
+            prc = next((x for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'orderStatus', x))), {})
+            MB.orderStatusUnasProxy(prc)
             retData = "OK"
+          elif pPath[2] == "logfiles-rotate":
+            uts = MU.createTransactionId( UnasTransactionType.LOGROTATE )
+            changeLogFile()
+            MU.batchMethodWrapper('logrotate', methodName='archiveLogFiles' )
+            retData = "OK"
+          elif pPath[2] == "xmlfiles-rotate":
+            uts = MU.createTransactionId( UnasTransactionType.XMLROTATE )
+            prc = next((x for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'xmlrotate', x))), {}) or {}
+            MU.batchMethodWrapper('xmlrotate', methodName='archiveXmlFiles' )
+            retData = "OK"
+          elif pPath[2] == "dummy":
+            retData = "OK"
+          else:
+            pass # simply ignore
         elif (pPath[1] == "sql"):
           retData = 'NoData'
           try:
@@ -542,6 +557,14 @@ def startBatchThread():
     except Exception as x:
       logging.info('BATCH Server closing:', x)
 
+logger = None
+def changeLogFile():
+  logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
+  logrotate(logFileName)
+  logging.basicConfig(filename=logFileName,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
+  logger=logging.getLogger(__name__)
+  return logger
+
 if __name__ == "__main__":
   configPath = YAML_CONFIG_FILE
   if (len(sys.argv)>1):
@@ -557,12 +580,8 @@ if __name__ == "__main__":
       logLevel = logging.ERROR
   else:
       logLevel = logging.DEBUG
-      
-  logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
-  logrotate(logFileName)
-  logging.basicConfig(filename=logFileName,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
-  logger=logging.getLogger(__name__)
 
+  logger=changeLogFile()
   
   MSG_serverStarting = []
   MSG_serverStarting.append(f'Server starting on => {MU.hostName}:{MU.serverPort}')
