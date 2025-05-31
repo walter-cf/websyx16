@@ -1881,9 +1881,9 @@ def batchMethodWrapper(configItemName, methodName:str=None, *args, **kwargs ):
     prc = next((x[configItemName] for x in  BATCH_PROCESSES if   list(filter(lambda key: key == configItemName, x))), {}) or {}
     if methodName is None:
         methodName = prc.get('method')
-    eval( f"{methodName}(prc, args, kwargs)")
+    eval( f"{methodName}(prc {', args' if args else ''}{', kwargs' if kwargs else ''})")
 #
-def archiveLogFiles(prc, args, kwargs): # szerintem ez csak hetente kell
+def archiveLogFiles(prc, args=None, kwargs=None):
     '''tar.gz a logz/*.log file-okat EXCEPT utolso (maxIndex) file-t?
        prc[preservetime]::(defa90 nap) - nal regebbi fileokat torli a logz-z kvt-ban'''
     logPath  = prc.get('filePath')
@@ -1907,7 +1907,7 @@ def archiveLogFiles(prc, args, kwargs): # szerintem ez csak hetente kell
     cmd = f"find {prc.get('archivePath')} -type f  -mtime +{prc.get('preserveDays')} -print0 | xargs -0 rm"
     os.system(cmd)
 
-def archiveXmlFiles(prc, args, kwargs): # ez meg talan nem is kell, a rotate csinalhatja
+def archiveXmlFiles(prc, args=None, kwargs=None): # ez meg talan nem is kell, a rotate csinalhatja
     '''tar.gz a xmlfiles/*.xml and move to ../xmlfiles-z/'''
     currDateStr = datetime.today().strftime('%Y-%m-%d')
 
