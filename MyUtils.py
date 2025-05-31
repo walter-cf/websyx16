@@ -1878,7 +1878,7 @@ def trimAddressAttributes(addr):
 #
 ## Kell ez? A deveben pont ezt csinalom, assszem
 def batchMethodWrapper(configItemName, methodName:str=None, *args, **kwargs ):
-    prc = next((x for x in  BATCH_PROCESSES if   list(filter(lambda key: key == configItemName, x))), {}) or {}
+    prc = next((x[configItemName] for x in  BATCH_PROCESSES if   list(filter(lambda key: key == configItemName, x))), {}) or {}
     if methodName is None:
         methodName = prc.get('method')
     eval( f"{methodName}(prc, args, kwargs)")

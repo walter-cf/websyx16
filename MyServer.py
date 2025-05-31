@@ -110,7 +110,7 @@ class MyServer(BaseHTTPRequestHandler):
         elif (pPath[1] == "batch"): # Ki kellene innen torolni - csak a Batch hivhassa?
           if pPath[2] == "orderStatusUnas":
             uts = MU.createTransactionId( UnasTransactionType.ORDERSTATUS )
-            prc = next((x for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'orderStatus', x))), {})
+            prc = next((x["orderStatus"] for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'orderStatus', x))), {})
             MB.orderStatusUnasProxy(prc)
             retData = "OK"
           elif pPath[2] == "logfiles-rotate":
