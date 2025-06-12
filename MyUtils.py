@@ -1904,18 +1904,18 @@ def archiveLogFiles(prc, args, kwargs): # szerintem ez csak hetente kell
         cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyLog-{currDateStr}-{UtcNow()}.tgz {excludeStr} --remove-files {logPath}/*.log"
         os.system(cmd)
     # remove older than UtNow - 86400*prc[reservetime]
-    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
+    cmd = f"find {prc.get('archivePath')} -type f  -mtime +{prc.get('preserveDays')} -print0 | xargs -0 rm"
     os.system(cmd)
 
 def archiveXmlFiles(prc, args, kwargs): # ez meg talan nem is kell, a rotate csinalhatja
     '''tar.gz a xmlfiles/*.xml and move to ../xmlfiles-z/'''
     currDateStr = datetime.today().strftime('%Y-%m-%d')
 
-    cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyXmlz-{currDateStr}-{UtcNow()}.tgz  --remove-files {prc.get('filePath')}/*.log"
+    cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyXmlz-{currDateStr}-{UtcNow()}.tgz  --remove-files {prc.get('filePath')}/*.xml"
     os.system(cmd)
     #
     # remove older than UtNow - 86400*prc[reservetime]
-    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
+    cmd = f"find {prc.get('archivePath')} -type f  -mtime +{prc.get('preserveDays')} -print0 | xargs -0 rm"
     os.system(cmd)
 
 from stat import *
