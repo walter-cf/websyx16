@@ -166,8 +166,7 @@ def transformUnasRequestObject(root, xsltFilename):
                     if ucc is None:
                         ucc = next((x for x in  MU.UnasCustomerList.values() if x.code == cust.code), None )
                         logging.warning("PostCust:MISSING! Eml:%s - Ado:%s", cust.email, cust.taxnumber )
-                    # Skipping ??
-                    if ucc == None: # UNAS-bol hianyzik
+                        # Skipping ?? UNAS-bol hianyzik
                         if cust.deleted == 1 or cust.id == -2: # SKIP
                             logging.warning( "PtrfCust-Skipping DELETED nonexisting(UNAS) cust** sid:%i, code:%s", cust.id, cust.code )
                             ucc.state = MU.CACHESTATE_deleted # type: ignore
@@ -178,6 +177,7 @@ def transformUnasRequestObject(root, xsltFilename):
                             ucc = UCC.UnasCustomerCache(emil=cust.email, taxNo=cust.taxnumber, state='new' )
                             ucc.lastmod = 0
                             MU.putCustomerIntoCache(ucc) # MU.UnasCustomerList[ucc.custAzon] = ucc
+                            logging.error( f"WARNING only! New Cust added From SYMBOL to UNAS!:{ucc.toStr}"  )
                         #
                     elif ucc.state == "unreg" or str(cust.code).startswith( MU.CUSTOMER_CODE_PREFIXES["unregistered"] ): # type: ignore # Unregistered, nem kell felvinni
                             cust.SkipThisItem = '1' 
