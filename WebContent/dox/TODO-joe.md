@@ -13,3 +13,10 @@ log WARNING/INFO messages
 ### EMAG ???
 Kurvara kesobb jon, pillanatnyilag nem tom, mit akarok vele ...
 
+### git merge test to origin/master
+```
+git checkout master
+git pull origin master
+git merge test
+git push origin master
+```
