@@ -387,9 +387,7 @@ def getUnasActiveCustomers():
 
 CACHE_FORCE_RELOAD_PERIOD = 10000
 def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObjectType.ALL):
-    global UnasCustomerList, UnasProductList, UnasOrderList, LastCacheUpdated,UNASCOMM_SENDPACKETMAX
-    saved_SENDPACKETMAX = UNASCOMM_SENDPACKETMAX
-    UNASCOMM_SENDPACKETMAX =  2000
+    global UnasCustomerList, UnasProductList, UnasOrderList, LastCacheUpdated
     if force or typ == MUT.ProxyObjectType.CUSTOMER:
         UnasCustomerList.clear()
         UnasCustomerList = getUnasActiveCustomers()
@@ -413,15 +411,15 @@ def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObje
         if typ == MUT.ProxyObjectType.ALL:
             LastCacheUpdated = UtcNow()
     if force or typ == MUT.ProxyObjectType.ORDER: # Rendelesnek nem kell a minimum delay, az lehet ures
-        pass # Megyeztunk, hogy a cache-t a programlogika tolti, uriti polah@20250519
+        pass
+        # TODO a lezart teteleket, ki kellene szedni a cachebol
+        # Megyeztunk, hogy a cache-t a programlogika tolti, uriti polah@20250519
         ## UnasOrderList.clear()
         ## retV = UCH.unasGetActiveOrders()
         ## UnasOrderList = collectOrderItems(retV)
         ## if typ == MUT.ProxyObjectType.ALL:
         ##     LastCacheUpdated = UtcNow()
-    #
-    UNASCOMM_SENDPACKETMAX =  saved_SENDPACKETMAX
-    #
+
 
 LastSetCustomerDT:str = None # type: ignore
 LastSetProductDT:str = None # type: ignore
