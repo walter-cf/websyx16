@@ -213,8 +213,10 @@ def transformUnasRequestObject(root, xsltFilename):
                 ucc = None
                 logging.debug(f"Customer skipped while ID < 0:{cust.id}")
                 cust.SkipThisItem = '1' 
+                if MU.isLogLevelTrace():
+                    logging.error(f"Customer skipped via custId:{cust.id}/{cust.code.text}, status:{cust.customerstatus}, supplier:{ cust.supplierstatus}" )
+                    logging.debug(f"Customer skipped tag:: {ET.tostring(cust)}" )
             if MU.isLogLevelTrace():
-                logging.error(f"Customer tag: {ET.tostring(cust)}" )
                 print( f"Posting wo UCC:{cust.code}" if ucc is None else f"Posting custUCC:{ucc.toStr()}" )
     elif xsltFilename == 'CustomerX':
         for cust in root.getchildren():
