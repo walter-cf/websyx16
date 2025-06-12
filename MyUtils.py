@@ -1,5 +1,6 @@
 import json
 import os
+import os
 import logging
 import traceback as SysTB
 import typing
@@ -388,6 +389,7 @@ def getUnasActiveCustomers():
 CACHE_FORCE_RELOAD_PERIOD = 10000
 def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObjectType.ALL):
     global UnasCustomerList, UnasProductList, UnasOrderList, LastCacheUpdated
+    global UnasCustomerList, UnasProductList, UnasOrderList, LastCacheUpdated
     if force or typ == MUT.ProxyObjectType.CUSTOMER:
         UnasCustomerList.clear()
         UnasCustomerList = getUnasActiveCustomers()
@@ -414,11 +416,15 @@ def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObje
         pass
         # TODO a lezart teteleket, ki kellene szedni a cachebol
         # Megyeztunk, hogy a cache-t a programlogika tolti, uriti polah@20250519
+        pass
+        # TODO a lezart teteleket, ki kellene szedni a cachebol
+        # Megyeztunk, hogy a cache-t a programlogika tolti, uriti polah@20250519
         ## UnasOrderList.clear()
         ## retV = UCH.unasGetActiveOrders()
         ## UnasOrderList = collectOrderItems(retV)
         ## if typ == MUT.ProxyObjectType.ALL:
         ##     LastCacheUpdated = UtcNow()
+
 
 
 LastSetCustomerDT:str = None # type: ignore
