@@ -154,7 +154,7 @@ mysql:
 firebird:
   dbRoot: "C:\\SymbolUgyvitelDB"
   dbFile: default_a.database
-  dbHost: 192.168.10.110
+  dbHost: 192.168.10.4
   dbUser: SYSDBA
   dbPass: masterkey
 
