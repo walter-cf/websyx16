@@ -1,5 +1,9 @@
 ## web6Proxy - valtozaslista joe @ 2025.05.31
 
+### - 2025.06.17
+ - Issue-0001: setCustomer Failed!  TrId:1750148875047(first) - 1750151038047(last)
+   getCustomerFrom Cache - bad code - changeId:
+
 ### - 2025.05.31
 - log/xmlfiles rotate & archive /  add batch-func
 - xmlfiles - ProductPrice.UNAS - save: missed (3dbd207710ae96827f1955d4a2764b3549dbd8a7)
