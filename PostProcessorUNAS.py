@@ -162,7 +162,7 @@ def transformUnasRequestObject(root, xsltFilename):
                 try:
                     # Cache ??
                     # ucc = MU.getCustomerFormCache(cust.email, cust.taxnumber, cust.id ) joe@20250401 custAzon kivezetes
-                    ucc = MU.getCustomerFormCache(cust.id )
+                    ucc = MU.getCustomerFormCacheByCode(cust.code )
                     if ucc is None:
                         ucc = next((x for x in  MU.UnasCustomerList.values() if x.code == cust.code), None )
                         logging.warning("PostCust:MISSING! Eml:%s - Ado:%s", cust.email, cust.taxnumber )

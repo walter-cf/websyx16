@@ -506,6 +506,10 @@ def getCustomerFromCacheByOrder( cust ) -> UCC.UnasCustomerCache:
     unasId = 0 if len(cust.findall('Id')) == 0 else int(cust.find('Id').text)
     return getCustomerFormCache(unasId)
 
+def getCustomerFormCacheByCode(code:str ) -> UCC.UnasCustomerCache:
+    ucc = next((x for x in  UnasCustomerList.values() if x.code == code), None )
+    return ucc # type: ignore
+
 def getCustomerFormCache(unasId:int ) -> UCC.UnasCustomerCache:
     ucc = UnasCustomerList.get( unasId )
     if ucc is not None:
