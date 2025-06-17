@@ -2,7 +2,7 @@
 
 ### - 2025.06.17
  - Issue-0001: setCustomer Failed!  TrId:1750148875047(first) - 1750151038047(last)
-   getCustomerFrom Cache - bad code - changeId:
+   getCustomerFrom Cache - bad code - changeId: 6bf46c9d2b1e6610b25ad3a4e40376aa9758c613
 
 ### - 2025.05.31
 - log/xmlfiles rotate & archive /  add batch-func
