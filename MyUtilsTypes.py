@@ -236,7 +236,7 @@ class AlertMailTypeEncoder(json.JSONEncoder):
         if isinstance(obj, AlertMailType):
             return {
                 "type"     : obj.type.name,
-                "objId"    : obj.objId,
+                "objId"    : str(obj.objId), ## joe@20250623 
                 "objTyp"   : obj.objTyp.name,
                 "errCode"  : obj.errCode.name,
                 "trId"     : obj.trId,

@@ -1,5 +1,25 @@
 ## web6Proxy - valtozaslista joe @ 2025.05.31
 
+### - 2025.06.23
+Issue: 0002: getOrder - Duplicate customer 0 errorhandlling failed
+```
+Context:: client:192.168.10.4, action:getOrder -+- TS:1750546863011, tsTime:2025.06.22 01:01:03, tsType:ORDERS
+
+Object of type IntElement is not JSON serializable
+
+Exception:<class 'TypeError'> / Object of type IntElement is not JSON serializable
+Traceback (most recent call last):
+  File "/opt/websyx/GetProcessor.py", line 106, in transformGetRequestObject
+    MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/opt/websyx/MyUtils.py", line 549, in putCustomerIntoCache
+    raise MUT.MyProgramFlowErrorException( _m, MUT.ProxyErrCode.E40 )
+MyUtilsTypes.MyProgramFlowErrorException: 40 -> [putCustomerIntoCache]:Duplicate item:{ "unasId":None, "symbolId":None, "lastmod":(1750545662)[2025.06.22 00:41:02], "code":"UCU-269184499",
++"email":"rendeles@lovemobile.hu", "taxNumber":"12676981-2-41", "state":"nonRegged" } :*-*: { "unasId":None, "symbolId":None, "lastmod":(1750545662)[2025.06.22 00:41:02], "code":"UCU-269192964",
++"email":"procurement@irodaszerellato.hu", "taxNumber":"12372137-2-41", "state":"nonRegged" }
+```
+MyUtilTypes:239 -> simans str -re konvertaltam !!! HACK !!! Kesobb megnezem
+
 ### - 2025.06.17
  - Issue-0001: setCustomer Failed!  TrId:1750148875047(first) - 1750151038047(last)
    getCustomerFrom Cache - bad code - changeId: 6bf46c9d2b1e6610b25ad3a4e40376aa9758c613
