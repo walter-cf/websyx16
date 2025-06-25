@@ -113,17 +113,18 @@ def transformUnasRequestObject(root, xsltFilename):
                         # 20250529@joe      foundCat = int(pi.pricecategory.text)
                         # 20250529@joe      pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
                         else:
-                            pass # pi.retValValid = 0
+                            pi.SkipThisItem = 1  # Issue:0003 - joe@20250625 Multiple Price in PriceCat:18
+                            #  pi.retValValid = 0
                         #
                     if foundCat > 0:
-                        for pi in prod.price:
+                        for pi in prod.findall('price'):
                             if foundCat == int(pi.pricecategory.text):
                                 pi.retValValid = 4
                                 foundCat = -1234567 # clear found Flag
                     elif not isPriceFound:
                         pi.retValValid = 0
                     else:
-                        pass
+                        pi.SkipThisItem = 1
             #else:
             #    logging.debug(f"Product skipped while webDisplay=0 Code:{prod.code}")
     elif xsltFilename == 'ProductQuantity':
@@ -638,7 +639,13 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         logging.debug("setProduct-TS:%d" % uts)
         if MU.isLogLevelDebug():
             print(postData)
+
         xmlReq = preProcessUnasPostRequest(action, postData)
+        if xmlReq.count('<?xml version="1.0"') > 1:
+            _m=f"Multiple xml tag in product request! TS:{MU.getTS()}"
+            logging.error(_m)
+            logging.error(postData)
+            raise MyProgramFlowErrorException(_m, ProxyErrCode.E41)
         xmlReq = prepareUnasReply(xmlReq, "Product" )
         # Ha nem csinaltam UNAS requestet vmilyen feltetel teljesulese miatt!
         if xmlReq != None:            # Lehet NEM OK-val kellene visszaterni?

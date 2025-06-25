@@ -17,13 +17,15 @@
                 <xsl:for-each select="price">
                     <xsl:if test="retValValid > 1">
                         <Prices>
-                            <Price>
-                                <Type>normal</Type>
-                                <Net><xsl:value-of select="value"/></Net>
-                                <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
-                            </Price>
+                            <xsl:if test="not(SkipThisItem)">
+                                <Price>
+                                    <Type>normal</Type>
+                                    <Net><xsl:value-of select="value"/></Net>
+                                    <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
+                                </Price>
+                            </xsl:if> <!-- test="not(SkipThisItem)"  -->
                         </Prices>
-                    </xsl:if>
+                    </xsl:if><!-- test="retValValid > 1"  -->
                 </xsl:for-each>
                 <xsl:if test="$SymbolIdIsNull > 0">
                     <Params>

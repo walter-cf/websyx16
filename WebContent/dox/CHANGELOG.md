@@ -1,5 +1,10 @@
 ## web6Proxy - valtozaslista joe @ 2025.05.31
 
+
+### - 2025.06.25
+Issue: 0003: SetPrice - joe@20250625 Multiple Price in PriceCat:18 ( EUR and HUF also exists)
+USER Error - but handled :: prefer HUF
+
 ### - 2025.06.23
 Issue: 0002: getOrder - Duplicate customer 0 errorhandlling failed
 ```
