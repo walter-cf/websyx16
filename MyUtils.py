@@ -2096,3 +2096,4 @@ def getLogger():
 def setLogger(lgr:MyLogger):
     global w6fLog
     w6fLog = lgr
+
