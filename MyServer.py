@@ -117,7 +117,6 @@ class MyServer(BaseHTTPRequestHandler):
             uts = MU.createTransactionId( UnasTransactionType.LOGROTATE )
             changeLogFile()
             logging.warning("logger changed/reloaded")
-            logging.warning("logger changed/reloaded")
             MU.batchMethodWrapper('logrotate', methodName='archiveLogFiles' )
             retData = "OK"
           elif pPath[2] == "xmlfiles-rotate":
