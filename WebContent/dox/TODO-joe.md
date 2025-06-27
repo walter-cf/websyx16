@@ -20,3 +20,12 @@ git pull origin master
 git merge test
 git push origin master
 ```
+```
+git checkout master
+git pull
+git checkout test
+git pull
+git rebase -i master
+git checkout master
+git merge test
+```
