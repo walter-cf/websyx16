@@ -2018,3 +2018,11 @@ def visitfile(file):
 
 def testWalkTree(path="./"):
     walktree(path, visitfile)
+
+import MyLogger
+w6fLog = None
+def getLogger():
+    return w6fLog
+def setLogger(lgr:MyLogger):
+    global w6fLog
+    w6fLog = lgr
