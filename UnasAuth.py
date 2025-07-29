@@ -7,7 +7,7 @@ import requests
 
 import MySmtpClient as SM
 import MyUtils as MU
-from MyUtilsTypes import (AlertMailType, MyProgramFlowErrorException,
+from MyUtilsTypes import (AlertMailType, MyProgramFlowErrorException, MyWarningBreakException,
                           ProxyErrCode, UnasTransactionType)
 
 unasToken : str = 'x'
@@ -27,7 +27,7 @@ def doLogin() -> str:
     if (x.text[0:15] == '<!DOCTYPE html>'):
       _m = (f"Login error! Reply is HTML-like - Bad URL: {MU.UNASAPI_URL} or UNAS account is expired/denied" )
       MU.createStatEntryERR(403, _m)
-      raise Exception(_m) # Nincs levelkuldes, ez elegge valoszinutlen eset
+      raise MyWarningBreakException("Login error! UNAS API not available", ProxyErrCode.B28)
 
     dom=ET.fromstring(x.text)
     #  for itm in dom.findall('Login'):
