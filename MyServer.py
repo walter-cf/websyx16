@@ -607,61 +607,15 @@ if __name__ == "__main__":
     configPath = sys.argv[1]
   MU.readYaml(configPath)
 
-def getGlobalLogLevel():
-  if MU.LOGLEVEL[0].upper() == 'I':
-      logLevel = logging.INFO
-  elif MU.LOGLEVEL[0].upper() == 'W':
-      logLevel = logging.WARNING
-  elif MU.LOGLEVEL[0].upper() == 'E':
-      logLevel = logging.ERROR
-  else:
-      logLevel = logging.DEBUG
-  return logLevel
-
-
-import MyLogger
-def changeLogFile():
-
-  myLogger = MU.getLogger()
-  logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
-  logLevel = getGlobalLogLevel()
-  if logger is None:
-    myLogger = MyLogger(logFileName, level='debug')
-    # logging.basicConfig(filename=,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
-    # logger=logging.getLogger('w6p')
-    # logging.info("logger created")
-  #
-  # close filehandles
-  for handler in myLogger.handlers[:]:  # make a copy of the list
-    handler.close()
-    myLogger.removeHandler(handler)    
-    # logger.handlers[0].stream.close()
-    # logger.removeHandler(logger.handlers[0])
-    #
-  logrotate(logFileName)
-  # reopen file
-  file_handler = logging.FileHandler(logFileName)
-  file_handler.setLevel(logLevel)
-  formatter = logging.Formatter("%(asctime)s %(levelname)s %(filename)s:%(lineno)d [%(funcName)s]: %(message)s")
-  file_handler.setFormatter(formatter)
-  logger.addHandler(file_handler)  
-  MU.setLogger(logger)
-  return logger
-
-
-if __name__ == "__main__":
-  configPath = YAML_CONFIG_FILE
-  if (len(sys.argv)>1):
-    configPath = sys.argv[1]
-  MU.readYaml(configPath)
-
   GBL_ErrorMessages = []
-  ###  logLevel = getGlobalLogLevel()
-  ###  logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
-  ###  logrotate(logFileName)
-  ###  logging.basicConfig(filename=logFileName,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
-  ###  logger=logging.getLogger(__name__)
+
   logger=changeLogFile()
+  ## 
+  ## logLevel = getGlobalLogLevel()
+  ## logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
+  ## logrotate(logFileName)
+  ## logging.basicConfig(filename=logFileName,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
+  ## logger=logging.getLogger(__name__) ## 
   
   MSG_serverStarting = []
   MSG_serverStarting.append(f'Server starting on => {MU.hostName}:{MU.serverPort}')
