@@ -610,7 +610,7 @@ if __name__ == "__main__":
   MU.readYaml(configPath)
 
 
-      
+  logLevel = getGlobalLogLevel()
   logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
   logrotate(logFileName)
   logging.basicConfig(filename=logFileName,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
