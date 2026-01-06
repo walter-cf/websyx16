@@ -1,6 +1,10 @@
 ## web6Proxy - valtozaslista joe @ 2025.05.31
 
 
+### - 2026.01.06
+Issue: 0004: SetProduct STATE confused - Ha UNASban mar letezett, de inaktiv es symbol aktivalja - akkor ez nem tortent meg
+Solution: PostProcessorUnas: 67-72 2025 Jjun 25-en kikommentezzewtt reszt helyreallitottam
+
 ### - 2025.06.25
 Issue: 0003: SetPrice - joe@20250625 Multiple Price in PriceCat:18 ( EUR and HUF also exists)
 USER Error - but handled :: prefer HUF

@@ -64,7 +64,10 @@ def transformUnasRequestObject(root, xsltFilename):
                         prod.unasProductAction = 'modify'
                         if prod.webdisplay == 0:
                             prod.unasProductStatus = UPC.ProductStatus_INACTIVE
-                        if prod.webdisplay == 1:
+                        # upc.status == UPC.ProductStatus_INACTIVE
+                        elif prod.webdisplay == 1 and upc.status != UPC.ProductStatus_NEW and upc.status != UPC.ProductStatus_NOTAVAILABLE:
+                            # TODO @20260106 Igazibol UNAS-Inactive kellene nezni!!
+                            # upc.status == UPC.ProductStatus_INACTIVE
                             prod.unasProductStatus = UPC.ProductStatus_ACTIVE
                 #
                 # GuaranteeMonths, Attributes, TargetCategory (symbolId, Gyarto, VTSZ, EAN)
@@ -170,6 +173,8 @@ def transformUnasRequestObject(root, xsltFilename):
                         # Skipping ?? UNAS-bol hianyzik
                         if cust.deleted == 1 or cust.id == -2: # SKIP
                             logging.warning( "PtrfCust-Skipping DELETED nonexisting(UNAS) cust** sid:%i, code:%s", cust.id, cust.code )
+                            if ucc is None:
+                                ucc = UCC.UnasCustomerCache()
                             ucc.state = MU.CACHESTATE_deleted # type: ignore
                             cust.unasCustomerAction = 'skip'
                             cust.SkipThisItem = '1' 

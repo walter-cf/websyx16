@@ -78,13 +78,15 @@
                     </xsl:if>             <!--  unasExtendedAttributes -->
                 </Params>
 
-                <Statuses>
-                    <Status>
-                        <Type>base</Type>
-                        <Value><xsl:value-of select="unasProductStatus"/></Value>
-                    </Status>
-                </Statuses>
-                <!-- -->
+                <xsl:if test="unasProductStatus">
+                    <Statuses>
+                        <Status>
+                            <Type>base</Type>
+                            <Value><xsl:value-of select="unasProductStatus"/></Value>
+                        </Status>
+                    </Statuses>
+                </xsl:if>
+             
                 <xsl:if test="unasActionWebCategory">
                     <Categories>
                         <Category>
@@ -103,12 +105,14 @@
                     <Vat><xsl:value-of select="vat"/></Vat>
                 </Prices>
 
-                <Statuses>
-                    <Status>
-                        <Type>base</Type>
-                        <Value><xsl:value-of select="unasProductStatus"/></Value>
-                    </Status>
-                </Statuses>
+                <xsl:if test="unasProductStatus">
+                    <Statuses>
+                        <Status>
+                            <Type>base</Type>
+                            <Value><xsl:value-of select="unasProductStatus"/></Value>
+                        </Status>
+                    </Statuses>
+                </xsl:if>
 
                 <Params>
                     <Param>
