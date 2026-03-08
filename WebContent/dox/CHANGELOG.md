@@ -1,5 +1,7 @@
 ## web6Proxy - valtozaslista joe @ 2025.05.31
 
+### - 2025.08.25
+GIT Merge Test into Master
 
 ### - 2026.01.06
 Issue: 0004: SetProduct STATE confused - Ha UNASban mar letezett, de inaktiv es symbol aktivalja - akkor ez nem tortent meg

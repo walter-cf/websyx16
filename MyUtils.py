@@ -1886,12 +1886,12 @@ def trimAddressAttributes(addr):
 #
 ## Kell ez? A deveben pont ezt csinalom, assszem
 def batchMethodWrapper(configItemName, methodName:str=None, *args, **kwargs ):
-    prc = next((x[configItemName] for x in  BATCH_PROCESSES if   list(filter(lambda key: key == configItemName, x))), {}) or {}
+    prc = next((x for x in  BATCH_PROCESSES if   list(filter(lambda key: key == configItemName, x))), {}) or {}
     if methodName is None:
         methodName = prc.get('method')
-    eval( f"{methodName}(prc {', args' if args else ''}{', kwargs' if kwargs else ''})")
+    eval( f"{methodName}(prc, args, kwargs)")
 #
-def archiveLogFiles(prc, args=None, kwargs=None):
+def archiveLogFiles(prc, args, kwargs): # szerintem ez csak hetente kell
     '''tar.gz a logz/*.log file-okat EXCEPT utolso (maxIndex) file-t?
        prc[preservetime]::(defa90 nap) - nal regebbi fileokat torli a logz-z kvt-ban'''
     logPath  = prc.get('filePath')
@@ -1912,18 +1912,18 @@ def archiveLogFiles(prc, args=None, kwargs=None):
         cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyLog-{currDateStr}-{UtcNow()}.tgz {excludeStr} --remove-files {logPath}/*.log"
         os.system(cmd)
     # remove older than UtNow - 86400*prc[reservetime]
-    cmd = f"find {prc.get('archivePath')} -type f  -mtime +{prc.get('preserveDays')} -print0 | xargs -0 rm"
+    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
     os.system(cmd)
 
-def archiveXmlFiles(prc, args=None, kwargs=None): # ez meg talan nem is kell, a rotate csinalhatja
+def archiveXmlFiles(prc, args, kwargs): # ez meg talan nem is kell, a rotate csinalhatja
     '''tar.gz a xmlfiles/*.xml and move to ../xmlfiles-z/'''
     currDateStr = datetime.today().strftime('%Y-%m-%d')
 
-    cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyXmlz-{currDateStr}-{UtcNow()}.tgz  --remove-files {prc.get('filePath')}/*.xml"
+    cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyXmlz-{currDateStr}-{UtcNow()}.tgz  --remove-files {prc.get('filePath')}/*.log"
     os.system(cmd)
     #
     # remove older than UtNow - 86400*prc[reservetime]
-    cmd = f"find {prc.get('archivePath')} -type f  -mtime +{prc.get('preserveDays')} -print0 | xargs -0 rm"
+    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
     os.system(cmd)
 
 from stat import *
@@ -1949,3 +1949,80 @@ def visitfile(file):
 
 def testWalkTree(path="./"):
     walktree(path, visitfile)
+
+#
+# Log/Xmlfile Rotate
+#
+## Kell ez? A deveben pont ezt csinalom, assszem
+def batchMethodWrapper(configItemName, methodName:str=None, *args, **kwargs ):
+    prc = next((x[configItemName] for x in  BATCH_PROCESSES if   list(filter(lambda key: key == configItemName, x))), {}) or {}
+    if methodName is None:
+        methodName = prc.get('method')
+    eval( f"{methodName}(prc, args, kwargs)")
+#
+def archiveLogFiles(prc, args, kwargs): # szerintem ez csak hetente kell
+    '''tar.gz a logz/*.log file-okat EXCEPT utolso (maxIndex) file-t?
+       prc[preservetime]::(defa90 nap) - nal regebbi fileokat torli a logz-z kvt-ban'''
+    logPath  = prc.get('filePath')
+    maxIdx=0
+    excludeFilename = None
+    # find maxIndex/lastDate file
+    for f in os.listdir(logPath):
+      if f.endswith('log'):
+          idx = -1  if '-' not in f else int(f[1+f.rindex('-'):-4])
+          if idx > maxIdx:
+            maxIdx = idx
+            excludeFilename = f
+            ctime = os.stat( f'{logPath}/{f}' ).st_ctime
+    # tar cvf syxProxyLog-`currDateStr-`timeStamp-Az egyediseg miatt`.tgz -exclude lastFile *.log
+    if maxIdx > 0:
+        currDateStr = datetime.today().strftime('%Y-%m-%d')
+        excludeStr = '' if excludeFilename is None else f'--exclude {excludeFilename}'
+        cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyLog-{currDateStr}-{UtcNow()}.tgz {excludeStr} --remove-files {logPath}/*.log"
+        os.system(cmd)
+    # remove older than UtNow - 86400*prc[reservetime]
+    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
+    os.system(cmd)
+
+def archiveXmlFiles(prc, args, kwargs): # ez meg talan nem is kell, a rotate csinalhatja
+    '''tar.gz a xmlfiles/*.xml and move to ../xmlfiles-z/'''
+    currDateStr = datetime.today().strftime('%Y-%m-%d')
+
+    cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyXmlz-{currDateStr}-{UtcNow()}.tgz  --remove-files {prc.get('filePath')}/*.log"
+    os.system(cmd)
+    #
+    # remove older than UtNow - 86400*prc[reservetime]
+    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
+    os.system(cmd)
+
+from stat import *
+def walktree(top, callback):
+    '''recursively descend the directory tree rooted at top,
+       calling the callback function for each regular file
+       >>>  https://docs.python.org/3/library/stat.html'''
+    for f in os.listdir(top):
+        pathname = os.path.join(top, f)
+        mode = os.lstat(pathname).st_mode
+        if S_ISDIR(mode):
+            # It's a directory, recurse into it
+            walktree(pathname, callback)
+        elif S_ISREG(mode):
+            # It's a file, call the callback function
+            callback(pathname)
+        else:
+            # Unknown file type, print a message
+            print('Skipping %s' % pathname)
+
+def visitfile(file):
+    print('visiting', file)
+
+def testWalkTree(path="./"):
+    walktree(path, visitfile)
+
+import MyLogger
+w6fLog = None
+def getLogger():
+    return w6fLog
+def setLogger(lgr:MyLogger):
+    global w6fLog
+    w6fLog = lgr

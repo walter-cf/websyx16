@@ -35,7 +35,7 @@ class ProxyErrCode(IntEnum):
     B25 = 25
     B26 = 26
     B27 = 27
-    B28 = 28
+    B28 = 28  # UnasAuth Login result HTML page - Api not available
     B29 = 29
     B30 = 30
     B31 = 31
