@@ -64,11 +64,13 @@ def transformUnasRequestObject(root, xsltFilename):
                         prod.unasProductAction = 'modify'
                         if prod.webdisplay == 0:
                             prod.unasProductStatus = UPC.ProductStatus_INACTIVE
-                        # upc.status == UPC.ProductStatus_INACTIVE
-                        elif prod.webdisplay == 1 and upc.status != UPC.ProductStatus_NEW and upc.status != UPC.ProductStatus_NOTAVAILABLE:
+                            upc.status = UPC.ProductStatus_INACTIVE
+                        elif upc.status == UPC.ProductStatus_INACTIVE:
+                        # elif prod.webdisplay == 1 and upc.status != UPC.ProductStatus_NEW and upc.status != UPC.ProductStatus_NOTAVAILABLE:
                             # TODO @20260106 Igazibol UNAS-Inactive kellene nezni!!
                             # upc.status == UPC.ProductStatus_INACTIVE
                             prod.unasProductStatus = UPC.ProductStatus_ACTIVE
+                            upc.status = UPC.ProductStatus_ACTIVE
                 #
                 # GuaranteeMonths, Attributes, TargetCategory (symbolId, Gyarto, VTSZ, EAN)
                 attribs = ''
@@ -199,7 +201,8 @@ def transformUnasRequestObject(root, xsltFilename):
                         cust.unasCustomerId = ucc.unasId
                         if  cust.deleted == 1:             # 'live' == ucc.state and
                             logging.info( f"PostCust-DELETE** sid:{ucc.symbolId}, code:{ucc.code}, lastMod:{ucc.lastmod}")
-                            cust.unasCustomerAction = 'delete'
+                            # cust.unasCustomerAction = 'delete'
+                            cust.SkipThisItem = '1'   # 20260202 delete ignore
                             ucc.state = MU.CACHESTATE_marked4delete
                         else:
                             cust.unasCustomerAction = 'modify'
@@ -275,7 +278,8 @@ def transformUnasRequestObject(root, xsltFilename):
                         if  cust.deleted == 1:             # 'live' == ucc.state and
                             logging.warning( "PtrfCust-DELETE** sid:%i, code:%s, lastMod:%i",
                                             ucc.symbolId, 'None' if ucc.code is None else ucc.code, ucc.lastmod )
-                            cust.unasCustomerAction = 'delete'
+                            # cust.unasCustomerAction = 'delete'
+                            cust.SkipThisItem = '1'   # 20260202 delete ignore
                             ucc.state = MU.CACHESTATE_marked4delete
                         else:
                             cust.unasCustomerAction = 'modify'
