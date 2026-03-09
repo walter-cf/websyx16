@@ -570,15 +570,14 @@ def getGlobalLogLevel():
       logLevel = logging.DEBUG
   return logLevel
 
-
 import MyLogger
 def changeLogFile():
 
   myLogger = MU.getLogger()
   logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
   logLevel = getGlobalLogLevel()
-  if logger is None:
-    myLogger = MyLogger(logFileName, level='debug')
+  if myLogger is None:
+    myLogger = MyLogger.SyxLogger(logFileName, level=logLevel).logger
     # logging.basicConfig(filename=,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
     # logger=logging.getLogger('w6p')
     # logging.info("logger created")
@@ -596,59 +595,9 @@ def changeLogFile():
   file_handler.setLevel(logLevel)
   formatter = logging.Formatter("%(asctime)s %(levelname)s %(filename)s:%(lineno)d [%(funcName)s]: %(message)s")
   file_handler.setFormatter(formatter)
-  logger.addHandler(file_handler)  
-  MU.setLogger(logger)
-  return logger
-
-if __name__ == "__main__":
-  configPath = YAML_CONFIG_FILE
-  if (len(sys.argv)>1):
-    configPath = sys.argv[1]
-  MU.readYaml(configPath)
-
-def getGlobalLogLevel():
-  if MU.LOGLEVEL[0].upper() == 'I':
-      logLevel = logging.INFO
-  elif MU.LOGLEVEL[0].upper() == 'W':
-      logLevel = logging.WARNING
-  elif MU.LOGLEVEL[0].upper() == 'E':
-      logLevel = logging.ERROR
-  else:
-      logLevel = logging.DEBUG
-  return logLevel
-
-
-import MyLogger
-def changeLogFile():
-
-  myLogger = MU.getLogger()
-  logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
-  logLevel = getGlobalLogLevel()
-  if logger is None:
-    myLogger = MyLogger(logFileName, level='debug')
-    # logging.basicConfig(filename=,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
-    # logger=logging.getLogger('w6p')
-    # logging.info("logger created")
-  #
-  # close filehandles
-  for handler in myLogger.handlers[:]:  # make a copy of the list
-    handler.close()
-    myLogger.removeHandler(handler)    
-    # logger.handlers[0].stream.close()
-    # logger.removeHandler(logger.handlers[0])
-    #
-  logrotate(logFileName)
-  # reopen file
-  file_handler = logging.FileHandler(logFileName)
-  file_handler.setLevel(logLevel)
-  formatter = logging.Formatter("%(asctime)s %(levelname)s %(filename)s:%(lineno)d [%(funcName)s]: %(message)s")
-  file_handler.setFormatter(formatter)
-  logger.addHandler(file_handler)  
-  MU.setLogger(logger)
-  return logger
-
-
-      
+  myLogger.addHandler(file_handler)  
+  MU.setLogger(myLogger)
+  return myLogger
 
 if __name__ == "__main__":
   configPath = YAML_CONFIG_FILE
@@ -658,7 +607,7 @@ if __name__ == "__main__":
 
   GBL_ErrorMessages = []
 
-  logger=changeLogFile()
+  localLogger=changeLogFile()
   ## 
   ## logLevel = getGlobalLogLevel()
   ## logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
@@ -681,18 +630,21 @@ if __name__ == "__main__":
 
   uts = MU.createTransactionId( UnasTransactionType.STARTPROXY )
   # TODO DB Connect TEST-eket kellene vegezni es ha nincs, akkor leallni vagy varni 5 percet 3x ujraprobalni es utana fatalExit
-  logger.info( 'Test FB connect; Customer table rowCount: %s' % FBU.testDbConnect() )
+  localLogger.info( 'Test FB connect; Customer table rowCount: %s' % FBU.testDbConnect() )
   FBU.insertDummyCustomer()
   FBU.dbClose()
 
   MU.mySqlCheckConnection()
   MU.loadUnasProxyContext()
+
   if not MU.JOETESTCustomer:
     MU.checkCacheState(force=True)
     # MU.UnasOrderList.clear()
 
   if MU.isLogLevelWarn():
-      print("Server started http://%s:%s, PID: %d" % (MU.hostName, MU.serverPort, os.getpid()))  #Server starts
+      _m = "Server started http://%s:%s, PID: %d" % (MU.hostName, MU.serverPort, os.getpid())
+      print(_m)  #Server starts
+      localLogger.info( _m )
       SM.sendProxyMail('\r\n'.join( MSG_serverStarting ), AlertMailType( UnasTransactionType.STARTPROXY, code=ProxyErrCode.INFO), 'starting')
 
   try:
@@ -700,7 +652,7 @@ if __name__ == "__main__":
       webServer.serve_forever() #@IgnoreException
   except KeyboardInterrupt:
       # FBU.dbClose()
-      logging.info('Server closing...')
+      localLogger.info('Server closing...')
 
   if controlSocketThread is not None:
       MySocket.mySocketWebServer.shutdown()

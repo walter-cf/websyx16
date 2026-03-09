@@ -2023,6 +2023,6 @@ import MyLogger
 w6fLog = None
 def getLogger():
     return w6fLog
-def setLogger(lgr:MyLogger):
+def setLogger(lgr:logging.Logger):
     global w6fLog
     w6fLog = lgr
