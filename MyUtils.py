@@ -1,3 +1,5 @@
+import base64
+from collections import namedtuple
 import json
 import os
 import os
@@ -11,12 +13,13 @@ from typing import Dict, List
 import xmltodict
 import yaml
 # import xml.etree.ElementTree as ET
-from lxml import etree as ET
-from lxml import objectify
+import lxml.etree as ET
+import lxml.objectify as objectify
 from markdown2 import Markdown
 
 import FdbUtils as FBU
 import MyBatch
+from MyLogger import SyxLogger
 import MySmtpClient as SM
 import MyUtilsTypes as MUT
 import UnasConnectHelper as UCH
@@ -24,15 +27,28 @@ import UnasCustomerCache as UCC
 import UnasOrderCache as UOC
 from MySqlUtils import MySqlWrapper
 from UnasProductCache import UnasProductCache as UPC
-
 #
+# PEPITA
+# 
+from PepitaOrderCache import PepitaCustomer, PepitaOrder, PepitaProducts, PaymentModeEnum, DeliveryModeEnum, from_json as POC_fromJson, from_jsonFile as POC_fromJsonFile
+from MySqlUtils import MySqlWrapper
+from UnasProductCache import UnasProductCache as UPC
+from xmlclazz.customerOffer import CustomerOffer
+# 
+# Gonlom a PriceGroupnal majd elojonnek ezek is
+#
+# from xmlclazz.customerGroupResponse import CustomerGroupResponse
+# from xmlclazz.customerOffer import CustomerOffer, CustomerOfferDetail
+# from xmlclazz.customerResponse import CustomerResponse
+# from xmlclazz.productResponse import ProductResponse
+
 
 CONFIG_FILE = None
 FaviconData = None
 def reReadYaml():
     return readYaml(CONFIG_FILE)
 
-PROXYCONFIG = None
+PROXYCONFIG : Dict = dict({})
 def readYaml(yamlFile) -> str:
     global CONFIG_FILE, PROXYCONFIG
     CONFIG_FILE = yamlFile 
@@ -45,6 +61,7 @@ def readYaml(yamlFile) -> str:
         except yaml.YAMLError as exc:
             print(exc)
     return json.dumps(PROXYCONFIG)
+
 
 def valDef(val, defa):
     return defa if val is None else val
@@ -268,14 +285,14 @@ def collectCustItems(xml):
                 try:
                     putCustomerIntoCache(ucc)
                 except Exception as e:
-                    logging.error(f"UnasCustomerCache corrupted! Err:{str(e)}, unasId:{custId}")
+                    getLogger().logError(f"UnasCustomerCache corrupted! Err:{str(e)}, unasId:{custId}")
                 # end try
             elif  custId is None:
-                logging.error(f"UnasCustomer DATA-ERROR! Customer-unasId is NULL UCC:" + ucc.toStr())
+                getLogger().logError(f"UnasCustomer DATA-ERROR! Customer-unasId is NULL UCC:" + ucc.toStr())
             elif  UnasCustomerList.get(custId) is None:
                 putCustomerIntoCache(ucc) # type: ignore
             else:
-                logging.error(f"UnasCustomerCache corrupted! tripled, unasId:{custId}")
+                getLogger().logError(f"UnasCustomerCache corrupted! tripled, unasId:{custId}")
         #
         else:
             #_m = "xmlData: %s" % ET.tostring(cust , encoding='utf-8', pretty_print=True)
@@ -504,13 +521,13 @@ def mkCustomerCode( ucc : UCC.UnasCustomerCache, prefix : str = 'unregistered'):
 
 def getCustomerFromCacheByOrder( cust ) -> UCC.UnasCustomerCache:
     unasId = 0 if len(cust.findall('Id')) == 0 else int(cust.find('Id').text)
-    return getCustomerFormCache(unasId)
+    return getCustomerFromCache(unasId)
 
 def getCustomerFormCacheByCode(code:str ) -> UCC.UnasCustomerCache:
     ucc = next((x for x in  UnasCustomerList.values() if x.code == code), None )
     return ucc # type: ignore
 
-def getCustomerFormCache(unasId:int ) -> UCC.UnasCustomerCache:
+def getCustomerFromCache(unasId:int ) -> UCC.UnasCustomerCache:
     ucc = UnasCustomerList.get( unasId )
     if ucc is not None:
         if ucc.symbolId is None:
@@ -545,7 +562,7 @@ def putCustomerIntoCache(ucc : UCC.UnasCustomerCache):
         UnasCustomerList[ucc.unasId] = ucc
     else:
         _m = '[putCustomerIntoCache]:Duplicate item:' + u.toStr() + ' :*-*: '+ ucc.toStr()
-        logging.error( _m, u, ucc)
+        getLogger().logError( _m, u, ucc)
         raise MUT.MyProgramFlowErrorException( _m, MUT.ProxyErrCode.E40 )
 #
 # Constants
@@ -564,6 +581,7 @@ UnasProductList : Dict[str, UPC] = dict({})
 UnasCustomerList: Dict[int, UCC.UnasCustomerCache] = dict({})
 #UnasOrderList    = dict({})
 UnasOrderList : Dict[str, UOC.UnasOrderCache] = dict({})
+PepitaOrderList : Dict[int, PepitaOrder] = dict({})
 UnasBadOrderList : Dict[int, UOC.UnasOrderCache] = dict({})
 UnasProductWebCategoryId = 0
 UnasProductWebCategoryName = "WebCat"
@@ -588,7 +606,7 @@ XMLTAG = '<?xml version="1.0" encoding="UTF-8" ?>'
 XMLTAG16 = '<?xml version="1.0" encoding="UTF-16" ?>'
 
 #Batched
-BATCH_PROCESSES = List[MyBatch.BatchContext]
+BATCH_PROCESSES : List[MyBatch.BatchContext] = []
 BATCH_GRANULARITY : int = 0
 
 # Databases
@@ -1618,16 +1636,16 @@ def loadUnasProxyContext():
     sql = 'SELECT * FROM proxy_context'
     ctxRow = mySqlIntance.getRow(sql) or {}
     ctx = getUnasContext()
-    ctx.lastGetCustomer = 0 if ctxRow['lastGetCustomer'] is None else ctxRow['lastGetCustomer']
-    ctx.lastGetOrder    = 0 if ctxRow['lastGetOrder'   ] is None else ctxRow['lastGetOrder'   ]
-    ctx.lastSetCustomer = 0 if ctxRow['lastSetCustomer'] is None else ctxRow['lastSetCustomer']
-    ctx.lastSetProduct  = 0 if ctxRow['lastSetProduct' ] is None else ctxRow['lastSetProduct' ]
+    ctx.lastGetCustomer = 0 if ctxRow['lastGetCustomer'] is None else ctxRow['lastGetCustomer'] # type: ignore
+    ctx.lastGetOrder    = 0 if ctxRow['lastGetOrder'   ] is None else ctxRow['lastGetOrder'   ] # type: ignore
+    ctx.lastSetCustomer = 0 if ctxRow['lastSetCustomer'] is None else ctxRow['lastSetCustomer'] # type: ignore
+    ctx.lastSetProduct  = 0 if ctxRow['lastSetProduct' ] is None else ctxRow['lastSetProduct' ] # type: ignore
 
 def loadUnasBatchContext():
     sql = 'SELECT * FROM proxy_context'
     ctxRow = mySqlIntance.getRow(sql) or {}
     ctx = getUnasContext()
-    ctx.lastUnasOrderStatus = 0 if len(ctxRow) == 0 else ctxRow['lastUnasOrderStatus']
+    ctx.lastUnasOrderStatus = 0 if len(ctxRow) == 0 else ctxRow['lastUnasOrderStatus'] # type: ignore
 
 def saveUnasProxyContext():
     ctx = getUnasContext()
@@ -1742,21 +1760,17 @@ mySqlIntance = MySqlWrapper()
 def mySqlCheckConnection() -> bool :
     try:
         conn = mySqlIntance.getConn()
-        return doMySql('select 1') or False
+        res = doMySql('select 1')
+        return len(res)>0 or False
     except:
         conn = mySqlIntance.getConn()
-        return conn or False
+        return conn is not None
 
 def doMySql(sql, params = ()):
     return mySqlIntance.doSql( sql, params)
 
 def execMySql(sql, params):
     return mySqlIntance.execSql( sql, params)
-
-def createStatEntrySql(action, xmlParam ):
-    sql = "INSERT INTO commstats (action, requestXml, transactionId) VALUES (%s, %s, %s)"
-    val = (action, xmlParam, getTS())
-    return mySqlIntance.execSql(sql, val, True )
 
 def createStatEntrySql(action, xmlParam ):
     sql = "INSERT INTO commstats (action, requestXml, transactionId) VALUES (%s, %s, %s)"
@@ -1777,11 +1791,11 @@ def getPacketLastHourCnt(fromTime:int=0, toTime:int = 0):
             "SELECT count(*) cnt from commstats WHERE createdAt between %s and %s", (
                 tsToDateSql( fromTime if fromTime > 0 else UtcNow(3600)),
                 tsToDateSql( toTime if toTime > 0 else getCurrTime())     ))  or []
-    return 0 if len(result) == 0 else result[0]['cnt']
+    return 0 if len(result) == 0 else  int(result[0]['cnt'] or '0') # type: ignore
 # Modositott  verzio: count last 10,20,40 60 minutes
-def getPacketLastIntervalCnt(interval:int=60):
-    result =  mySqlIntance.doSql(f"SELECT count(*) cnt from commstats WHERE createdAt > DATE_SUB(NOW(), interval {interval} MINUTE)") or []
-    return 0 if len(result) == 0 else result[0]['cnt']
+def getPacketLastIntervalCnt(interval:int=60) -> int:
+    result =  mySqlIntance.doSql(f"SELECT count(*) cnt from commstats WHERE createdAt > DATE_SUB(NOW(), interval {interval} MINUTE)") or [ { 'cnt' : 0 } ]
+    return 0 if len(result) == 0 else int(result[0]['cnt'] or '0') # type: ignore
 
 
 def getQueryParamInt(queryParams, name:str):
@@ -1806,23 +1820,23 @@ def errorHandler(errMsg:str, alertType:MUT.AlertMailType, level = logging.INFO, 
     logErrMsg = f"TS:[{actTS}] - Err:[{alertType.errCode}]: {json.dumps(alertType,cls=MUT.AlertMailTypeEncoder)} %s"
     if eDescr is None:
         SM.sendProxyMail(errMsg, alertType, '%s! TS:%d' % ( _subj, actTS))
-        logging.error(logErrMsg, errMsg)
+        getLogger().logError(logErrMsg, errMsg)
         writeErrorSql(errMsg, alertType,_subj )
     else:
         exception_type, exception_value, tracebackDummy = eDescr
         errMsg += f"\r\n\r\nException:{exception_type} / {exception_value}\r\n{SysTB.format_exc()}"
         if exception_type in ( MUT.MyProgramFlowWarningException, MUT.MyProgramFlowErrorException ):
-            logging.debug(logErrMsg, errMsg)
+            getLogger().logError(logErrMsg, errMsg)
         else:
             SM.sendProxyMail(errMsg, alertType, '%s! TS:%d' % ( _subj, actTS))
-            logging.error(logErrMsg, errMsg)
+            getLogger().logError(logErrMsg, errMsg)
             writeErrorSql(errMsg, alertType,_subj )
 
 def writeErrorSql(errMsg:str, alertType:MUT.AlertMailType, _subj:str='genericDirectWrite', ts:int=0):
     if ts == 0:
         ts = getTS()
     mySqlIntance.writeError(_subj, errMsg, alertType, ts)
-    logging.error(errMsg)
+    getLogger().logError(errMsg)
 #########################################################################################
 # MySQL Wrapper section endz....
 #########################################################################################
@@ -1885,8 +1899,8 @@ def trimAddressAttributes(addr):
 # Log/Xmlfile Rotate
 #
 ## Kell ez? A deveben pont ezt csinalom, assszem
-def batchMethodWrapper(configItemName, methodName:str=None, *args, **kwargs ):
-    prc = next((x for x in  BATCH_PROCESSES if   list(filter(lambda key: key == configItemName, x))), {}) or {}
+def batchMethodWrapper(configItemName, methodName:str, *args, **kwargs ):
+    prc = next((x[configItemName] for x in  BATCH_PROCESSES if list(filter(lambda key: key == configItemName, x))), {}) or {} # type: ignore
     if methodName is None:
         methodName = prc.get('method')
     eval( f"{methodName}(prc, args, kwargs)")
@@ -1894,7 +1908,7 @@ def batchMethodWrapper(configItemName, methodName:str=None, *args, **kwargs ):
 def archiveLogFiles(prc, args, kwargs): # szerintem ez csak hetente kell
     '''tar.gz a logz/*.log file-okat EXCEPT utolso (maxIndex) file-t?
        prc[preservetime]::(defa90 nap) - nal regebbi fileokat torli a logz-z kvt-ban'''
-    logPath  = prc.get('filePath')
+    logPath  = prc.get('logPath')
     maxIdx=0
     excludeFilename = None
     # find maxIndex/lastDate file
@@ -1912,7 +1926,7 @@ def archiveLogFiles(prc, args, kwargs): # szerintem ez csak hetente kell
         cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyLog-{currDateStr}-{UtcNow()}.tgz {excludeStr} --remove-files {logPath}/*.log"
         os.system(cmd)
     # remove older than UtNow - 86400*prc[reservetime]
-    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
+    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')} -exec rm {'{}'} \\;"
     os.system(cmd)
 
 def archiveXmlFiles(prc, args, kwargs): # ez meg talan nem is kell, a rotate csinalhatja
@@ -1926,7 +1940,7 @@ def archiveXmlFiles(prc, args, kwargs): # ez meg talan nem is kell, a rotate csi
     cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
     os.system(cmd)
 
-from stat import *
+from stat import S_ISDIR, S_ISREG
 def walktree(top, callback):
     '''recursively descend the directory tree rooted at top,
        calling the callback function for each regular file
@@ -1950,79 +1964,180 @@ def visitfile(file):
 def testWalkTree(path="./"):
     walktree(path, visitfile)
 
-#
-# Log/Xmlfile Rotate
-#
-## Kell ez? A deveben pont ezt csinalom, assszem
-def batchMethodWrapper(configItemName, methodName:str=None, *args, **kwargs ):
-    prc = next((x[configItemName] for x in  BATCH_PROCESSES if   list(filter(lambda key: key == configItemName, x))), {}) or {}
-    if methodName is None:
-        methodName = prc.get('method')
-    eval( f"{methodName}(prc, args, kwargs)")
-#
-def archiveLogFiles(prc, args, kwargs): # szerintem ez csak hetente kell
-    '''tar.gz a logz/*.log file-okat EXCEPT utolso (maxIndex) file-t?
-       prc[preservetime]::(defa90 nap) - nal regebbi fileokat torli a logz-z kvt-ban'''
-    logPath  = prc.get('filePath')
-    maxIdx=0
-    excludeFilename = None
-    # find maxIndex/lastDate file
-    for f in os.listdir(logPath):
-      if f.endswith('log'):
-          idx = -1  if '-' not in f else int(f[1+f.rindex('-'):-4])
-          if idx > maxIdx:
-            maxIdx = idx
-            excludeFilename = f
-            ctime = os.stat( f'{logPath}/{f}' ).st_ctime
-    # tar cvf syxProxyLog-`currDateStr-`timeStamp-Az egyediseg miatt`.tgz -exclude lastFile *.log
-    if maxIdx > 0:
-        currDateStr = datetime.today().strftime('%Y-%m-%d')
-        excludeStr = '' if excludeFilename is None else f'--exclude {excludeFilename}'
-        cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyLog-{currDateStr}-{UtcNow()}.tgz {excludeStr} --remove-files {logPath}/*.log"
-        os.system(cmd)
-    # remove older than UtNow - 86400*prc[reservetime]
-    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
-    os.system(cmd)
-
-def archiveXmlFiles(prc, args, kwargs): # ez meg talan nem is kell, a rotate csinalhatja
-    '''tar.gz a xmlfiles/*.xml and move to ../xmlfiles-z/'''
-    currDateStr = datetime.today().strftime('%Y-%m-%d')
-
-    cmd = f"tar zcvf {prc.get('archivePath')}/syxProxyXmlz-{currDateStr}-{UtcNow()}.tgz  --remove-files {prc.get('filePath')}/*.log"
-    os.system(cmd)
-    #
-    # remove older than UtNow - 86400*prc[reservetime]
-    cmd = f"find {prc.get('archivePath')} -mtime +{prc.get('preserveDays')}"
-    os.system(cmd)
-
-from stat import *
-def walktree(top, callback):
-    '''recursively descend the directory tree rooted at top,
-       calling the callback function for each regular file
-       >>>  https://docs.python.org/3/library/stat.html'''
-    for f in os.listdir(top):
-        pathname = os.path.join(top, f)
-        mode = os.lstat(pathname).st_mode
-        if S_ISDIR(mode):
-            # It's a directory, recurse into it
-            walktree(pathname, callback)
-        elif S_ISREG(mode):
-            # It's a file, call the callback function
-            callback(pathname)
-        else:
-            # Unknown file type, print a message
-            print('Skipping %s' % pathname)
-
-def visitfile(file):
-    print('visiting', file)
-
-def testWalkTree(path="./"):
-    walktree(path, visitfile)
-
-import MyLogger
-w6fLog = None
-def getLogger():
+w6fLog : SyxLogger
+def getLogger() -> SyxLogger:
     return w6fLog
-def setLogger(lgr:logging.Logger):
+def setLogger(lgr:SyxLogger):
     global w6fLog
     w6fLog = lgr
+#
+#  get Config(yaml) value NOT TESTED!!!
+#
+def getCfgVal(path:str, fromTag:str=''):
+    itm = Conf(fromTag or '')
+    return Conf(path, itm) # pyright: ignore[reportArgumentType]
+
+#def Conf(path:str, fromCfg:Dict= dict({})):
+def Conf(path:str, fromCfg:Dict = PROXYCONFIG):
+    val = fromCfg or PROXYCONFIG
+    # print(val)
+    if val is not None:
+        for ztag in path.split('.'):
+            val = val.get(ztag) # pyright: ignore[reportOptionalMemberAccess]
+    return val
+#
+# Pepita Product to XML es Orders from Pepita
+#
+
+def getSymbolPrice(sku:str) -> float:
+    priceStr = FBU.getPriceBySku(sku)
+    return 0  if priceStr is None else  float( priceStr )
+
+def putPepitaOrderIntoCache(jsonStr:str) ->  PepitaOrder:
+    poc = POC_fromJson(jsonStr)
+    poc.tsId = createTransactionId(MUT.UnasTransactionType.PEPITA_ORDER)
+    PepitaOrderList[poc.id] = poc
+    # Save into file
+    with open(f"{Conf("pepita.folder.order")}/{poc.tsId}-{poc.id}.json", "w") as fp:
+        fp.write( jsonStr )
+    #
+    if poc.package_label:
+        with open(f"{Conf("pepita.folder.package")}/{poc.tsId}-{poc.id}.pdf", "wb") as fp:
+            fp.write( base64.b64decode(poc.package_label) )
+    return poc
+
+def removePepitaOrderFromCache(orderId:int):
+    poc = PepitaOrderList.pop(orderId)
+    fn = f"{poc.tsId}-{poc.id}.json"
+    os.rename(f"{Conf("pepita.folder.order")}/{fn}", f"{Conf("pepita.folder.archive")}/{fn}")
+
+def pepitaPaymentMethod(mode:PaymentModeEnum) -> str:
+    match (mode):
+        case PaymentModeEnum.cod:
+            return "Utánvéttel"
+        case PaymentModeEnum.creditcard:
+            return "Bankkártyával a helyszínen"
+        case PaymentModeEnum.transfer:
+            return "Előre utalással"
+        case _:
+            raise Exception('asdfasdf')
+    return None
+
+def pepitaTransportMethod(mode:DeliveryModeEnum) -> str:
+    match (mode):
+        case DeliveryModeEnum.gls:
+            return "MPL futárral"
+        case DeliveryModeEnum.gls_parcellocker:
+            return "MPL futárral"
+        case DeliveryModeEnum.gls_xxl:
+            return "Ne küldjétek még! Várjon még másik megrendelésre!"
+        case DeliveryModeEnum.mpl:
+            return "MPL futárral"
+        case DeliveryModeEnum.shipping:
+            return "Ne küldjétek még! Várjon még másik megrendelésre!"
+        case _:
+            return "Személyes átvétel a bemutatótermünkben"
+    return None
+
+def createOrderItem(p_d) -> str:
+    # p = type('PepitaProducts', (object,), p_d)
+    p = namedtuple('PepitaProducts', p_d.keys())(*p_d.values())
+    return f"""
+        <productcode>{p.sku}</productcode>
+        <quantity>{p.quantity}</quantity>
+        <unipricenet>{p.price / 1.27}</unipricenet>
+        <grossvalue>{p.price}</grossvalue>
+    """
+
+def toSymbolOrderXml(poc : PepitaOrder) -> str:
+    cust = namedtuple('PepitaCustomer', poc.customer.keys())(*poc.customer.values()) # type: ignore
+    
+    customerid, customercode = createSymbolCustomer(poc.id, cust) # type: ignore
+    orderKey = f'PEP-{poc.id}'
+    xml = f"""<customerid>{customerid}</customerid>
+                <customercode>{customercode}</customercode>
+                <customeremail>{cust.email}</customeremail>
+
+            <date>{poc.date}</date>
+            <orderid>{orderKey}</orderid>
+            <currency>{poc.total_shipping_price_currency}</currency>
+            <vouchersequencecode>B2C</vouchersequencecode>
+
+            <country>{cust.billing_country}</country>
+            <zip>{cust.billing_postal_code}</zip>
+            <city>{cust.billing_city}</city>
+            <street>{cust.billing_street}</street>
+
+            <transportcountry>{cust.shipping_country}</transportcountry>
+            <transportzip>{cust.shipping_postal_code}</transportzip>
+            <transportcity>{cust.shipping_city}</transportcity>
+            <transportstreet>{cust.shipping_street_address}</transportstreet>
+            <transporthousenumber>{cust.shipping_house_number}</transporthousenumber>
+            <transportcontactname>{cust.billing_name}</transportcontactname>
+
+            <transportmode>{pepitaTransportMethod(poc.delivery_mod)}</transportmode>
+            <paymentmethod>{pepitaPaymentMethod(poc.payment_mode)}</paymentmethod>
+            <!-- paymentmethodtolerance> Kimarad, nincs adatom -->
+            <internalcomment>{poc.customer_message}</internalcomment>
+            <comment>{poc.courier_message}</comment>
+
+            <!-- Productitems -->
+            { ' '.join([ f'<detail>{createOrderItem(itm)}</detail>' for itm in poc.products ]) }
+            
+            <feedbackurl>{UNAS_FEEDBACK_URL}/oke/pepitaorder?id={poc.id}&amp;symbolid=</feedbackurl>
+            <errorurl>{UNAS_FEEDBACK_URL}/err/pepitaorder?id={poc.id}&amp;errormsg=</errorurl>
+    """
+    return xml
+
+def loadPepitaOrdersHanging() -> Dict[int, PepitaOrder]:
+    global PepitaOrderList
+    PepitaOrderList.clear()
+    pepitaOrdersFolder = str(Conf("pepita.folder.order")) or '.'
+    if os.path.exists(pepitaOrdersFolder):
+        for fn in os.listdir(pepitaOrdersFolder):
+            if fn.endswith(".json"):
+                with open(f'{pepitaOrdersFolder}/{fn}', "r") as text_file:      
+                    poc = POC_fromJsonFile(text_file)
+                    poc.tsId = int(fn.split('-')[0])
+                    PepitaOrderList[poc.id] = poc
+    return PepitaOrderList
+
+###############################
+# Kell ez ???
+###############################
+def mkUniqueGroupName(custId:int) -> str:
+    customerName = FBU.getCustomerNameById(custId)
+    if customerName:
+        return f'{customerName} (@{custId})'
+    else:
+        raise MUT.MyProgramFlowErrorException(f"Missing customer:{custId}", MUT.ProxyErrCode.UNKNOWN)
+
+def createShadowOffer(offer:CustomerOffer) -> bool:
+    # id:int, voucher_number:str, name:str, valid_from:str, valid_to:str
+    offerRow = doMySql("select id, unas_id from customer_offers where id = %s", (offer.id,) )
+    retval = False # offerId is None
+    if len(offerRow) == 0:
+        retval = True
+        execMySql("insert into customer_offers (id, voucher_number, name, valid_from, valid_to)"
+                            + "values( %s, %s , %s , %s , %s )",
+                          (offer.id, offer.voucher_number, offer.name, offer.valid_from, offer.valid_to)
+                    )
+    else:
+        execMySql("update customer_offers set name = %s, voucher_number = %s,valid_from=%s, valid_to=%s where id = %s"
+                  , (offer.name , offer.voucher_number, offer.valid_from, offer.valid_to, offer.id))
+                
+    execMySql( "delete from customer_offer_customers where offer_id=%s", (offer.id))
+    execMySql( "delete from customer_offer_details   where offer_id=%s", (offer.id))
+    for c in [] if offer.customer_offer_customers is None else offer.customer_offer_customers.customer_offer_customer or []:
+        # customerCode =  next(( x.code for x in UnasCustomerList.values() if x.symbolId == c.customer ), None)
+        grpName = mkUniqueGroupName(c.customer)
+        execMySql("insert into customer_offer_customers (id, customer, name, forbid, offer_id ) values( %s, %s, %s, %s, %s )"
+                  , (c.id, c.customer, grpName, c.forbid, offer.id) )
+    for d in [] if offer.customer_offer_details is None else offer.customer_offer_details.customer_offer_detail  or []:
+        execMySql("insert into customer_offer_details (id, product, currency_name, price_category_name, base_price , base_price_date, sales_percent, sales_price, offer_id)" + 
+                " values( %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+                , (d.id, d.product, d.currency_name, d.price_category_name, d.base_price , d.base_price_date, d.sales_percent, d.sales_price, offer.id )
+            )
+    #
+    mySqlIntance.commit()
+    return retval

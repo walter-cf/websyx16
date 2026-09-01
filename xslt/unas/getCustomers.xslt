@@ -33,7 +33,9 @@
                     <street><xsl:value-of  select="Addresses/Invoice/StreetName"  disable-output-escaping="yes" /><xsl:if test="Addresses/Invoice/StreetType"><xsl:text> </xsl:text></xsl:if><xsl:value-of select="Addresses/Invoice/StreetType" /></street>
                     <housenumber><xsl:value-of select="Addresses/Invoice/StreetNumber" /></housenumber>
                 -->
-                <customercategory><xsl:value-of select="unasCustomerCategory" /></customercategory>
+                <xsl:if test="unasCustomerCategory">
+                    <customercategory><xsl:value-of select="unasCustomerCategory" /></customercategory>
+                </xsl:if>
                 <taxnumber><xsl:value-of select="Addresses/Invoice/TaxNumber" /></taxnumber>
                 <email><xsl:value-of select="Email" /></email>
                 <phone><xsl:value-of select="Contact/Phone" /></phone>

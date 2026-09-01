@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import html
 import logging
+import logging.handlers
 import os
 import sys
 import threading
@@ -8,8 +9,6 @@ import time
 import traceback as SysTB
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
-
-import FdbUtils as FBU
 # import urllib
 #
 import GetProcessor as getProc
@@ -18,7 +17,9 @@ import MySmtpClient as SM
 import MySocket
 import MyUtils as MU
 import PostProcessorUNAS as PPU
+import FdbUtils as FBU
 from MyUtilsTypes import *
+from PepitaUtils import savePepitaOrders, batchDoIt as createPepitaProductXml
 
 global GBL_ErrorMessages
 GBL_ErrorMessages = []
@@ -29,11 +30,11 @@ def stopControlWebThread():
             MySocket.myControlWebServer.shutdown()
             time.sleep(2)
             controlWebThread.join()
-            logging.info('controlWebThread - stopped %s', MySocket.myControlWebServer )
+            MU.getLogger().logger.info('controlWebThread - stopped %s', MySocket.myControlWebServer )
         else:
-          logging.info('controlWebThread(!) - already stopped? %s', MySocket.myControlWebServer )
+          MU.getLogger().logger.info('controlWebThread(!) - already stopped? %s', MySocket.myControlWebServer )
     else:
-        logging.info('controlWebThread is zero? Already stopped?' )
+        MU.getLogger().logger.info('controlWebThread is zero? Already stopped?' )
 
  
 def aboutProxy():
@@ -61,7 +62,7 @@ class MyServer(BaseHTTPRequestHandler):
     htmlResponseMessage = 'Garbled-No-Message'
     htmlResponseCode = 404
     try:
-      logging.info('symbol GET: %s' % self.path)
+      MU.getLogger().logger.info('symbol GET: %s' % self.path)
       if MU.isLogLevelDebug():
           print('symbol GET: %s' % self.path)
       if (len(pPath) > 0): ### GET
@@ -86,6 +87,7 @@ class MyServer(BaseHTTPRequestHandler):
           if MU.isClientIpDisabled(self.client_address):
             raise UnasCommIpDisabledException(client = self.client_address)
 
+          fb_Conn = None
           try:
             fb_Conn = FBU.getFbConn()
             unasErrors = []
@@ -94,7 +96,7 @@ class MyServer(BaseHTTPRequestHandler):
               GBL_ErrorMessages.append(errItem)
           # TODO a communacation errort itt kezelhetnem, esetleg - mert ujrakuldom az egeszet, megjelolve a feldolgozottakat
           # except Exception as e:
-          #    logging.error('Unas GET X:%s', e)
+          #    MU.getLogger().logger.error('Unas GET X:%s', e)
           #    errMsg = 'Unexpected(UNAS-Get) error:' + str(e)
           #    MU.errorHandler(errMsg, code=1, level = logging.ERROR)
           #    htmlResponseCode = 500
@@ -103,26 +105,31 @@ class MyServer(BaseHTTPRequestHandler):
           #    raise Exception(errMsg) 
           finally:
             try:
-              FBU.dbClose(fb_Conn)
+              if fb_Conn:
+                FBU.dbClose(fb_Conn)
             except Exception as e:
-              logging.error('Firebird-DB-Close error X:%s', e)
+              MU.getLogger().logger.error('Firebird-DB-Close error X:%s', e)
           # end try
         elif (pPath[1] == "batch"): # Ki kellene innen torolni - csak a Batch hivhassa?
           if pPath[2] == "orderStatusUnas":
             uts = MU.createTransactionId( UnasTransactionType.ORDERSTATUS )
             prc = next((x["orderStatus"] for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'orderStatus', x))), {})
             MB.orderStatusUnasProxy(prc)
+
             retData = "OK"
           elif pPath[2] == "logfiles-rotate":
             uts = MU.createTransactionId( UnasTransactionType.LOGROTATE )
             changeLogFile()
-            logging.warning("logger changed/reloaded")
+            MU.getLogger().logger.warning("logger changed/reloaded")
             MU.batchMethodWrapper('logrotate', methodName='archiveLogFiles' )
             retData = "OK"
           elif pPath[2] == "xmlfiles-rotate":
             uts = MU.createTransactionId( UnasTransactionType.XMLROTATE )
             prc = next((x for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'xmlrotate', x))), {}) or {}
             MU.batchMethodWrapper('xmlrotate', methodName='archiveXmlFiles' )
+            retData = "OK"
+          elif pPath[2] == "createProductXml":
+            createPepitaProductXml()
             retData = "OK"
           elif pPath[2] == "dummy":
             retData = "OK"
@@ -175,7 +182,7 @@ class MyServer(BaseHTTPRequestHandler):
       htmlResponseCode = 200
       htmlResponseMessage = retData
     except MyWarningBreakException as e:
-        logging.error("Bad GET Request: %s" % self.path)
+        MU.getLogger().logger.error("Bad GET Request: %s" % self.path)
         # self.send_header("Content-type", "text/plain")
         # self.end_headers()
         htmlResponseCode = 207
@@ -198,8 +205,8 @@ class MyServer(BaseHTTPRequestHandler):
       print("Exception Value:", exception_value)
       print("Traceback:", traceback)
       #
-      logging.error("Fatal Comm-ERROR - GET Request: %s" % self.path)
-      logging.error("%s\r\n%s\r\n%s" % (exception_type, exception_value, traceback))
+      MU.getLogger().logger.error("Fatal Comm-ERROR - GET Request: %s" % self.path)
+      MU.getLogger().logger.error("%s\r\n%s\r\n%s" % (exception_type, exception_value, traceback))
       htmlResponseCode = 500
       htmlResponseMessage = str(ce) if not hasattr(ce, 'message') else ce.message # type: ignore
       retData = htmlResponseMessage
@@ -249,7 +256,7 @@ class MyServer(BaseHTTPRequestHandler):
     self.wfile.write(bytes(htmlResponseMessage, "utf-8")) # type: ignore
     self.wfile.flush()
     if MU.isLogLevelTrace():
-      logging.debug("GET Request response: %s",  'NONE' if htmlResponseMessage is None else html.unescape(htmlResponseMessage) )
+      MU.getLogger().logger.debug("GET Request response: %s",  'NONE' if htmlResponseMessage is None else html.unescape(htmlResponseMessage) )
 
   def do_POST(self):
     content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
@@ -260,8 +267,11 @@ class MyServer(BaseHTTPRequestHandler):
     clientReferrer = self.client_address[0]
     MU.getUnasContext().lastIpAddress, clientIpPort = self.client_address
 
-    pPath = self.path.split("/")
-    logging.info('symbol POST: %s, len:%i' % (self.path, content_length))
+    parsedUlParts = urlparse(self.path)
+    queryParams = parse_qs( parsedUlParts.query )
+
+    pPath = parsedUlParts.path.split("/")
+    MU.getLogger().logger.info('symbol POST: %s, len:%i' % (self.path, content_length))
     
     #retData = None
     htmlResponseMessage = 'Garbled-No-Message'
@@ -281,10 +291,11 @@ class MyServer(BaseHTTPRequestHandler):
           if MU.isClientIpDisabled(self.client_address):
                 raise UnasCommIpDisabledException(client = self.client_address)
 
-          logging.debug("POST request,\nReferrer: %s\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n"
+          MU.getLogger().logger.debug("POST request,\nReferrer: %s\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n"
                 ,clientReferrer, str(self.path), str(self.headers), unquote(post_data.decode('utf-8')).replace('+', ' ') )
           postParams = post_data.decode('utf-8')
           parsedFields = parse_qs( postParams )
+          fb_Conn = None
           try:
             fb_Conn = FBU.getFbConn()
           
@@ -317,18 +328,23 @@ class MyServer(BaseHTTPRequestHandler):
           ###   # raise  WalueError( str(e) if not hasattr(e, 'message') else e.message ) # type: ignore
           finally:
             try:
-              FBU.dbClose(fb_Conn)
+              if fb_Conn:
+                FBU.dbClose(fb_Conn)
             except Exception as e:
-              logging.error('DB-Close error X:%s', e)
+              MU.getLogger().logger.error('DB-Close error X:%s', e)
           # end try UnasPostProcess
+        elif (pPath[1] == "pepita-order"): # ACK NEM atgondolt. pld: Nem itt van a helye
+          isErr, msg = savePepitaOrders(queryParams, post_data)
+          # prepare response
+          htmlResponseMessage = "OKJ:{%s }" % f''' "isError" : { 'true' if isErr else 'false'}, "resopnseCode" : { '500' if isErr else '200' },"messages" : [{msg}]'''
         elif (pPath[1] == "emag Not Used Blaaaa"):
           pass # htmlResponseMessage = PPE.doEmagRequest(self.path, 'DummyData')
         elif (pPath[1] == "synclog Not Used Blaaaa"):
-          #logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n"
+          #MU.getLogger().logger.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n"
           #      ,str(self.path), str(self.headers), post_data.decode('utf-8'))
           postParams = post_data.decode('utf-8')
           parsedFields = parse_qs( postParams )
-          logging.debug(parsedFields['xmldata'][0])
+          MU.getLogger().logger.debug(parsedFields['xmldata'][0])
           htmlResponseMessage = 'OK'
         else:
           GBL_ErrorMessages.append( "Unhandled (POST) request: " + self.path )
@@ -361,7 +377,7 @@ class MyServer(BaseHTTPRequestHandler):
       print("Exception Value:", exception_value)
       print("Traceback:", traceback)
       #
-      logging.error("Fatal Comm-ERROR - GET Request: %s\r\n%s\r\n%s\r\n%s" % (self.path, exception_type, exception_value, traceback))
+      MU.getLogger().logger.error("Fatal Comm-ERROR - GET Request: %s\r\n%s\r\n%s\r\n%s" % (self.path, exception_type, exception_value, traceback))
       htmlResponseCode = 500
       htmlResponseMessage = str(ce) if not hasattr(ce, 'message') else ce.message # type: ignore
       MU.errorHandler(htmlResponseMessage, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E06), level = logging.ERROR, eDescr=sys.exc_info())
@@ -371,7 +387,7 @@ class MyServer(BaseHTTPRequestHandler):
       htmlResponseMessage = 'Client IP"%s disabled (%d)' % self.client_address
         
     except Exception as e:
-        logging.error("Fatal ERROR-POST Referrer: %s, Request: %s" , clientReferrer, self.path)
+        MU.getLogger().logger.error("Fatal ERROR-POST Referrer: %s, Request: %s" , clientReferrer, self.path)
         htmlResponseCode = 500
         htmlResponseMessage = str(e) #if not hasattr(e, 'message') else e.message
         if not isinstance(e, MyProgramFlowErrorException):
@@ -442,7 +458,7 @@ class MyServer(BaseHTTPRequestHandler):
       # self.wfile.write(bytes("</body></html>", "utf-8"))
     '''
     if MU.isLogLevelTrace():
-      logging.info("POST Ref: %s, uri: %s, resp: %s" , clientReferrer, self.path, 'NEmpty-Response' if htmlResponseMessage is None else htmlResponseMessage )
+      MU.getLogger().logger.info("POST Ref: %s, uri: %s, resp: %s" , clientReferrer, self.path, 'NEmpty-Response' if htmlResponseMessage is None else htmlResponseMessage )
 
   def do_PUT(self): # the do_GET method is inherited from BaseHTTPRequestHandler
     self.send_response(200)
@@ -479,7 +495,7 @@ class MyServer(BaseHTTPRequestHandler):
             MySocket.myControlWebServer.shutdown()
           #threading.sleep(2)
           #controlWebThread.join()
-          logging.info('controlWebThread - stopped? %s', MySocket.myControlWebServer )
+          MU.getLogger().logger.info('controlWebThread - stopped? %s', MySocket.myControlWebServer )
         #
       except Exception as e:
         responseCode = 400
@@ -493,7 +509,7 @@ class MyServer(BaseHTTPRequestHandler):
     elif parsedUlParts.path == '/stopsocket':
       try:
         if controlSocketThread is not None:
-          logging.error('Beragadt, Ki kellene loni')
+          MU.getLogger().logger.error('Beragadt, Ki kellene loni')
           if MySocket.mySocketServer is not None:
             MySocket.mySocketServer.shutdown()
         #
@@ -529,10 +545,10 @@ def startControlWebThread():
       controlWebThread = threading.Thread( target = MySocket.setWebServer, name = "controlWeb", args=(MU.WEB_CONTROL_HOST, MU.WEB_CONTROL_PORT ), daemon=True )
       controlWebThread.start()
       MSG_serverStarting.append(f'WEB-ControlServer started on => {MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}')
-      logging.info(f'WEB-ControlServer started on => {MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}')
+      MU.getLogger().logger.info(f'WEB-ControlServer started on => {MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}')
       print(f'WEB-ControlServer started on => {MU.WEB_CONTROL_HOST}:{MU.WEB_CONTROL_PORT}')
     except Exception as x:
-      logging.info('Websocket Server closing:', x)
+      MU.getLogger().logger.info('Websocket Server closing:', x)
 
 controlSocketThread:typing.Optional[threading.Thread] = None
 def startSocketThread():
@@ -540,23 +556,23 @@ def startSocketThread():
     try:
       controlSocketThread = threading.Thread( target = MySocket.setSocketServer, name = "controlSocket", args=(MU.SOCKET_CONTROL_HOST, MU.SOCKET_CONTROL_PORT ), daemon=True )
       controlSocketThread.start()
-      logging.info(f'socket Server starting {MU.SOCKET_CONTROL_HOST}:{MU.SOCKET_CONTROL_PORT}')
+      MU.getLogger().logger.info(f'socket Server starting {MU.SOCKET_CONTROL_HOST}:{MU.SOCKET_CONTROL_PORT}')
       print(f'Socket Server started on => {MU.SOCKET_CONTROL_HOST}:{MU.SOCKET_CONTROL_PORT}')
       MSG_serverStarting.append(f'TCP-SocketServer started on => {MU.SOCKET_CONTROL_HOST}:{MU.SOCKET_CONTROL_PORT}')
     except Exception as x:
-      logging.info('socket Server closing:', x)
+      MU.getLogger().logger.info('socket Server closing:', x)
 
 batchThread:typing.Optional[threading.Thread] = None
 def startBatchThread():
     global batchThread
     try:
-      batchThread = threading.Thread( target = MB.startService, name = "controlWeb", args=(MU.WEB_CONTROL_HOST, MU.WEB_CONTROL_PORT ), daemon=True )
+      batchThread = threading.Thread( target = MB.startBatchService, name = "controlWeb", args=(MU.WEB_CONTROL_HOST, MU.WEB_CONTROL_PORT ), daemon=True )
       batchThread.start()
       MSG_serverStarting.append(f'BATCH-Server started (inline)')
-      logging.info('BATCH-Server started (inline)')
+      MU.getLogger().logger.info('BATCH-Server started (inline)')
       print('BATCH-Server started (inline)')
     except Exception as x:
-      logging.info('BATCH Server closing:', x)
+      MU.getLogger().logger.info('BATCH Server closing:', x)
 
 
 def getGlobalLogLevel():
@@ -571,33 +587,35 @@ def getGlobalLogLevel():
   return logLevel
 
 import MyLogger
+localLogger : MyLogger.SyxLogger|None = None
 def changeLogFile():
-
-  myLogger = MU.getLogger()
+  global localLogger
   logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
   logLevel = getGlobalLogLevel()
-  if myLogger is None:
-    myLogger = MyLogger.SyxLogger(logFileName, level=logLevel).logger
+  if localLogger is None:
+    localLogger = MyLogger.SyxLogger(logFileName, level=logLevel)
     # logging.basicConfig(filename=,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
     # logger=logging.getLogger('w6p')
-    # logging.info("logger created")
+    # MU.getLogger().logger.info("logger created")
   #
   # close filehandles
-  for handler in myLogger.handlers[:]:  # make a copy of the list
-    handler.close()
-    myLogger.removeHandler(handler)    
+  for handler in localLogger.logger. handlers[:]:  # make a copy of the list
+    if 'WatchedFileHandler' in  str(type(localLogger.logger.handlers[1])):
+      pass
+      #handler.close()
+      #myLogger.removeHandler(handler)    
     # logger.handlers[0].stream.close()
     # logger.removeHandler(logger.handlers[0])
     #
   logrotate(logFileName)
   # reopen file
-  file_handler = logging.FileHandler(logFileName)
-  file_handler.setLevel(logLevel)
-  formatter = logging.Formatter("%(asctime)s %(levelname)s %(filename)s:%(lineno)d [%(funcName)s]: %(message)s")
-  file_handler.setFormatter(formatter)
-  myLogger.addHandler(file_handler)  
-  MU.setLogger(myLogger)
-  return myLogger
+  #file_handler = logging.handlers.WatchedFileHandler(logFileName)
+  #file_handler.setLevel(logLevel)
+  #formatter = logging.Formatter("%(asctime)s %(levelname)s %(filename)s:%(lineno)d [%(funcName)s]: %(message)s")
+  #file_handler.setFormatter(formatter)
+  #myLogger.addHandler(file_handler)  
+  MU.setLogger(localLogger)
+  return localLogger
 
 if __name__ == "__main__":
   configPath = YAML_CONFIG_FILE
@@ -630,7 +648,7 @@ if __name__ == "__main__":
 
   uts = MU.createTransactionId( UnasTransactionType.STARTPROXY )
   # TODO DB Connect TEST-eket kellene vegezni es ha nincs, akkor leallni vagy varni 5 percet 3x ujraprobalni es utana fatalExit
-  localLogger.info( 'Test FB connect; Customer table rowCount: %s' % FBU.testDbConnect() )
+  localLogger.logger.info( 'Test FB connect; Customer table rowCount: %s' % FBU.testDbConnect() )
   FBU.insertDummyCustomer()
   FBU.dbClose()
 
@@ -639,20 +657,25 @@ if __name__ == "__main__":
 
   if not MU.JOETESTCustomer:
     MU.checkCacheState(force=True)
+    MU.loadPepitaOrdersHanging()
     # MU.UnasOrderList.clear()
 
   if MU.isLogLevelWarn():
       _m = "Server started http://%s:%s, PID: %d" % (MU.hostName, MU.serverPort, os.getpid())
       print(_m)  #Server starts
-      localLogger.info( _m )
+      localLogger.logger.info( _m )
       SM.sendProxyMail('\r\n'.join( MSG_serverStarting ), AlertMailType( UnasTransactionType.STARTPROXY, code=ProxyErrCode.INFO), 'starting')
 
+  webServer = None
   try:
       webServer = HTTPServer((MU.hostName, MU.serverPort), MyServer)
       webServer.serve_forever() #@IgnoreException
   except KeyboardInterrupt:
       # FBU.dbClose()
-      localLogger.info('Server closing...')
+      localLogger.logger.info('Server closing...')
+  finally:
+    if webServer:
+      webServer.server_close()  #Executes when you hit a keyboard interrupt, closing the server
 
   if controlSocketThread is not None:
       MySocket.mySocketWebServer.shutdown()
@@ -663,7 +686,6 @@ if __name__ == "__main__":
       controlWebThread.join()
 
   MU.saveUnasProxyContext()
-  webServer.server_close()  #Executes when you hit a keyboard interrupt, closing the server
   if MU.isLogLevelWarn():
         print("Server stopped.")
         SM.sendProxyMail("Server stopped", AlertMailType( UnasTransactionType.STARTPROXY, code=ProxyErrCode.INFO), 'stopped')

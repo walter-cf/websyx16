@@ -19,9 +19,20 @@
                         <Prices>
                             <xsl:if test="not(SkipThisItem)">
                                 <Price>
-                                    <Type>normal</Type>
-                                    <Net><xsl:value-of select="value"/></Net>
-                                    <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
+                                    <xsl:if test="not(unasPriceSpecial)">
+                                        <Type>normal</Type>
+                                        <Net><xsl:value-of select="value"/></Net>
+                                        <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
+                                    </xsl:if><!-- test="unasPriceSpecial == 0""  -->
+                                    <xsl:if test="unasPriceSpecial">
+                                        <Type>special</Type>
+                                        <GroupName><xsl:value-of select="groupName"/></GroupName>
+                                        <Net><xsl:value-of select="value"/></Net>
+                                        <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
+                                        <Currency><xsl:value-of select="priceCurrency"/></Currency>
+                                        <Start><xsl:value-of select="offerStart"/></Start>
+                                        <End><xsl:value-of select="offerEnd"/></End>
+                                    </xsl:if><!-- test="unasPriceSpecial > 0""  -->
                                 </Price>
                             </xsl:if> <!-- test="not(SkipThisItem)"  -->
                         </Prices>
@@ -39,7 +50,6 @@
             </Product>
         </xsl:if>
         </xsl:if>
-
     </xsl:for-each>
     </xsl:template>
 </xsl:stylesheet>

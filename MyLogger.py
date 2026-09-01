@@ -11,25 +11,26 @@ class SyxLogger(object):
         self.logger.setLevel(level)  # Setting the log level
         console_handler = logging.StreamHandler()  # on-screen output
         console_handler .setFormatter(format_str)  # Setting the format
-        th = handlers.TimedRotatingFileHandler(filename=filename, when=when, backupCount=backCount,encoding='utf-8')  # automatically generates the file at specified intervals
+        #th = handlers.TimedRotatingFileHandler(filename=filename, when=when, backupCount=backCount,encoding='utf-8')  # automatically generates the file at specified intervals
+        th = handlers.WatchedFileHandler(filename,encoding='utf-8')  # automatically generates the file at specified intervals
         th.setFormatter(format_str)  # Setting the format
         self.logger.addHandler(console_handler)  # Add the object to the logger
         self.logger.addHandler(th)
 
-    def loggingError(self, *args):
+    def logError(self, *args):
         self.logger.error(args)
         
-    def loggingWarn(self, *args):
+    def logWarn(self, *args):
         self.logger.warning(args)
         
-    def loggingInfo(self, *args):
+    def logInfo(self, *args):
         self.logger.info(args)
         
-    def loggingDebug(self, *args):
+    def logDebug(self, *args):
         self.logger.debug(args)
         
-    def loggingCrit(self, *args):
+    def logCrit(self, *args):
         self.logger.critical(args)
         
-    def loggingTrace(self, *args):
+    def logTrace(self, *args):
         self.logger.debug(args)

@@ -49,15 +49,8 @@ class ProxyErrCode(IntEnum):
     B39 = 39
     E40 = 40
     E41 = 41
-    E42 = 42
-    E43 = 43
-    E44 = 44
-    E45 = 45
-    E46 = 46
-    E47 = 47
-    E48 = 48
-    E49 = 49
-
+    E42 = 42 # masterChallengeUnas -> Nout USED !!!
+    F50 = 50 # PepitaCache missed item
 
 class UnasTransactionType(IntEnum):
     CREATENEW   = 0
@@ -99,6 +92,8 @@ class UnasTransactionType(IntEnum):
     SYNCLOG = 52
     PROXYCONTROL = 53
     TESTPOST = 54
+    OFFER = 55
+    PEPITA_ORDER = 56
     #
     UNAS_COMM_ERROR = 60
     UNAS_LOGIN_ERROR = 61
@@ -232,18 +227,18 @@ class AlertMailType():
             "trId" : "{self.trId}","trTime" : "{MU.getTimeStringTS(self.trId)}","trAction" : "{MU.getActionTypeNameFromTS(self.trId)}"'
 
 class AlertMailTypeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, AlertMailType):
+    def default(self, o):
+        if isinstance(o, AlertMailType):
             return {
-                "type"     : obj.type.name,
-                "objId"    : str(obj.objId), ## joe@20250623 
-                "objTyp"   : obj.objTyp.name,
-                "errCode"  : obj.errCode.name,
-                "trId"     : obj.trId,
-                "trTime"   : MU.getTimeStringTS(obj.trId),
-                "trAction" : MU.getActionTypeNameFromTS(obj.trId)
+                "type"     : o.type.name,
+                "objId"    : str(o.objId), ## joe@20250623 
+                "objTyp"   : o.objTyp.name,
+                "errCode"  : o.errCode.name,
+                "trId"     : o.trId,
+                "trTime"   : MU.getTimeStringTS(o.trId),
+                "trAction" : MU.getActionTypeNameFromTS(o.trId)
             }
-        return super().default(obj)    
+        return super().default(o)    
 
 
 class ProxyClient:

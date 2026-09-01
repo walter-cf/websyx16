@@ -38,7 +38,7 @@ def doLogin() -> str:
         _tkn = dom.find('Token')
         if _tkn is not None:
           currToken = _tkn.text
-          logging.debug("Token: %s, Status: %s", currToken, currStatus)
+          MU.getLogger().logDebug("Token: %s, Status: %s", currToken, currStatus)
           MU.createStatEntryOK(currToken or '')
           return str(currToken)
       else:

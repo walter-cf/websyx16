@@ -1,4 +1,21 @@
-## web6Proxy - valtozaslista joe @ 2025.05.31
+## web6Proxy - valtozaslista joe @ 2026.08.25
+
+### - 2026.08.20
+*add - Pepita XML push service*  
+*add - Pepita Order pull handler*  
+*add - get/setCustomer :: customerCategory*
+  - get:  
+         if cache.symbolId is 0 (new customer from Unas) => customerCategory := BASE/default Haffner24 UNAS  
+         else => nothingToDo ;  symbol:CG remains unchanged
+  - set:  
+         if special => unas.special := fromYAMLspecial(symbol.CG)  
+         else => nothingToDo ;  Unas:CG remains unchanged
+
+### - 2026.08.19
+Start devel websyxProxy version 1.6
+
+### - 2026.07.19
+logging. to MU.getLogger
 
 ### - 2025.08.25
 GIT Merge Test into Master

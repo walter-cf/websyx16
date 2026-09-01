@@ -110,6 +110,12 @@
             </customerorder>
         </xsl:if>
         </xsl:for-each>
+        <!-- HACK !!!!   At kell irnom, de egyenlore egyszerubb igy.  az  xml stringet elokeszitem apythonnal es egyszeruen berakom ide -->
+        <xsl:for-each select="pepitaOrdersXmls">
+              <customerorder>
+                    <xsl:value-of select="pepXml"/>
+              </customerorder>
+        </xsl:for-each>        
         </customerorders>
     </xsl:template>
 </xsl:stylesheet>

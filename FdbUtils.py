@@ -93,7 +93,7 @@ def insSql(table:str, colList:str='', valuePart:str = '',  param = None ) -> int
     CON.commit()  # type: ignore /// a getCursor beallitotta, ha nulla volt a con!!! LOGIKATLAN es CSUNYA!!!
     return newId[0] if len(newId) > 0 else 0
 
-def execSql(sql:str,  param = None ):
+def execSql(sql:str,  param = None, comitted=False ):
     # sql = 'INSERT INTO "' + table + '" ( "Id", ' + colList +  ') VALUES (0+NEXT VALUE FOR "Gen' + table + '", ' +  valuePart  + ' ) RETURNING "Id"'
     cur = getFbCursor()
     if param is None:
@@ -105,7 +105,8 @@ def execSql(sql:str,  param = None ):
     else:
         cur.execute(sql, [param])
     #
-    CON.commit()  # type: ignore /// a getCursor beallitotta, ha nulla volt a con!!! LOGIKATLAN es CSUNYA!!!
+    if comitted:
+        CON.commit()  # type: ignore /// a getCursor beallitotta, ha nulla volt a con!!! LOGIKATLAN es CSUNYA!!!
 
 
 def prepStatement(sql, cur):
@@ -118,9 +119,39 @@ def execSql_OLD( sql, paramList = (), con = CON ):
     con.commit() # type: ignore
     return cur
 
+def getField( sql, param = None, cursor = None ):
+    row = getRow( sql, param , cursor )
+    return None if not row else row[0]
+
+def getRow( sql, param = None, cursor = None ):
+    cur = getFbCursor() if cursor is None else cursor
+    try:
+        # comment: 
+        # end try
+        if param is None:
+            cur.execute(sql)
+        elif "<class 'tuple'>" == str(type (param)):
+            cur.execute(sql, param)
+        elif "<class 'list'>" == str(type (param)):
+            cur.execute(sql, param)
+        else:
+            cur.execute(sql, [param])
+        return cur.fetchone()
+    except Exception as e:
+        err = f"DB-Err; sql:{sql},\r\nprms:{param}\r\nX:{e}"
+        MU.errorHandler(err, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E19), level = logging.ERROR, eDescr=sys.exc_info())
+        raise MyProgramFlowErrorException(err)
+
 #####################################################
 # Specials
 #####################################################
+
+def getPriceBySku(sku:str):
+    sql = f'''select "Price" from "ProductPrice" 
+                join "Product" on "Product"."Id"="ProductPrice"."Product"  where "Product"."Code"=? and "PriceCategory"=-1 and "Currency"=-1
+                order by "ProductPrice"."Id" desc'''
+    return getField(sql, sku)
+
 
 def getPaymentMethodByCustomer( customerId ) :
     sql = f'select "Name" from "PaymentMethod" where "Id"  in (select "PaymentMethod" from "Customer" where "Id" = {customerId})'
@@ -130,7 +161,7 @@ def getPaymentMethodByCustomer( customerId ) :
 def getModifiedOrders(sqlCols, interval, unasOrdType):
     cols = '","'.join(sqlCols)
     sql = f"""select "{cols}" from "CustomerOrder"
-                where "RowVersion" > ( select dateadd (second, ?, cast(\'now\' as timestamp))  from rdb$database)
+                where "RowModify" > ( select dateadd (second, ?, cast(\'now\' as timestamp))  from rdb$database)
                 and "VoucherSequence" = ?
         """
     res = doSql(sql, (-1*interval, unasOrdType) )
@@ -166,7 +197,7 @@ def addCust(unasId, custCode):
         result = insSql('Customer', ' "Code", "Name" ', ' ?, ? ', (  custCode, custName ))
         return result
     except Exception as e:
-        logging.error("DatabaseError :%s", e.args)
+        MU.getLogger().logError("DatabaseError :%s", e.args)
         print(e.args)
         return -1 
 
@@ -440,3 +471,12 @@ def testDbConnect():
     cur = doSql( 'select count(*) from "Customer"')
     row = cur.fetchone()
     return row[0]
+
+########################################
+# Kell ez ? 20260901
+########################################
+def getCustomerById(id:int):
+    return getRow('select * from "Customer" where "Id" = ?', (id,))
+
+def getCustomerNameById(id:int):
+    return getField('select "Name" from "Customer" where "Id" = ?', (id,))

@@ -20,6 +20,8 @@ from MyUtilsTypes import (AlertMailType, MyProgramFlowErrorException,
                           MyProgramFlowWarningException, ProxyErrCode,
                           UnasTransactionType)
 from UnasProductCache import UnasProductCache as UPC
+from xmlclazz.customerOffer import CustomerOffers
+from xmlclazz.discountRules import DiscountRules 
 
 GBL_ErrorMessages = []
 
@@ -89,12 +91,11 @@ def transformUnasRequestObject(root, xsltFilename):
     elif xsltFilename == 'ProductPrice':
         for prod in root.getchildren():
             #if prod.webdisplay == 1:
+            if "ObjectifiedElement" in str(type(prod)): # azt hiszem, a pepita prod-okol tudott jonni StringElement
                 upc = None if not hasattr(prod,'productcode') else MU.UnasProductList.get(str(prod.productcode))
                 if upc == None: # UNAS-bol hianyzik
                     logging.warning("Skipped - UNASban nem letezo termek CODE/Sku: " + str(prod.productcode))
-                    print("Warning: SKIPPED-Modositasi kiserlet UNASban nem letezo termekre CODE/Sku: " + str(prod.productcode))
                     prod.SkipThisItem = '1'
-                    # raise ValueError("Modositasi kiserlet UNASban nem letezo termekre CODE/Sku: " + prod.productcode)
                 else:  # UNAS-ban azonositottam SKU alapjan es LIVE
                     prod.unasProductId = upc.unasId
                     prod.symbolIdIsNull = 1 if upc.symbolId == 0 else 0
@@ -103,35 +104,27 @@ def transformUnasRequestObject(root, xsltFilename):
                     foundCat = -99999
                     for pi in prod.price:
                         # 20250529@joe prod.retValProduct = 1
+                        specialPriceCat = next(( x[1] for x in MU.PRODUCT_PRICECAT_SPECIALS if x[0] == pi.pricecategoryName.text), None)
                         if pi.pricecategory == MU.PRODUCT_PRICECAT_BASE and pi.priceCurrency == 'HUF':
-                            isPriceFound = True
-                            pi.retValValid = 2
                             pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
-                            foundCat = int(pi.pricecategory.text)
-                        # 20250529@joe  elif isPriceFound == False and pi.pricecategory == MU.PRODUCT_PRICECAT_FALLBACK and pi.priceCurrency == 'HUF':
-                        # 20250529@joe      foundCat = int(pi.pricecategory.text)
-                        # 20250529@joe      pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
-                        # 20250529@joe  elif isPriceFound == False and pi.pricecategory == MU.PRODUCT_PRICECAT_FALLBACK2 and pi.priceCurrency == 'HUF':
-                        # 20250529@joe      foundCat = int(pi.pricecategory.text)
-                        # 20250529@joe      pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
-                        # 20250529@joe  elif isPriceFound == False and foundCat < 0 and pi.priceCurrency == 'HUF':
-                        # 20250529@joe      foundCat = int(pi.pricecategory.text)
-                        # 20250529@joe      pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                        elif pi.pricecategory == MU.PRODUCT_PRICECAT_UNIQUE:
+                            raise MyProgramFlowErrorException("Nem lekezelt EGYEDI ProductPrice", ProxyErrCode.UNKNOWN)
+                        elif specialPriceCat:
+                            pi.unasPriceSpecial = 1
+                            pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                            pi.groupName  = pi.pricecategoryName.text
+                            pi.offerStart = pi.validfrom.text.replace('-', '.')
+                            pi.offerEnd   = MU.EPOCH_ENDDATE
+                            MU.checkUnasCustomerGroup(pi.groupName)
                         else:
                             pi.SkipThisItem = 1  # Issue:0003 - joe@20250625 Multiple Price in PriceCat:18
                             #  pi.retValValid = 0
                         #
-                    if foundCat > 0:
-                        for pi in prod.findall('price'):
-                            if foundCat == int(pi.pricecategory.text):
-                                pi.retValValid = 4
-                                foundCat = -1234567 # clear found Flag
-                    elif not isPriceFound:
-                        pi.retValValid = 0
-                    else:
-                        pi.SkipThisItem = 1
             #else:
             #    logging.debug(f"Product skipped while webDisplay=0 Code:{prod.code}")
+        if next((False for x in prod.findall('price') if x.find('SkipThisItem') is None ), True):
+            prod.SkipThisItem = '1'
+        # ProductPrice endz
     elif xsltFilename == 'ProductQuantity':
         for prod in root.getchildren():
             upc = MU.UnasProductList.get(prod.ProductCode)
@@ -161,7 +154,6 @@ def transformUnasRequestObject(root, xsltFilename):
             ord.unasOrderStatus = MU.ORDER_STATUS_CLOSE # vagy 
             ord.unasOrderStatus = 'Megrendelés lezárva'
             # xmlResp = UCH.unasSetOrderStatus( unasOrderKey, ord.unasOrderStatus, ord.Id, True, "Rendelését számláztuk, kiszállítása folyamatban van.")
-
     elif xsltFilename == 'Customer':
         for cust in root.getchildren():
             if cust.id > 0 and isCustomerTypeChecked(cust):
@@ -233,7 +225,7 @@ def transformUnasRequestObject(root, xsltFilename):
                 try:
                     # ucc = MU.UnasCustomerList.get( UCC.buildAzonData( cust.email, cust.taxnumber ))
                     # ucc = MU.getCustomerFormCache(cust.email, cust.taxnumber, cust.id )  joe@20250401 custAzon kivezetes
-                    ucc = MU.getCustomerFormCache(cust.id)
+                    ucc = MU.getCustomerFromCache(cust.id)
                     postDiffTime = MU.getCurrTime()
                     if ucc:
                         postDiffTime -= ucc.lastmod
@@ -345,6 +337,56 @@ def transformUnasRequestObject(root, xsltFilename):
             else:
                 logging.debug(f"Customer skipped while ID < 0:{cust.id}")
                 cust.SkipThisItem = '1' 
+    #
+    #
+    elif xsltFilename == 'DiscountRules':
+        rules = DiscountRules.from_xml(root)
+        # OR simple check root tag just now
+        for rule in root.getchildren():
+            match (rule.tag):
+                case "CustomerVoucherDiscounts":
+                    pass
+                case "PaymentMethods":
+                    logging.debug("PaymentMethods")
+                    for pm in rule.getchildren():
+                        logging.debug("PaymentMethod: %s, %d" , pm.PaymentMethodName, pm.DiscountPercent)
+                case "ProductCategoryDiscounts":
+                    pass
+                case "ProductCustomerDiscounts":
+                    pass
+                case "TransportModes":
+                    pass
+                case "TransportModes":
+                    logging.debug("TransportMode")
+                    for pm in rule.getchildren():
+                        logging.debug("TransportMode: %s, %d" , pm.TransportModeName, pm.Discountpercent)
+                case _:
+                    logging.debug("Default Rule: %s" , rule.text)
+        return None
+    # 
+    elif xsltFilename == 'CustomerOffer':
+        offers = CustomerOffers.from_xml(root)
+        for offer in offers.customer_offers or []:
+            isNewRecord = MU.createShadowOffer(offer)
+            #
+            if isNewRecord:
+                for cust in ([] if offer.customer_offer_customers is None else offer.customer_offer_customers.customer_offer_customer or []):
+                    ucc = next((x for x in  MU.UnasCustomerList.values() if x.symbolId == int(cust.customer)), None )
+                    if ucc is not None:
+                        grpName = MU.mkUniqueGroupName(cust.customer) # or offer.name or 'Unknown'
+                        MU.addCustomerToUnasCustomerGroup( ucc.unasId, ucc.email, grpName)
+                        cg = FBU.getField( 'select CC."Name" from "Customer" as CU  join "CustomerCategory" as  CC on (CC."Id" = CU."CustomerCategory") where CU."Id" = ?' , cust.customer ) or None
+                        if cg !=  ucc.specialCustomerCategory:
+                            MU.setSpecialPrices(cust, ucc, cg)
+                        #
+                        for det in [] if offer.customer_offer_details is None else offer.customer_offer_details.customer_offer_detail or []:
+                            sku = MU.getSkuBySymbolId(int(det.product or 0))
+                            upc = next((x for x in  MU.UnasProductList.values() if x.sku == sku), None )
+                            if upc:
+                                MU.checkUnasCustomerDetail(grpName, det, sku, offer.valid_from.replace('-', '.') or MU.todayStr(), offer.valid_to.replace('-', '.') or MU.EPOCH_ENDDATE )
+            # Termek kedvezmeny
+            # ???
+        return None
     #
     else: # Untransformed action
         logging.warning( "Untransformed action:%s", xsltFilename)
@@ -464,7 +506,7 @@ def prepareUnasReply(xmlReq, xsltFilename):
     dom = ET.fromstring(preparedXml, None)
     newdom = transform( dom )
 
-    if xsltFilename == 'ProductPrice':
+    if xsltFilename in [ 'ProductPrice', 'CustomerOffer']:
         # new_fileDescriptor, filename = tempfile.mkstemp()
         filename = f"xmlfiles/set{xsltFilename}.unas.{str(MU.getTS())}.xml"
         newdom.write_output(filename)
@@ -613,7 +655,9 @@ def preProcessUnasPostRequest(action, xml):
         pass
     elif action == 'pricerule':
         pass
-    elif action == 'billed':
+    elif action == 'fulfilled':
+        pass
+    elif action == 'offer':
         pass
     elif action == 'finalize':
         pass
@@ -770,7 +814,18 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         xmlResp = xmlResp + '</PriRulz>'
         unasResp = postProcessUnasPostRequest(action, xmlResp)
         #return "OK"
-    elif action == 'billed':
+    elif action == 'offer':
+        uts = MU.createTransactionId( UnasTransactionType.OFFER )
+        logging.debug("Vevoi akcio - TS:%d" % uts)
+        if MU.isLogLevelDebug():
+            print(postData)
+        xmlReq = preProcessUnasPostRequest(action, postData)
+        xmlReq = prepareUnasReply(xmlReq, "CustomerOffer")
+        #if xmlReq != None:            # Lehet NEM OK-val kellene visszaterni?
+        #    xmlResp = "pillanatnyilag SKIP ALL !" # UCH.unasOrder_Direct(xmlReq)
+        #    unasResp = postProcessUnasPostRequest(action, xmlResp)
+        return "OK" if xmlReq is None else xmlReq # Always return OK!!!
+    elif action == 'fulfilled':
         uts = MU.createTransactionId( UnasTransactionType.BILLED )
         logging.debug("Order - szamlazva-TS:%d" % uts)
         if MU.isLogLevelDebug():
@@ -990,6 +1045,14 @@ def postProcessUnasPostRequest(action, xmlResp) -> str:
             root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
             logging.debug(root.tag)
         return 'OK'
+    elif action == 'offer':
+        root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
+        logging.debug(root.tag)
+        return 'OK'  # Product type Response
+    elif action == 'fulfilled':
+        # root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
+        # logging.debug(root.tag)
+        return 'OK'  # Pillnatnyilag SKIP all
     elif action == 'finalize':
         root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
         logging.debug(root.tag)

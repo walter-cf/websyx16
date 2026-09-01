@@ -23,6 +23,8 @@ class UnasCustomerCache:
     symbolId: int
     code: str
     #custAzon: str
+    customerGroup: str | None
+    # priceCategory: str | None    
     email: str
     taxNumber: str
     state: str
@@ -31,7 +33,9 @@ class UnasCustomerCache:
     unasAddrObj = List[CustomerAddress]
     unasAddrXml = List[_Element]
 
-    def __init__(self, unasid:int=None, emil:str=None, taxNo:str=None, code:str=None, sid:int = 0, state:str = 'live', authed: bool = False): # type: ignore
+    def __init__(self, unasid:int=None, emil:str=None, taxNo:str=None, code:str=None, sid:int = 0
+                 , state:str = 'live', authed: bool = False
+                 , cg:str = None, priceCat:str = None                            ):
         self.unasId = unasid
         self.symbolId = sid
         self.email = '' if emil is None else str(emil).strip()
@@ -48,10 +52,15 @@ class UnasCustomerCache:
         self.unasAddrObj = []
         self.unasAddrXml = []
         self.authorized = authed
-
+        # self.customerGroup = cg       FULL lekeresnel a CG-t megkapom, de a proceCat remenytelen, szal KI KELL Szedni!
+        # self.priceCategory = priceCat
+        
     def toStr(self):
         return '{ "unasId":%s, "symbolId":%s, "lastmod":(%i)[%s], "code":"%s", "email":"%s", "taxNumber":"%s", "state":"%s" }' % (
-                    self.unasId, self.symbolId, self.lastmod, MU.tsToDateStr(self.lastmod), self.code, self.email, self.taxNumber, self.state)
+                    self.unasId, self.symbolId, self.lastmod, MU.tsToDateStr(self.lastmod), self.code
+                    , self.email, self.taxNumber, self.state
+                    # , self.customerGroup, self.priceCategory
+                    )
 
     def fromXml(self, xml, symbolid:int=0):
         self.symbolId = symbolid if symbolid > 0 else next((x.Value for x in xml.find('Params').getchildren() if x.Name =='symbolId'), 0)  
@@ -61,6 +70,8 @@ class UnasCustomerCache:
         self.unasAddrObj = xml.Addresses
         # self.unasAddrXml = []
         self.authorized = 'yes' == MU.nullSafeStru( xml, [ 'Authorize', 'Admin' ], '-' )
+        # self.customerGroup = 'x'
+        # self.priceCategory = 'x'
 
     VARIABLES = ["unasId","symbolId", "lastmod", "code", "email", "taxNumber", "state"]
     def toXml(self):

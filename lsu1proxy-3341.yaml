@@ -1,0 +1,265 @@
+logLevel: INFO
+proxy:
+  # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
+  hostName: syxproxy.lan
+  serverPort: 3341
+
+mail:
+  server: 192.168.10.6
+  sender: web6proxy-alert@ledsound.hu
+  # unas3-operator@ledsound.hu # web6proxy-operator@ledsound.hu
+  operator: joelenovo@nepextel.hu
+#
+# Control socket elavult , ki kellene szednem
+controlSocket:
+  enabled: False
+  host: 0.0.0.0
+  port: 0
+#
+# Control WebServer
+controlWeb:
+  enabled: True
+  host: syxproxy.lan 
+  port: 3342
+
+unas:
+  # Lehet .hu es .eu is
+  apiUrl: https://api.unas.eu/shop
+  feedbackUrl: "'http://' + hostName + ':' + str(serverPort) + '/fbunas'"
+  # a WewbShopban kell generalni a hozzaferesi kulcsot
+  apiKey: 11538c5a19ee5cec8b2b38ccf4294fd9b7d8b9f0
+  # marton.k@brill-clean.hu /Aa123456
+  # apiKey: fc63a447addd1f32cd822d89a90e651a7052f8b4
+
+    # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
+  webcategory:
+    # id: 187458
+    name: Webáruházba
+  # technikai, nekem kellett, Amikor mexaladt a prg es kitiltottam magamat, akkor default ertekeket adtam vissza magamnak az UNAS hivasokkor(HA ez TRUE)
+  ignoreBlockedClient: false # szerinem elavult, ki kellenne szednem
+  cacheForceReload: 10000 # force cahce reload after this period
+  #
+  # Comm stat:
+  commstat:
+    maxerrorcnt: 3 # continous tries
+    maxloginerr: 3 # Not Used Yet - a Login es a POST - kulon kezelem , hatha kulon kell nezni az errorCnt is - de MOST NU.!
+    blockedTimeMax: 600 # after 10 minutes will retry again - error counters will reset + SendMail -again
+    alertRetryAfter: 600 # Resend Alert mail by [alertRetryAfter] seconds
+    sendPacketWarningThreshold: 5000 # hourly max packet MySQL-ben tartom, es onnan is kerdez le
+    sendPacketStopLimit:  5500 # hourly max packet MySQL-ben tartom, es onnan is kerdez le
+    #
+    # Mar elavultak az alabbiak, ki kellene szedenem
+    preserveIdleMaster: 600 # degrade master after inactive `preserveIdleMaster` seconds
+    enableMasterChallenger: False # TRUE -> Ha automatizalt lesz az Symbol-Unas utemezes, es csak EGY gepnek akarom engedni(IP cim alapjan)
+    preserveIdleMaster: 600 #  Ennyi IDLE utan Master status torlodeik es a kovetkezo(vagy utoljara) aktiv lesz a master
+
+    clientChallenge:
+      idleTime: 600  # after this (seconds) client marked as offline
+      machines: [ 192.168.10.6, 192.168.10.2, 192.168.10.4, 192.168.10.11 ] # Az elorebb levonek magasabb a prioritasa!
+      method: Prio # { None | Last | Prio | API }
+                  # None: Current active transaction
+                  # Last (Last active client)
+                  # Prio: Prefer priorityList but only client has activity in `idleTime`
+                  # API : Manually set by operator vi ProxyControl interface
+  #
+  #
+  customerPaymentMode: "Szerződés szerint"
+  priceRules:
+    epochEnds: 2038.01.19
+    transportModes:
+      - ["Helyszíni"        ,"Személyes átvétel a bemutatótermünkben"]
+      - ["MPL Futár"        ,"MPL futárral"]
+      - ["Gyűjtőzendő"      ,"Ne küldjétek még! Várjon még másik megrendelésre!"]
+    paymentMethods: [
+        [ "Utánvét"         , "Utánvéttel"      ],
+        [ "Bankkártya"      , "Bankkártyával a helyszínen"   ],
+        [ "Előre utalás"    , "Előre utalással" ],
+        [ specialFunction01 , "Szerződött fizetési mód" ]   ## Ide tettem, hogy helyen legyen a program kezelem `specialFuncion01` kifejezest, ha azt kapom
+      ]
+
+  order:
+    # Unas paarmeterk: symbolId
+    # Unit => seconds
+    # getInterval: 1180 NOT USED most mar status szerint szed le 
+    vouchersequencecode: "B2B"
+    symbolOrderPrefix: H24
+    symbolOrderStatusNew: 1
+    sendOrderStatusEmail: No   # Yes - send alert-mail if customerOrder status changed
+
+    # Order params - statuses
+    status:
+        new:      6540041 # Feldolgozasra var
+        accepted: 6540046 # Visszaigazolva
+        prepared: 6540051 # Keszletezes alatt
+        shipping: 6540056 # NU.? 
+        closed:   6540061 # Lezarva
+        returned: 0       # NU. in UNAS (yet)
+        cancel:   0       # NU. in UNAS (yet)
+    autoAcknowledge: False
+    flow:
+      getUnregistered: False
+      getMissingCust: False
+
+  customer:
+    # Unas paarmeterek: symbolId, symbolCode
+    categoryName: HU / Channel / Haffner24 UNAS
+    specialCategories: 
+        - [ "HU / Channel / R1", R1 ]
+        - [ "HU / Channel / R2", R2 ]
+        - [ "HU / Channel / R3", R3 ]
+        - [ "HU / Channel / R4", R4 ]
+        - [ "HU / Channel / R5", R5 ]
+    getInterval: 600 
+    bulk: False
+    ignoreCyclicInterval: 1
+    cerateMissingCustomer: False
+    forceNewState: True
+    handleCustomerAddress: False
+    bulkFeedback: False
+
+    countries:
+      at:  'Ausztria'
+      uk:  'Egyesült Királyság'
+      gr:  'Görögország'
+      hu:  'Magyarország'
+      de:  'Németország'
+      pt:  'Portugália'
+      ro:  'Románia'
+      se:  'Svédország'
+    codePrefix:
+      default: UCO
+      unregistered: UCU
+      address: UCA # plus sorszam 1-99
+      pattern: '%s-%i'
+      patternAddr: '%s-%i-%i'
+
+  inventory:
+    warehouses: [ -1, 999999, 999998 ]
+
+  product:
+    # Unas paarmeterk: symbolId, symbolCode??, EAN, Gyarto, VTSZ
+    getInterval: 600
+    getproductLimit: 200 # a 6000 tetel lekerdezese egyszerre sok lett, dartabolni kell
+    bulk: False
+    overwriteName: False
+    pricecat:
+      # Symbol arkategoria ID. Ha tobb van, akkor ezeket - sorrendben - elonyben reszesiti; egyebkent a listaban az utolso ar lesz(vagy lehet, az elso)
+      base: 18
+      fallback1: -9999999
+      fallback2: -9999999
+      unique: EGYEDI
+      specials: 
+         - [ R1, R1 ]
+         - [ R2, R2 ]
+         - [ R3, R3 ]
+         - [ R4, R4 ]
+         - [ R5, R5 ]
+         - [ R8, R8 ]
+
+pepita:
+  apikey: P5s5Ns329Mhg8NNeEMWt8v6aAmF74Bq2kYyFD7xB 
+  folder:
+    order: pepita/orders
+    archive: pepita/orders-z
+    package: pepita/pckg-labels
+  resultPath: /var/www/b2c-xml/pepita/ledsound-pepita-products.xml
+  pepitaXsd: https://pepita.hu/feed/1.0
+  pepitaXsdFile: pepita.xsd
+  productLimitNum: 500
+  orderPrefix: PEP-
+
+########################################################################
+mysql:
+  dbFile: lsu3proxyTEST
+  dbHost: localhost
+  dbUser: w6pusr
+  dbPass: w6p-Abc+123
+
+#firebird:
+#  dbRoot: /opt/firebird/data
+#  dbFile: default_a.database
+#  dbHost: localhost
+#  dbUser: SYSDBA
+#  dbPass: Bertalan11
+
+firebird:
+  dbRoot: "C:\\SymbolUgyvitelDB_TEST"
+  dbFile: default_a.database
+  dbHost: 192.168.10.4
+  dbUser: SYSDBA
+  dbPass: masterkey
+
+
+########################################################################
+# Batch
+# atkerul MAJD a proxyba , de ettol meg arre a szkciora szugseg lesz 
+batch:
+  granularity: 5
+  enabled: False
+  processes:
+    - orderStatus:
+        startDelay: 10                     # initial delay after start BatchScheduler
+        frequency: 30                      # Batch thread raise/trigger interval
+        name: Rendeles Statusz - UNAS      # Batch threadName
+        method: orderStatusUnasProxy       # called Entry point
+        orderStatusCheckInterval: 600      # RovModified > NOW -orderStatusCheckInterval(seconds)
+        setStatusSafetyInterval: 0       # Ha ez >0 akkor a RovModified > context.lastSetOrderstatus - setStatuSafetyInterval a viszonyitasi alap!!
+
+        checkVoucherSequence: 42           # UNAS order type identifier
+        defaultClosedStatus: "Megrendelés lezárva" # IF  closed, manuallyClosed, canceled is 1 and can nto find in statuses? elvileg nem lehet
+        statuses:
+          - [ closed, "Megrendelés lezárva"]            # CustmerOrder.Closed = 1
+          - [ manuallyClosed, "Megrendelés törölve"]    # CustmerOrder.ClosedManually = 1
+          - [ canceled, "Megrendelés lezárva"]          # CustmerOrder.Cancelled = 1
+          - [ 1, "Feldolgozásra vár"]                   #   == 1, 2, 3 ...
+          - [ 2, "Visszaigazolva"]                      # 
+          - [ 3, "Készletezés alatt"]                   #
+          
+    - saveProxyContent:
+        enabled: False
+        startDelay: 105
+        frequency:  3601
+        name: Unas Context Saver
+        method: saveUnasProxyContext
+
+    - refreshCache:
+        enabled: False
+        startDelay: 1000
+        frequency:  3603
+        name: Unas-Cache-Referesher
+        method: refreshUnasCache
+
+    - masterChallenge:
+        enabled: False
+        startDelay: 600
+        frequency:  1800
+        name: Active machine promoter
+        method: masterChallengeUnas
+
+    - logrotate:
+        enabled: True
+        startDelay: 36000
+        frequency:  864000
+        name: ZIP Logrotated files
+        method: batchMethodWrapper
+        logPath: logz
+        archivePath: logz-z
+        preserveDays: 105
+
+###    - prc2:
+###        startDelay: 7
+###        frequency:  22
+###        name: Process Ketto
+###        method: startProcess2
+###    - prc3:
+###        startDelay: 9
+###        frequency:  33
+###        name: Process Harom
+###        method: startProcess3
+
+
+# technikai, nekem kellett
+prghelper:
+  xmltag: <?xml version="1.0" encoding="UTF-8" ?>
+  xmltag16: <?xml version="1.0" encoding="UTF-16" ?>
+  extendedProductAttributes: False

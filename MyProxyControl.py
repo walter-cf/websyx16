@@ -86,7 +86,7 @@ def doWebControlQuery(pPath, queryParams):
     elif 'getunascontext' == pPath[0]:
         return MU.getUnasContext().toJson()
     elif 'dofeedback' == pPath[0]:
-        return '{"x":"Igazibol, nem csinaltasm meg, egyelore nem volt kedvemn hozza, mert ugysem kell"}'
+        return '{"x":"Igazibol, nem csinaltam meg, egyelore nem volt kedvem hozza, mert ugysem kell"}'
     elif 'unascache' == pPath[0]:
         resp = []
         if 'customer' == pPath[1] or 'all' == pPath[1]:

@@ -1,14 +1,13 @@
 import datetime as date
 import html as HTML
-import json
-import logging
+import json, logging
 import pprint as pp
 import sys
 import urllib.parse as urlParse
 from typing import List
 
-from lxml import etree as ET
-from lxml import objectify
+import lxml. etree as ET
+import lxml. objectify as objectify
 
 import FdbUtils as FBU
 import MyServer
@@ -73,11 +72,11 @@ def transformGetRequestObject(root, action, xmlPart):
                 upc = MU.UnasProductList.get(sku)
                 if upc:
                     prod.symbolId = upc.symbolId
-                    logging.info('p-Product:%s TsDiff:%i', upc.sku, MU.getCurrTime() - upc.lastmod)
+                    MU.getLogger().logger.info('p-Product:%s TsDiff:%i', upc.sku, MU.getCurrTime() - upc.lastmod)
                 else:
-                    logging.info("p-Prod %s not found in cache", sku)
+                    MU.getLogger().logger.info("p-Prod %s not found in cache", sku)
                     prod.symbolId = FBU.getProductSymbolId(sku.text)
-                logging.info("trfGet-Product:%s (%i), %s", sku,prod.symbolId, 'Nincs.Neve' if prod.find('Name') is None else prod.Name)
+                MU.getLogger().logger.info("trfGet-Product:%s (%i), %s", sku,prod.symbolId, 'Nincs.Neve' if prod.find('Name') is None else prod.Name)
                 if (MU.PRODUCTNAME_OVERWRITE):
                     if prod.find('Name') and prod.Name.text:
                         prod.NameEncoded =  urlParse.quote(prod.Name.text)
@@ -136,7 +135,7 @@ def transformGetRequestObject(root, action, xmlPart):
                 if len(cust.findall('Addresses')) > 0:
                     for addr in cust.Addresses.getchildren():
                         MU.trimAddressAttributes(addr)
-                logging.info("trfGet-Ord:%s (%s)", ord.Id, email )
+                MU.getLogger().logger.info("trfGet-Ord:%s (%s)", ord.Id, email )
                 # Item processing
                 if len(ord.findall('Items'))>0:
                     for itm in ord.Items.getchildren():
@@ -149,6 +148,13 @@ def transformGetRequestObject(root, action, xmlPart):
                             oid=ord.Id, otyp=ProxyObjectType.UNASORDER), level = logging.ERROR, eDescr=sys.exc_info())
             finally:
                 pass
+        if len(MU.PepitaOrderList) > 0:
+            for ord in MU.PepitaOrderList.values():
+                pepitaOrdersXmls = ET.Element('pepitaOrdersXmls')
+                pepTag = ET.SubElement(pepitaOrdersXmls, 'pepXml')
+                pepTag.text = MU.toSymbolOrderXml(ord)
+                root.append(pepitaOrdersXmls)
+    # 
     elif action == 'OrderCustomers':
         # TODO Nincs atirva - elhanyagoltam, mert soha nem hasznaltam
         for ord in root.getchildren():
@@ -169,11 +175,12 @@ def transformGetRequestObject(root, action, xmlPart):
                 ucc.unasAddrXml = [] if cust.find('Addresses') is None else cust.find('Addresses').getchildren()
                 if len(ucc.unasAddrXml) > 0 and  CAH(0,0).compareCA(CA(0).initAddr(ucc.unasAddrXml[0]), CA(0).initAddr(ucc.unasAddrXml[1])):
                     cust.SkipAddressShipping = 1
-                logging.info("trfGet-OrdCust:%s (%s)", ord.Id, cust.Email )
+                MU.getLogger().logger.info("trfGet-OrdCust:%s (%s)", ord.Id, cust.Email )
                 if ucc.symbolId == 0:
                     xmlPart.append(cust)
             except Exception as e:
-                cust.SkipThisOrderItem = 1      # Try continue without  Bad Object
+                ord.SkipThisOrderItem = 1      # Try continue without  Bad Object
+                ord.Customer.SkipThisOrderItem = 1      # Try continue without  Bad Object
                 errMsg = f"getOrderCustomer processError - Skipped : {ord.Key}"
                 MU.errorHandler(errMsg, AlertMailType(UnasTransactionType.ORDERS, code=ProxyErrCode.E23,
                             oid=ord.Id, otyp=ProxyObjectType.UNASORDER), level = logging.ERROR, eDescr=sys.exc_info())
@@ -212,7 +219,7 @@ def transformGetRequestObject(root, action, xmlPart):
                                             MU.tsToDateSql( MU.getCurrTime()), MU.getTS(), cust.Email, custTaxNo ))
                         cust.SkipThisCustomerItem =  1
                     #
-                    ucc = MU.getCustomerFormCache(unasCustUnasId)
+                    ucc = MU.getCustomerFromCache(unasCustUnasId)
                     #
                     if ucc == None:
                         custCode = MU.CUSTOMER_CODE_PREFIXES["pattern"] % (MU.CUSTOMER_CODE_PREFIXES["default"], cust.Id)
@@ -221,14 +228,14 @@ def transformGetRequestObject(root, action, xmlPart):
                         MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc
                         ucc.unasAddrXml = [] if cust.find('Addresses') is None else cust.find('Addresses').getchildren() # type: ignore
                     elif cust.Email != ucc.email:
-                        logging.warning('u-Customer[%i] in Unas-only!:%s', unasCustUnasId, ucc.email )
+                        MU.getLogger().logger.warning('u-Customer[%i] in Unas-only!:%s', unasCustUnasId, ucc.email )
                         GBL_ErrorMessages.append(f"Warning! Possible Duplicate TaxNo:{ucc.taxNumber}, emils:{cust.Email} / {ucc.email} ")
                         custCode = MU.CUSTOMER_CODE_PREFIXES["pattern"] % (MU.CUSTOMER_CODE_PREFIXES["default"], unasCustUnasId)
                         ucc = UCC.UnasCustomerCache(unasCustUnasId, cust.Email, custTaxNo, custCode, 0, 'new')
                         ucc.symbolId = unasCustSymbolId
                         #ucc.custAzon = UCC.buildCustAzonById(unasCustUnasId)
                         MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc
-                        logging.info('g-Customer:%d,%s TsDiff:NEW', ucc.unasId, ucc.email )
+                        MU.getLogger().logger.info('g-Customer:%d,%s TsDiff:NEW', ucc.unasId, ucc.email )
                         ucc.unasAddrXml = [] if cust.find('Addresses') is None else cust.find('Addresses').getchildren() # type: ignore
                     if ucc.symbolId == 0:
                         # ucc = UCC.UnasCustomerCache(cust.Id, cust.Email, custTaxNo, None, 0, 'new')
@@ -238,16 +245,16 @@ def transformGetRequestObject(root, action, xmlPart):
                         MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc
                         ucc.unasAddrXml = [] if cust.find('Addresses') is None else cust.find('Addresses').getchildren() # type: ignore
                         GBL_ErrorMessages.append( f"Warning[W002]:- Customer in Unas-only! Id:{cust.Id} emil:{ucc.email}")
-                        logging.debug('u-Customer[%i] in Unas-only!:%s', cust.Id, ucc.email )
+                        MU.getLogger().logger.debug('u-Customer[%i] in Unas-only!:%s', cust.Id, ucc.email )
                     else:
                         uldStr = None if cust.Dates.Modification is None else cust.Dates.Modification.text
                         unasLastMod = 0 if uldStr is None else MU.dateStrToTs(uldStr)
-                        logging.info('g-Customer:%s lastMod-symb/unas/diff:%s/%s/%i TsDiff:%i', ucc.email,
+                        MU.getLogger().logger.info('g-Customer:%s lastMod-symb/unas/diff:%s/%s/%i TsDiff:%i', ucc.email,
                                     MU.tsToDateStr(ucc.lastmod), uldStr, unasLastMod - ucc.lastmod, MU.getCurrTime() - ucc.lastmod)
                         ucc.unasAddrXml = [] if cust.find('Addresses') is None else cust.find('Addresses').getchildren() # type: ignore
                         symbolModTime = FBU.getModTime( ucc.symbolId, "Customer" )
                         if symbolModTime is None:
-                            logging.warning('Gyanus, HIANYZO SymbolID! Azon:%d Id:%d', ucc.unasId,ucc.symbolId )
+                            MU.getLogger().logger.warning('Gyanus, HIANYZO SymbolID! Azon:%d Id:%d', ucc.unasId,ucc.symbolId )
                             GBL_ErrorMessages.append( f"Warning[W001]:- Gyanus, HIANYZO SymbolID! Azon:{ucc.unasId} Id:{ucc.symbolId}")
                             ## Quick HACK - mert NINCS Symbolban es ha van symbolId-je, akkor ki kell nullazni
                             if len(cust.findall('Params')) >0:
@@ -256,12 +263,18 @@ def transformGetRequestObject(root, action, xmlPart):
                                         prm.Value = ''
                             ucc.symbolId = 0
                         else: 
-                            logging.warning('Cust(g):%d %s lastMod:%s(%i), unasMod:%s(%i), symbolMod:%s(%i)' % (
+                            MU.getLogger().logger.warning('Cust(g):%d %s lastMod:%s(%i), unasMod:%s(%i), symbolMod:%s(%i)' % (
                                     ucc.unasId, 'Gyanus SKIP!' if unasLastMod - symbolModTime.timestamp()  < 100000   else '',
                                     MU.tsToDateStr(ucc.lastmod), ucc.lastmod, MU.tsToDateStr(unasLastMod), unasLastMod,
                                     str(symbolModTime), symbolModTime.timestamp()))
-                    logging.info("trf-trfGet:%s", cust.Email )
-                    cust.unasCustomerCategory = MU.UnasCustomerCategoryName
+                    MU.getLogger().logger.info("trf-trfGet:%s", cust.Email )
+                    # joe@20260820
+                    # cust.unasCustomerCategory = MU.UnasCustomerCategoryName
+                    if ucc.symbolId <= 0: # and ucc.unasId == 0 csak akkor szeretnem belerakni az xml-be, ha meg nem letezik a symbolban
+                        specCatz = MU.Conf("customer.specialCategories") or []
+                        if specCatz:
+                            cust.unasCustomerCategory = next((x[0] for x in specCatz.values() if x[1] == cust.unasCustomerCategory), MU.UnasCustomerCategoryName ) # pyright: ignore[reportAttributeAccessIssue]
+
                     if len(cust.findall('Addressess')) > 0:
                         for addr in cust.Addresses.getchildren():
                             MU.trimAddressAttributes(addr)
@@ -282,7 +295,7 @@ def transformGetRequestObject(root, action, xmlPart):
                 errMsg  = f"getCustomer processError - Skipped : {cust.Id}, symbolId:{unasCustSymbolId}, code:{custCode}, TaxNo:{custTaxNo}"
                 errMsg += f"\r\n\t CacheItem:{ 'None' if ucc is None else ucc.toStr()}"
                 MU.errorHandler(errMsg, AlertMailType(UnasTransactionType.CUSTOMERS, code=ProxyErrCode.E23,
-                            oid=cust.Id, otyp=ProxyObjectType.UNASCUSTOMER), level = logging.ERROR, eDescr=sys.exc_info())
+                            oid=cust.Id or 0, otyp=ProxyObjectType.UNASCUSTOMER), level = logging.ERROR, eDescr=sys.exc_info())
             finally:
                 pass
 
@@ -523,7 +536,7 @@ def doUnasFeedback(pathArray, path, queryParams):
     MU.checkCacheState()
     if (pathArray[2] == 'oke' ):
         try:
-            logging.debug("FBUNAS-OKE: {0}".format( urlParse.unquote('/'.join(pathArray)[10:] )))
+            MU.getLogger().logger.debug("FBUNAS-OKE: {0}".format( urlParse.unquote('/'.join(pathArray)[10:] )))
             unasId = MU.getQueryParamInt(queryParams, 'id')
             symbolId = MU.getQueryParamInt(queryParams, 'symbolid')
             symbolCode = MU.getQueryParam(queryParams, 'code')
@@ -557,7 +570,19 @@ def doUnasFeedback(pathArray, path, queryParams):
                     _msg = f"FB-Order-Cacche corrupted! order:{orderKey}: symbolId-s differ [Sym]{symbolId}/[Cache]{0 if uoc is None else uoc.symbolId}"
                     MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E11), level = logging.WARNING)
                     raise MyProgramFlowErrorException(_msg)
-
+            elif  pathArray[3].startswith('pepitaorder'):
+                uoc = MU.PepitaOrderList.get(unasId) # igazibol Pepita OrderId
+                if uoc is None:
+                    _msg = f"FBack-Pepita-Order-Cache corrupted, missing order:{unasId}"
+                    MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.F50), level = logging.WARNING)
+                    raise MyProgramFlowErrorException(_msg)
+                #  else
+                FBU.updateSymbolCode(symbolId, '%s-%s' % ( MU.getCfgVal("pepita.OrderPrefix"), unasId), 'CustomerOrder', 'PrimeVoucherNumber' )
+                uoc.symbolId = symbolId
+                #
+                FBU.updateOrderStatus(symbolId, MU.SYMBOLORDERSTATUS)
+                MU.removePepitaOrderFromCache(unasId)
+                return None
             elif pathArray[3] .startswith('orderstatus'):
                 pass
             elif pathArray[3] .startswith('cust'):
@@ -571,7 +596,7 @@ def doUnasFeedback(pathArray, path, queryParams):
                     if ucc is None:
                         _msg = f'{pathArray[3]}\nCustomer cache corrupted, missing unasId:{unasId}'
                         MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E12), level=logging.ERROR )
-                        logging.error("Customer cache corrupted, missing unasId:%i", unasId)
+                        MU.getLogger().logger.error("Customer cache corrupted, missing unasId:%i", unasId)
                         # raise WalueError("Customer cache corrupted, missing unasId:%i", unasId)
                     else:
                         ucc.lastmod = MU.getCurrTime()
@@ -595,29 +620,29 @@ def doUnasFeedback(pathArray, path, queryParams):
                                     MU.UnasCustomerFeedbackList.append( (unasId, symbolId, symbolCode) )
                                 else:
                                     UCH.updateCustomerSymbolId(unasId, symbolId, symbolCode)
-                                logging.debug("CustomerCode:%s(%i) modified at:%i,%s in cache",
+                                MU.getLogger().logger.debug("CustomerCode:%s(%i) modified at:%i,%s in cache",
                                         ucc.code, symbolId, ucc.lastmod, MU.tsToDateStr(ucc.lastmod) )
                             else:
-                                logging.debug("CustomerCode:%s(%i) SKIPP mod at:%i,%s in cache",
+                                MU.getLogger().logger.debug("CustomerCode:%s(%i) SKIPP mod at:%i,%s in cache",
                                         ucc.code, symbolId, ucc.lastmod, MU.tsToDateStr(ucc.lastmod) )
 
-                        logging.info("Customer:%s(%i) lastMod:%i/%s ", ucc.code, symbolId, ucc.lastmod, MU.tsToDateStr(ucc.lastmod) )
-                        logging.debug( "fbUnas-Cust:%s ", ucc.toStr())
+                        MU.getLogger().logger.info("Customer:%s(%i) lastMod:%i/%s ", ucc.code, symbolId, ucc.lastmod, MU.tsToDateStr(ucc.lastmod) )
+                        MU.getLogger().logger.debug("fbUnas-Cust:%s ", ucc.toStr())
                         # ?????    Cimek !!!!
                         if MU.HANDLE_CUSTOMERADDRESS and ucc is not None :
                             if isinstance(ucc.unasAddrObj, List) and  len(ucc.unasAddrObj) > 0:
                                 postProcessCAddresses(symbolId, ucc.unasAddrObj)
                         #
                 elif pathArray[:-1] == 'custshipaddr':
-                    pass # logging.warning('Not written Yet')
+                    pass # MU.getLogger().logger.warning('Not written Yet')
                 elif pathArray[:-1] == 'custinvaddr':
-                    pass # logging.warning('Not written Yet')
+                    pass # MU.getLogger().logger.warning('Not written Yet')
                 elif pathArray[:-1] == 'custcontact':
-                    pass # logging.warning('Not written Yet')
+                    pass # MU.getLogger().logger.warning('Not written Yet')
                 elif pathArray[:-1] == 'custothaddr':
-                    pass # logging.warning('Not written Yet')
+                    pass # MU.getLogger().logger.warning('Not written Yet')
                 else:
-                    logging.error('Not handled Customer Feedback action: %s', pathArray[:-1])
+                    MU.getLogger().logger.error('Not handled Customer Feedback action: %s', pathArray[:-1])
             elif pathArray[3] == 'product':
                 #upc = MU.UnasProductList.get(productSku)
                 upc = next((x for x in  MU.UnasProductList.values()  if x.unasId == unasId), None )
@@ -633,12 +658,12 @@ def doUnasFeedback(pathArray, path, queryParams):
                     prodname = MU.getQueryParam(queryParams, 'prodname')
                     if prodname is not None:
                         name = urlParse.unquote(prodname, encoding='utf-8')
-                        logging.info('Felulvagom a ProdID:%i nevet:%s!!!', symbolId, name )
+                        MU.getLogger().logger.info('Felulvagom a ProdID:%i nevet:%s!!!', symbolId, name )
                         FBU.updateProductName(symbolId, name )
 
         except Exception as e:
             if isinstance(e, MyProgramFlowErrorException) or isinstance(e, MyProgramFlowWarningException):
-                logging.debug("MyProgramFlowErrorException : ", str(e), " / ignored")
+                MU.getLogger().logger.debug("MyProgramFlowErrorException : ", str(e), " / ignored")
             else:
                 _err = str(e) # if not hasattr(e, 'message') else e.message
                 _msg = f"\r\nFeedback-OKE process megszakitva!\r\nX: {_err}\r\nIsmetleshez az URL: {path}"
@@ -668,10 +693,10 @@ def doUnasFeedback(pathArray, path, queryParams):
             FBU.deleteDummyCArex(unasId)
 
         except MyProgramFlowErrorException as pfe:
-            logging.error("MyProgramFlowErrorException : ", str(pfe), " / ignored")
+            MU.getLogger().logger.error("MyProgramFlowErrorException : ", str(pfe), " / ignored")
         except Exception as e:
             if isinstance(e, MyProgramFlowErrorException) or isinstance(e, MyProgramFlowWarningException):
-                logging.debug("MyProgramFlow-Exception : ", str(e), " / ignored")
+                MU.getLogger().logger.debug("MyProgramFlow-Exception : ", str(e), " / ignored")
             else:
                 _msg = f"FBUNAS-ERR process error:{e}"
                 _msg += f"\r\nFeedback-ERR process megszakitva! Az esetleges ismetleshez a keres URL: {path}"
@@ -694,7 +719,7 @@ def getMissingCustomersFromOrder(xml:str):
         taxTag = None if cust.Addresses is None else None if cust.Addresses.Invoice is None else cust.Addresses.Invoice.TaxNumber
         unasId = 0 if len(cust.findall('Id')) == 0 else int(cust.Id.text)
         if unasId > 0:
-            ucc = MU.getCustomerFormCache(unasId)
+            ucc = MU.getCustomerFromCache(unasId)
             if ucc is None: # next((x for x in UnasCustomerList.values() if x.unasId == 256185675) , None )
                 unasCust = UCH.unasGetCustomers('Id', None if not cust.find('Id') else cust.Id.text )
                 if unasCust is None:
@@ -719,7 +744,7 @@ def getMissingCustomersFromOrder(xml:str):
                 if "ok" == '-' if len(retStatus) < 1 else retStatus[0].Status:
                     cl.append(ucc)
                 else:
-                    logging.error("getMissingCustomersFromOrder :%s, Nem vart customer-Update err:%s" % ( ord.Key, retXml))
+                    MU.getLogger().logger.error("getMissingCustomersFromOrder :%s, Nem vart customer-Update err:%s" % ( ord.Key, retXml))
                     # raise WalueError()
         # else:: unasId == 0
     return cl
@@ -734,14 +759,14 @@ def doUnasGetRequest(path, errors, qry={}) -> str:
     # reset errors
     GBL_ErrorMessages.clear()
     #
-    logging.debug(path)
+    MU.getLogger().logger.debug(path)
     actionPath = path[2]
     tsStart = MU.getCurrTime()
     # GBL_ErrorMessages.append("Test GET errMsg:%d" % tsStart)
     unasresp : str = None # type: ignore
     if (actionPath == 'orders'):
         uts = MU.createTransactionId( UTSTYPE.ORDERS )
-        logging.debug("getOrderToday-TS:%d" % uts)
+        MU.getLogger().logger.debug("getOrderToday-TS:%d" % uts)
         xmlResp = UCH.unasGetOrderNew()
         
         # Ha nincs a symbolban, csinaljak egy dummy rekordot?
@@ -761,80 +786,80 @@ def doUnasGetRequest(path, errors, qry={}) -> str:
         MU.getUnasContext().lastGetOrder = int(uts / 1000)
     elif actionPath == 'orderby':
         uts = MU.createTransactionId( UTSTYPE.ORDERBY )
-        logging.debug("getOrderBy-TS:%d" , uts)
+        MU.getLogger().logger.debug("getOrderBy-TS:%d" , uts)
         xmlResp = UCH.unasGetOrderBy( path[3], path[4])
         unasresp = doUnasActionRequest(xmlResp, 'orders', 'Order', 'OrderBy')
     elif actionPath == 'products':
         uts = MU.createTransactionId( UTSTYPE.PRODUCTS )
-        logging.debug("getProducts-TS:%d" , uts)
+        MU.getLogger().logger.debug("getProducts-TS:%d" , uts)
         xmlResp = UCH.unasGetProducts( '1' , 1, 0 )
         unasresp =  doUnasActionRequest(xmlResp, 'products','Product')
     elif actionPath.startswith('prodby'):
         uts = MU.createTransactionId( UTSTYPE.PRODBY )
-        logging.debug("getProduct BY-TS:%d Item:%s, val:%s", uts, path[3], path[4] )
+        MU.getLogger().logger.debug("getProduct BY-TS:%d Item:%s, val:%s", uts, path[3], path[4] )
         xmlResp = UCH.unasGetProductByAzon( path[3], path[4])
         unasresp = doUnasActionRequest(xmlResp, 'prodbyid','Product')
     elif actionPath.startswith('unasprod'):
         uts = MU.createTransactionId( UTSTYPE.UNASPROD )
-        logging.debug("unasprod BY-TS:%d Item:%s, val:%s", uts, path[3], path[4] )
+        MU.getLogger().logger.debug("unasprod BY-TS:%d Item:%s, val:%s", uts, path[3], path[4] )
         unasresp = UCH.unasGetProductByAzon( path[3], path[4])              # NINCS checkCacheState
     elif actionPath.startswith('inquirers'):
         prodId = actionPath[9:]
         uts = MU.createTransactionId( UTSTYPE.INQUIRERS )
-        logging.debug("getProducts-TS:%d, Inquirer:%s" , uts,prodId)
+        MU.getLogger().logger.debug("getProducts-TS:%d, Inquirer:%s" , uts,prodId)
         xmlResp = UCH.unasGetInquirers( prodId)
         unasresp = doUnasActionRequest(xmlResp, 'inquirers','Inquirer')
     elif actionPath.startswith('customers'):
         if MU.ORDER_HandleUnregistered:
             uts = MU.createTransactionId( UTSTYPE.CUSTOMERORDER )
-            logging.debug("getCustomers - Unregistered in Order-TS:%d" , uts)
+            MU.getLogger().logger.debug("getCustomers - Unregistered in Order-TS:%d" , uts)
             xmlResp = UCH.unasGetOrderNew()
             orderCustomers = ET.fromstring('<customerPartXmlObj></customerPartXmlObj>', None)
             retV = doUnasActionRequest(xmlResp, 'orders', 'OrderCustomers', orderCustomers)
-            logging.debug("getCustomers - Unregistered in Order:%s", ET.tostring(orderCustomers, encoding='utf-8', pretty_print=True)) # type: ignore
+            MU.getLogger().logger.debug("getCustomers - Unregistered in Order:%s", ET.tostring(orderCustomers, encoding='utf-8', pretty_print=True)) # type: ignore
         else:
             orderCustomers = None
 
         # if MU.ORDER_getMissingCust:
-        #     logging.debug("getCustomers - MISSING Customers (Cust in cache but missed from Symbol)")
+        #     MU.getLogger().logger.debug("getCustomers - MISSING Customers (Cust in cache but missed from Symbol)")
         #     xmlResp = UCH.unasGetOrderNew()
         #     orderCustomers = doUnasActionRequest(xmlResp, 'orders', 'OrderCustomers')
-        #     logging.debug("getCustomers - Unregistered in Order:%s", orderCustomers)
+        #     MU.getLogger().logger.debug("getCustomers - Unregistered in Order:%s", orderCustomers)
         # else:
         #     orderCustomers = None
 
         uts = MU.createTransactionId( UTSTYPE.CUSTOMERS )
-        logging.debug("getCustomer-TS:%d" , uts)
+        MU.getLogger().logger.debug("getCustomer-TS:%d" , uts)
         xmlResp = UCH.unasGetCustomers()
         unasresp = doUnasActionRequest(xmlResp, 'customers','Customers', orderCustomers)
         MU.getUnasContext().lastGetCustomer = int(uts / 1000)
     elif actionPath.startswith('unascust'):
         uts = MU.createTransactionId( UTSTYPE.UNASCUST )
-        logging.debug("getCustomers-TS:%d - unascust %s, %s", uts, path[3], 'NoNe' if len(path) < 5 else path[4])
+        MU.getLogger().logger.debug("getCustomers-TS:%d - unascust %s, %s", uts, path[3], 'NoNe' if len(path) < 5 else path[4])
         unasresp = UCH.unasGetCustomers( path[3], None if len(path) < 5 else path[4])                # NINCS checkCacheState
     elif actionPath.startswith('customerby'):
         uts = MU.createTransactionId( UTSTYPE.CUSTOMERBY )
-        logging.debug("getCustomers-TS:%d - customerby %s, %s", uts, '3-None' if len(path) < 4 else path[3], '4-None' if len(path) < 5 else path[4])
+        MU.getLogger().logger.debug("getCustomers-TS:%d - customerby %s, %s", uts, '3-None' if len(path) < 4 else path[3], '4-None' if len(path) < 5 else path[4])
         xmlResp = UCH.unasGetCustomers( None if len(path) < 4 else path[3], None if len(path) < 5 else path[4])
         unasresp = doUnasActionRequest(xmlResp, 'customers','Customers', None)
     elif actionPath.startswith('storage'):
         uts = MU.createTransactionId( UTSTYPE.STORAGE )
-        logging.debug("get Storage files-TS:%d" , uts)
+        MU.getLogger().logger.debug("get Storage files-TS:%d" , uts)
         xmlResp = UCH.unasGetStorage( None if len(path) < 4 else path[3], None if len(path) < 5 else path[4]) # NOT TESTED!! NINCS checkCacheState
         unasresp = xmlResp
     elif actionPath.startswith('logger'):
         uts = MU.createTransactionId( UTSTYPE.LOGGER )
-        logging.debug("Logger GET called-TS:%d" , uts)
+        MU.getLogger().logger.debug("Logger GET called-TS:%d" , uts)
         raise MyProgramFlowWarningException("Logger GET Not Implmented Yet!")
     elif actionPath.startswith('initcache'):
         uts = MU.createTransactionId( UTSTYPE.INITCACHE )
-        logging.debug("InitCache-TS:%d" , uts)
+        MU.getLogger().logger.debug("InitCache-TS:%d" , uts)
         MU.reinitCacheState()
         unasresp = 'OKJ:{ "custs":%i , "prods":%i , "orders":%i  }' % ( len(MU.UnasCustomerList), len(MU.UnasProductList), len(MU.UnasOrderList) )
     elif actionPath.startswith('proxytest'):
         try:
             uts = MU.createTransactionId( UTSTYPE.TESTGET )
-            logging.debug("proxytest-TS:%d" , uts)
+            MU.getLogger().logger.debug("proxytest-TS:%d" , uts)
             unasresp =  doProxyTest(path, None if len(path) < 4 else path[3], None if len(path) < 5 else path[4])
         except Exception as e:
             errors.append( "FATAL TEST   req: " + "/".join(path) )
@@ -843,7 +868,7 @@ def doUnasGetRequest(path, errors, qry={}) -> str:
     elif actionPath.startswith('proxycontrol'):
         try:
             uts = MU.createTransactionId( UTSTYPE.PROXYCONTROLS )
-            logging.debug("proxycontrol-TS:%d" , uts)
+            MU.getLogger().logger.debug("proxycontrol-TS:%d" , uts)
             resp =  doProxyControl(path, None if len(path) < 4 else path[3], None if len(path) < 5 else path[4], queryParams=qry)
             unasresp =  'err' if not resp else  ("OKJ:" + resp)
         except Exception as e:
@@ -852,27 +877,27 @@ def doUnasGetRequest(path, errors, qry={}) -> str:
         # end try
     elif actionPath.startswith('test'):
         uts = MU.createTransactionId( UTSTYPE.TESTJOE )
-        logging.debug("test-TS:%d" , uts)
+        MU.getLogger().logger.debug("test-TS:%d" , uts)
         unasresp =  doJoeTest(path, None if len(path) < 4 else path[3], None if len(path) < 5 else path[4])
     elif actionPath.startswith('TEST'):
         uts = MU.createTransactionId( UTSTYPE.TESTJOE )
-        logging.debug("testJOE-TS:%d" , uts)
+        MU.getLogger().logger.debug("testJOE-TS:%d" , uts)
         unasresp = doJoeTEST(path)
     else:
         raise MyProgramFlowWarningException(f"Unhandled GET req: {'/'.join(path)}")
     #
-    logging.info("GetReq:%s handled in:%i secs" , actionPath, MU.getCurrTime() - tsStart)
+    MU.getLogger().logger.info("GetReq:%s handled in:%i secs" , actionPath, MU.getCurrTime() - tsStart)
     for errItm in GBL_ErrorMessages:
         errors.append( str(errItm) )
     return unasresp
 
 def getErrorTextProduct(act, xmlResp):
+    errorMessage = None
     if xmlResp == None:
-        logging.debug("Null %s response?", act.upper())
+        MU.getLogger().logger.debug("Null %s response?", act.upper())
     else:
         root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
-        logging.debug(root.tag)
-        errorMessage = None
+        MU.getLogger().logger.debug(root.tag)
         for prod in root.getchildren():
             #productId = prod.find('Id').text
             productSku = prod.find('Sku').text
@@ -880,20 +905,20 @@ def getErrorTextProduct(act, xmlResp):
             action = prod.find('Action')
             if status.lower() ==  'ok':
                 MU.UnasProductList[productSku].lastmod = MU.getTimeFromTS() # MU.UtcNow()
-                logging.info( "%s-ok:%s", 'NoneAction' if action is None else action.text, productSku)
+                MU.getLogger().logger.info("%s-ok:%s", 'NoneAction' if action is None else action.text, productSku)
             else:
                 errMsg = prod.find('Error').text
                 GBL_ErrorMessages.append(errMsg)
                 errorMessage = errMsg if errorMessage is None else  errorMessage + ' | ' + errMsg
-                logging.error( "%s-%s ERR:%s", 'NoneAction' if action is None else action.text, productSku, '-' if errMsg is None else errMsg )
+                MU.getLogger().logger.error("%s-%s ERR:%s", 'NoneAction' if action is None else action.text, productSku, '-' if errMsg is None else errMsg )
     return 'OK' if errorMessage is None else errorMessage
 
 def getErrorTextOrder(act, xmlResp, symbolId, statusCode) -> str:  # @20240914 NEZDMEG!
     if xmlResp == None:
-        logging.warning("Null %s response?", act.upper())
+        MU.getLogger().logger.warning("Null %s response?", act.upper())
     else:
         root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
-        logging.debug(root.tag)
+        MU.getLogger().logger.debug(root.tag)
         errorMessage = None
         for tt  in root.getchildren():
             key = tt.find('Key').text
@@ -905,13 +930,13 @@ def getErrorTextOrder(act, xmlResp, symbolId, statusCode) -> str:  # @20240914 N
                 uoc = MU.UnasOrderList.get(key)
                 if uoc:
                     uoc.lastmod = MU.getTimeFromTS()
-                    logging.info("%s-ok:%s lastMod:%i,%s",
+                    MU.getLogger().logger.info("%s-ok:%s lastMod:%i,%s",
                             'NoneAction' if action is None else action.text,
                             key,
                             uoc.lastmod, # uoc["lastmod"],
                             MU.tsToDateStr(uoc.lastmod))
                 else:
-                    logging.info("%s-ok:%s ",'NoneAction' if action is None else action.text, key)
+                    MU.getLogger().logger.info("%s-ok:%s ",'NoneAction' if action is None else action.text, key)
                     orderRow = FBU.getOrderById(symbolId)
                     if orderRow is not None:
                         uoc = UOC.UnasOrderCache(ordKey=key, status=statusCode,
@@ -919,7 +944,7 @@ def getErrorTextOrder(act, xmlResp, symbolId, statusCode) -> str:  # @20240914 N
                                     ordcode=orderRow[2]  )
             else:
                 errMsg = tt.find('Error').text
-                logging.error( "(setOrderStatus) %s-ERR:%s", 'NoneAction' if action is None else action, xmlResp)
+                MU.getLogger().logger.error("(setOrderStatus) %s-ERR:%s", 'NoneAction' if action is None else action, xmlResp)
                 errorMessage = errMsg if errorMessage is None else  errorMessage + ' | ' + errMsg
                 GBL_ErrorMessages.append(errorMessage)
     return errorMessage # type: ignore
@@ -929,7 +954,7 @@ def getXmlTag( itm, tag:str ):
     return None if xval is None else xval.strip()
 
 def doProxyTest(path, unit, id) -> str:
-    logging.error("proxyTest path:%s", path)
+    MU.getLogger().logger.error("proxyTest path:%s", path)
     if "cust" == unit:
         if "caddrall" == id:
             xrx = MU.CUSTOMER_CYCLIC_INTERVAL
@@ -968,8 +993,9 @@ def doProxyTest(path, unit, id) -> str:
                 xmlreq = "<Customers>%s</Customers>" % "\n".join(xmlArray)
                 resp = UCH.updateCustomer(xmlreq)
                 customers = MU.getUnasActiveCustomers()
+                return resp
             MU.checkCacheState(typ=ProxyObjectType.CUSTOMER)
-            return resp
+            return 'NoData'
         elif "nullsymazon" == id:
             xmlArray = []
             customers = MU.getUnasActiveCustomers()
@@ -997,7 +1023,7 @@ def doProxyTest(path, unit, id) -> str:
                 xmlArray.append( f"<Customer><Action>delete</Action><Id>{ucc.unasId}</Id></Customer>" )
             if len(xmlArray) > 0:
                 resp = UCH.updateCustomer(  " ".join(xmlArray) )
-            return resp
+                return resp
         else:
             return MU.CUSTOMER_TESTDATA1
     elif "ord" == unit:
@@ -1130,7 +1156,7 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
                 xmlReq = "\n".join(xmlArray)
                 resp = UCH.unasOrder_Direct(xmlReq)
                 MU.checkCacheState(typ=ProxyObjectType.ORDER)
-            return resp
+                return resp
         elif "getnew" == id:
             return UCH.unasGetOrderNew()
         elif "getnewjs" == id:
@@ -1174,6 +1200,7 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
             joeOnly = "nullparamsJoe" == id
             xmlArray = []
             customers = MU.getUnasActiveCustomers()
+            resp = 'Error?'
             for cust in customers.values():
                 if joeOnly == False or cust.email.lower().startswith('joe'):
                     xmlArray.append(UCH.UNAS_SETSYMBOLID_XML % (cust.unasId, '','') )
@@ -1196,6 +1223,7 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
         elif "nullparams" == id:
             xmlArray = []
             customers = MU.getUnasActiveCustomers()
+            resp = 'Eerr??'
             for cust in customers.values():
                 xmlArray.append(UCH.UNAS_SETSYMBOLID_XML % (cust.unasId, '','') )
             if len(xmlArray) > 0:
@@ -1236,7 +1264,7 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
             return '{"st":"OK"}'
         elif "deleteByCacheFDB" == id:
             deleted = []
-            curs = None # Szegeny ember tranzakcioja :(
+            cursor = None # Szegeny ember tranzakcioja :(
             for cust in MU.UnasCustomerList.values():
                 cursor = FBU.delCustomerById(cust.symbolId, False, cursor)
                 cust.symbolId = 0
@@ -1261,7 +1289,7 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
                 xmlArray.append( f"<Customer><Action>delete</Action><Id>{ucc.unasId}</Id></Customer>" )
             if len(xmlArray) > 0:
                 resp = UCH.updateCustomer(  " ".join(xmlArray) )
-            return resp
+                return resp
 ##########################        
         elif "getAll" == id:
             resp = UCH.unasGetActiveCustomers()
@@ -1373,7 +1401,7 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
     return '{"err":"Unhandled action: %s"}' % '/'.join(path)
 
 def doJoeTest(path, unit, id) -> str:
-    logging.error("joeTest path:%s", path)
+    MU.getLogger().logger.error("joeTest path:%s", path)
     if "cust" == unit:
         if "nano" == id:
             return MU.CUSTOMER_TESTDATA_NANO
@@ -1403,7 +1431,7 @@ def doJoeTest(path, unit, id) -> str:
     return "OK"
 
 def doJoeTEST(path):
-    logging.error("joeTest path:%s ", path)
+    MU.getLogger().logger.error("joeTest path:%s ", path)
     xxx = FBU.getCustomerAddressesById(203)
     pp.pprint(xxx)
     return str(xxx)

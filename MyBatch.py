@@ -8,7 +8,7 @@ import threading
 from time import sleep
 from typing import List
 
-from lxml import etree as ET
+import lxml.etree as ET
 
 import FdbUtils as FBU
 import MySmtpClient as SM
@@ -38,7 +38,7 @@ ORDSTATCOLUMNS = [ "Id",  "VoucherNumber", "PrimeVoucherNumber", "CustomerOrderS
 Interrupted = False
 
 def masterChallengeUnas(prc):
-    raise MyProgramFlowWarningException("Not Usable Yet, under developed until... faszomTuggya ",1234321)
+    raise MyProgramFlowWarningException("Not Usable Yet, under developed until... faszomTuggya ",ProxyErrCode.E42)
 
 def getOrdercacheFromProxy():
     # code, resp = UCH.callProxyControl('status/cache/orders')
@@ -117,12 +117,12 @@ def orderStatusUnasProxy( prc ):
                             uoc.badCounter = 1 + uoc.badCounter
 
                     elif (ordStatusStr == uoc.orderStatus):
-                        logging.debug(f"Skipping:{ordKey}({symbolId}) BizSz:{ord[ORDSTATCOLUMNS.index('VoucherNumber')]} Customer:{uoc.code}({uoc.symbolCustId})")
+                        MU.getLogger().logger.debug(f"Skipping:{ordKey}({symbolId}) BizSz:{ord[ORDSTATCOLUMNS.index('VoucherNumber')]} Customer:{uoc.code}({uoc.symbolCustId})")
                     else:
                         # TODO BVlokkosirttani
                         # orderStatusXmlArray.append(f"<Order>{ORDER_SETSTAUS_XML % (ordKey, MU.ORDER_STATUS_SENDMAIL, ordStatusStr, symbolId)}</Order>")
                         xmlResp = UCH.unasSetOrderStatus( ordKey,  ordStatusStr, symbolId)
-                        logging.debug(f'SetOrder:[{ordKey}] set Status: {ordStatusStr}')
+                        MU.getLogger().logger.debug(f'SetOrder:[{ordKey}] set Status: {ordStatusStr}')
                         # TODO meg kellene vizsgalni, hogy xml valos-e
                         if xmlResp.find('<Status>ok</Status>') > 0:
                             uoc.orderStatus = ordStatusStr
@@ -135,16 +135,16 @@ def orderStatusUnasProxy( prc ):
                 elif  ordStatusStr == skippingStatus:
                     pass
                 else:
-                    logging.error("ordKEY missing from UNAS Skipping:%s", ordKey)
+                    MU.getLogger().logger.error("ordKEY missing from UNAS Skipping:%s", ordKey)
                 #
             # TODO into Cache and cache handling
             ## if len(orderStatusXmlArray) > 0:
             ##     xmlResp = UCH.unasOrder_Direct(orderStatusXmlArray.join('\n'))
-            ##     logging.debug(f'SetOrder response:{xmlResp}')
+            ##     MU.getLogger().logger.debug(f'SetOrder response:{xmlResp}')
             ##     print(xmlResp)
         #
         elif badOrder:
-            logging.debug("BadList hit:%s" % badOrder)
+            MU.getLogger().logger.debug("BadList hit:%s" % badOrder)
     #
     MU.getUnasContext().lastUnasOrderStatus = MU.UtcNow()
     #
@@ -189,7 +189,7 @@ class MyBatch():
     def doSql(self, arrPath):
         R = []
         if 'getTests0' == arrPath[0]:
-            resp = self.mSql.doSql()
+            resp = self.mSql.doSql('select 1')
             for r in resp:
                 R.append(json.dumps(r))
         else:
@@ -201,17 +201,17 @@ class MyBatch():
 
 
 def startProcess1(prc):
-    logger.info('Process1 Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
+    MU.getLogger().logger.info('Process1 Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
     print('Process1 Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
     print(prc)
 
 def startProcess2(prc):
-    logger.info(' Process22222 Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
+    MU.getLogger().logger.info(' Process22222 Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
     print(' Process22222 Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
     print(prc)
     
 def startProcess3(prc):
-    logger.info(' Process3 3 Harom Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
+    MU.getLogger().logger.info(' Process3 3 Harom Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
     print(' Process3 3 Harom Started at:%s' , MU.tsToDateSql(MU.getCurrTime()))
     print(prc)
 
@@ -224,7 +224,7 @@ def startProcess(**kwargs):
         frequency = vals["frequency"]
         procName = vals["method"]
         while not Interrupted:
-            logger.info(' Process:%s Started at:%s' , procName, MU.tsToDateSql(MU.getCurrTime()))
+            MU.getLogger().logger.info(' Process:%s Started at:%s' , procName, MU.tsToDateSql(MU.getCurrTime()))
             try:
                 exec(f"x = {procName}(vals)")
             except Exception as e:
@@ -256,13 +256,13 @@ def processloop(threads):
                 _msg = f"Batch exception : {str(e)}" # if not hasattr(e, 'message') else e.message"
                 MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.B27), eDescr=sys.exc_info())
     except (KeyboardInterrupt, ServiceExit) as ex:
-      logging.info('Batch Server interrupted - closing...(%s)', ex)
+      MU.getLogger().logger.info('Batch Server interrupted - closing...(%s)', ex)
     #
     Interrupted = True
     # and wait
     for t in threads:
         t.join()
-        logging.info(f'ServerThread: [{t.name}] closed')
+        MU.getLogger().logger.info(f'ServerThread: [{t.name}] closed')
     
     
 def service_shutdown(signum, frame):
@@ -314,19 +314,19 @@ def startBatchService():
             for f in getOrdercacheFromProxy():
                 ordKey = f['orderKey']
                 f.__setitem__('ordXml', None) #f['ordXml'] = None
-                ord = DefaultMunch.fromDict(f, None)
+                ord = DefaultMunch.fromDict(f, None) # pyright: ignore[reportPossiblyUnboundVariable]
                 uoc = UOC.UnasOrderCache(ordKey)
                 uoc.fromMunch(ord)
                 if len(ordKey) > 1:
                     MU.UnasOrderList[ordKey] = uoc
             print(MU.UnasOrderList)
         except Exception as e:
-            logging.error('getOrdercacheFromProxy Failed: %s', str(e) ) #if not hasattr(e,'message') else e.message)
+            MU.getLogger().logger.error('getOrdercacheFromProxy Failed: %s', str(e) ) #if not hasattr(e,'message') else e.message)
     # get Processes
     # ??? bp = MyBatch()
     # ??? myMyslConnection = bp.mSql.getConn()
     for batchItem in MU.BATCH_PROCESSES:
-        for procName, procArgs in batchItem.items():
+        for procName, procArgs in batchItem.items():  # pyright: ignore[reportAttributeAccessIssue]
             logger.info('Thread :%s created', procName)
             # run process
             thread = threading.Thread( target = startProcess, name = procName, kwargs = { procName: procArgs } )
@@ -335,8 +335,8 @@ def startBatchService():
     # Wait for all threads to finish.
   except (KeyboardInterrupt, ServiceExit) as ex:
     Interrupted = True
-    logging.info('Server closing...(%s)', ex)
-    logging.info('Server closed')
+    MU.getLogger().logger.info('Server closing...(%s)', ex)
+    MU.getLogger().logger.info('Server closed')
 
   #fb_Conn = FBU.getFbConn()
   #FBU.dbClose
@@ -351,7 +351,7 @@ def startBatchService():
     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
     message = template.format(type(ex).__name__, ex.args)
     print(message)
-    logging.error('Server Crashed x:', message)
+    MU.getLogger().logger.error('Server Crashed x:', message)
     SM.sendProxyMail(message, AlertMailType(UnasTransactionType.STARTBATCH), "Batch Server aborted (CRASH)")
 
 if __name__ == "__main__":

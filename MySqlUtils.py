@@ -46,6 +46,8 @@ class MySqlWrapper():
     
     def getCursor(self):
         try:
+            if self.MyDB is None:
+                self.MyDB = self.getConn(True)
             return self.MyDB.cursor(buffered=True, dictionary=True)
         except mysql.connector.errors.OperationalError:
             self.MyDB = self.getConn(True)

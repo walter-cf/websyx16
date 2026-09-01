@@ -16,6 +16,9 @@
             <Email><xsl:value-of select="email" /></Email>
 			<Name><xsl:value-of select="$CustomerName" /></Name>
 			<!-- Comment><xsl:value-of select="description" /></Comment -->
+			<xsl:if test="customercategory and customercategory != ''">
+				<Group><Name>customercategory</Name></Group>
+			</xsl:if>
 			<Params>
                 <Param>
 		            <!-- Id -->

@@ -157,9 +157,9 @@ def setSocketServer(host, port):
         print('Stopping socket server')
         mySocketServer.server_close()
     except MUT.ControlProcessSocketExit:
-        logging.info("control Process Socketsever Thread exiting")
+        MU.getLogger().info("control Process Socketsever Thread exiting")
     except Exception:
-        logging.error("control Process Socketsever Thread ABORTED")
+        MU.getLogger().error("control Process Socketsever Thread ABORTED")
 
 ###########################################################
 # https://github.com/r66ff/multithreaded-server/blob/master/src/server.py
@@ -182,9 +182,9 @@ def setWebServer(host, port):
         print('stopping controlServer')
         myControlWebServer.server_close()
     except MUT.ControlProcessWebExit:
-        logging.info("control Process SocketServer Thread exiting")
+        MU.getLogger().info("control Process SocketServer Thread exiting")
     except Exception:
-        logging.error("control Process WebServer Thread ABORTED")
+        MU.getLogger().error("control Process WebServer Thread ABORTED")
 
 def stopSocketServer():
     raise MUT.ControlProcessSocketExit

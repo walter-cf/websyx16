@@ -3,7 +3,7 @@ import logging
 import urllib.parse as urlParse
 
 import requests
-from lxml import objectify
+import lxml.  objectify as   objectify
 
 import MySmtpClient as SM
 import MyUtils as MU
@@ -141,7 +141,7 @@ def unasGetActiveProducts( limitNum, limitStart ):
         limitStartTag = '' if limitStart < 1 else '<LimitStart>%d</LimitStart>' % (1+limitStart)
         limitTag = '<LimitNum>%d</LimitNum>%s' % (limitNum, limitStartTag)
 
-    xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><State>live</State><ContentType>minimum</ContentType>%s</Params>' % limitTag
+    xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><State>live</State><ContentType>full</ContentType>%s</Params>' % limitTag
     responseText =  doPostReq('getProduct', xmlParam)
 
     xml = bytes(bytearray(responseText, encoding="utf-8"))
@@ -221,19 +221,19 @@ def doPostReq(action, xmlParam):
     MU.createStatEntry(action, xmlParam)
     if MU.isLogLevelTrace():
         print( "UCh-req:", action,  " TS:", MU.getTS())
-        logging.debug("UCh-req:%s TS:%d", action, MU.getTS())
-        logging.debug("xmlParam: %s", xmlParam)
+        MU.getLogger().logDebug("UCh-req:%s TS:%d", action, MU.getTS())
+        MU.getLogger().logDebug("xmlParam: %s", xmlParam)
     else:
-        logging.debug("UCh-req:%s", action)
+        MU.getLogger().logDebug("UCh-req:%s", action)
     x = requests.post("%s/%s" % (MU.UNASAPI_URL, action), data=xmlParam.encode('utf-8'), headers={ "Authorization" : "Bearer " + token })
     if x.status_code == 200:
-        logging.debug("Req returned st:%s", x.status_code)
+        MU.getLogger().logDebug("Req returned st:%s", x.status_code)
         MU.createStatEntryOK(x.text)
         if MU.isLogLevelTrace():
-            logging.debug("response: %s", x.text)
+            MU.getLogger().logDebug("response: %s", x.text)
     else:
         MU.createStatEntryERR(x.status_code, x.text)
-        logging.error(f"Req returned ({x.status_code}) -> {x.text}") # Hibakezelest a hiva programban kell majd elvegezni!!!
+        MU.getLogger().logError(f"Req returned ({x.status_code}) -> {x.text}") # Hibakezelest a hiva programban kell majd elvegezni!!!
         # msg = f"ERROR - UCh-req:{action}. TS:{ MU.getTS()}\r\n({x.status_code}) -> {x.text}"
         # SM.sendProxyMail(msg, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR), '[UNAS-Comm-Err] Sikertelen UNAS keres ST:%s' % x.status_code )
         raise UnasCommErrException(x.status_code, x.text)
@@ -406,4 +406,3 @@ def getProds(tag = None, val = None):
 def addProdsXml_NU(xmlTag:str):
     xmlParam =  MU.XMLTAG + f"<Products>{xmlTag}</Products>"
     return doPostReq('setProduct', xmlParam)
-
