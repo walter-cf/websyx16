@@ -23,8 +23,9 @@ class UnasCustomerCache:
     symbolId: int
     code: str
     #custAzon: str
-    customerGroup: str | None
+    customerGroup: str | None = None
     # priceCategory: str | None    
+    specialCustomerCategory: str | None = None
     email: str
     taxNumber: str
     state: str
@@ -33,9 +34,9 @@ class UnasCustomerCache:
     unasAddrObj = List[CustomerAddress]
     unasAddrXml = List[_Element]
 
-    def __init__(self, unasid:int=None, emil:str=None, taxNo:str=None, code:str=None, sid:int = 0
+    def __init__(self, unasid:int=None, emil:str=None, taxNo:str=None, code:str=None, sid:int = 0 # type: ignore
                  , state:str = 'live', authed: bool = False
-                 , cg:str = None, priceCat:str = None                            ):
+                 , cg:str = None, priceCat:str = None                            ): # type: ignore
         self.unasId = unasid
         self.symbolId = sid
         self.email = '' if emil is None else str(emil).strip()

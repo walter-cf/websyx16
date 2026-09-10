@@ -15,7 +15,7 @@ import MySmtpClient as SM
 import MyUtils as MU
 import UnasConnectHelper as UCH
 import UnasOrderCache as UOC
-from MyServer import logrotate
+from MyServer import logrotate, changeLogFile
 from MySqlUtils import MySqlWrapper as mSqlWrapper
 from MyUtilsTypes import (AlertMailType, MyProgramFlowWarningException,
                           ProxyErrCode, ProxyObjectType, UnasTransactionType)
@@ -290,9 +290,8 @@ def startBatchService():
       logLevel = logging.DEBUG
       
   logFileName='syxBatch{0}.log'.format( '' if MU.serverPort == 3301 else '-'+str(MU.serverPort))
-  logrotate(logFileName)
-  logging.basicConfig(filename=logFileName,level=logLevel,format='%(asctime)s %(levelname)s %(name)s %(message)s')
-  logger=logging.getLogger(__name__)
+
+  localLogger=changeLogFile('Batch')
 
   #MU.getUnasContext().processName = 'Batch'
   if MU.isLogLevelWarn():
@@ -327,7 +326,7 @@ def startBatchService():
     # ??? myMyslConnection = bp.mSql.getConn()
     for batchItem in MU.BATCH_PROCESSES:
         for procName, procArgs in batchItem.items():  # pyright: ignore[reportAttributeAccessIssue]
-            logger.info('Thread :%s created', procName)
+            localLogger.logger.info('Thread :%s created', procName)
             # run process
             thread = threading.Thread( target = startProcess, name = procName, kwargs = { procName: procArgs } )
             threads.append(thread)
@@ -335,8 +334,8 @@ def startBatchService():
     # Wait for all threads to finish.
   except (KeyboardInterrupt, ServiceExit) as ex:
     Interrupted = True
-    MU.getLogger().logger.info('Server closing...(%s)', ex)
-    MU.getLogger().logger.info('Server closed')
+    localLogger.logger.info('Server closing...(%s)', ex)
+    localLogger.logger.info('Server closed')
 
   #fb_Conn = FBU.getFbConn()
   #FBU.dbClose
@@ -351,7 +350,7 @@ def startBatchService():
     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
     message = template.format(type(ex).__name__, ex.args)
     print(message)
-    MU.getLogger().logger.error('Server Crashed x:', message)
+    localLogger.logger.error('Server Crashed x:', message)
     SM.sendProxyMail(message, AlertMailType(UnasTransactionType.STARTBATCH), "Batch Server aborted (CRASH)")
 
 if __name__ == "__main__":

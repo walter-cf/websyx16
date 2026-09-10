@@ -30,17 +30,18 @@ from UnasProductCache import UnasProductCache as UPC
 #
 # PEPITA
 # 
-from PepitaOrderCache import PepitaCustomer, PepitaOrder, PepitaProducts, PaymentModeEnum, DeliveryModeEnum, from_json as POC_fromJson, from_jsonFile as POC_fromJsonFile
+from PepitaOrderCache import PepitaCustomer, PepitaProduct, PepitaOrder, PepitaProduct, PaymentModeEnum, DeliveryModeEnum, from_json as POC_fromJson, from_jsonFile as POC_fromJsonFile
 from MySqlUtils import MySqlWrapper
 from UnasProductCache import UnasProductCache as UPC
 from xmlclazz.customerOffer import CustomerOffer
 # 
 # Gonlom a PriceGroupnal majd elojonnek ezek is
 #
-# from xmlclazz.customerGroupResponse import CustomerGroupResponse
-# from xmlclazz.customerOffer import CustomerOffer, CustomerOfferDetail
-# from xmlclazz.customerResponse import CustomerResponse
-# from xmlclazz.productResponse import ProductResponse
+from xmlclazz.customerGroupResponse import CustomerGroup, CustomerGroupResponse
+from xmlclazz.customerOffer import CustomerOffer, CustomerOfferDetail
+from xmlclazz.customerResponse import CustomerResponseCostumer, CustomerResponse
+from xmlclazz.productResponse import ProductResponse
+from xmlclazz.unasCustomer import UnasCustomer, UnasCustomers
 
 
 CONFIG_FILE = None
@@ -557,7 +558,10 @@ def getCustomerFromCache(unasId:int ) -> UCC.UnasCustomerCache:
 def putCustomerIntoCache(ucc : UCC.UnasCustomerCache):
     u = UnasCustomerList.get( ucc.unasId )
     if u is None:
-        UnasCustomerList[ucc.unasId] = ucc
+        if ucc.unasId or 0 > 0:
+            UnasCustomerList[ucc.unasId] = ucc
+        else:
+            getLogger().logError( '[putCustomerIntoCache]:Missing cache item:' + ucc.toStr(), u, ucc)
     elif u.email == ucc.email and u.unasId == ucc.unasId and u.symbolId == ucc.symbolId:
         UnasCustomerList[ucc.unasId] = ucc
     else:
@@ -663,6 +667,7 @@ ORDER_STATUS_CLOSE    = 0
 ORDER_STATUS_RETURN   = 0
 ORDER_STATUS_CANCEL   = 0
 ORDER_STATUS_SENDMAIL = 'No'
+EPOCH_ENDDATE = "2038.01.19"
 
 ORDER_HandleUnregistered  = False
 ORDER_getMissingCust      = False
@@ -1993,10 +1998,16 @@ def getSymbolPrice(sku:str) -> float:
     priceStr = FBU.getPriceBySku(sku)
     return 0  if priceStr is None else  float( priceStr )
 
+def getUnasCustomer(unasId:int) -> UnasCustomer | None:
+    resp = UCH.unasGetCustomerById(unasId)
+    customerResp = UnasCustomers.from_xmlStr(resp)
+    return None if len(customerResp or []) < 1 else customerResp[0]
+
 def putPepitaOrderIntoCache(jsonStr:str) ->  PepitaOrder:
     poc = POC_fromJson(jsonStr)
     poc.tsId = createTransactionId(MUT.UnasTransactionType.PEPITA_ORDER)
-    PepitaOrderList[poc.id] = poc
+    orderId = int(poc.id)
+    PepitaOrderList[orderId] = poc
     # Save into file
     with open(f"{Conf("pepita.folder.order")}/{poc.tsId}-{poc.id}.json", "w") as fp:
         fp.write( jsonStr )
@@ -2012,7 +2023,7 @@ def removePepitaOrderFromCache(orderId:int):
     os.rename(f"{Conf("pepita.folder.order")}/{fn}", f"{Conf("pepita.folder.archive")}/{fn}")
 
 def pepitaPaymentMethod(mode:PaymentModeEnum) -> str:
-    match (mode):
+    match PaymentModeEnum(mode):
         case PaymentModeEnum.cod:
             return "Utánvéttel"
         case PaymentModeEnum.creditcard:
@@ -2045,15 +2056,27 @@ def createOrderItem(p_d) -> str:
     return f"""
         <productcode>{p.sku}</productcode>
         <quantity>{p.quantity}</quantity>
-        <unipricenet>{p.price / 1.27}</unipricenet>
+        <unipricenet>{float(p.price) / 1.27}</unipricenet>
         <grossvalue>{p.price}</grossvalue>
     """
+
+#from collections import namedtuple
+def createSymbolCustomer(orderId:int, cust: PepitaCustomer ):
+    #  cust = type('PepitaCustomer', (object,), cust_d)
+    colList = f' "Name", "Email", "Code", "Phone", "TaxNumber" '
+    customerCode = f'{Conf("pepita.customerPrefix")}{orderId}'
+    newId = FBU.getField('select "Id" from "Customer" where "Code" = ?', customerCode)
+    if newId is None:
+        newId = FBU.insSql("Customer", colList, "?, ?, ?, ?, ?", ( f"{cust.last_name} {cust.first_name}", cust.email, customerCode
+                        , cust.phone, None if not hasattr(cust, 'tax_number') else cust.tax_number) )
+                        #, cust.phone, None if "tax_number" not in cust_d.keys() else cust.tax_number or '') )
+    return newId, customerCode
 
 def toSymbolOrderXml(poc : PepitaOrder) -> str:
     cust = namedtuple('PepitaCustomer', poc.customer.keys())(*poc.customer.values()) # type: ignore
     
     customerid, customercode = createSymbolCustomer(poc.id, cust) # type: ignore
-    orderKey = f'PEP-{poc.id}'
+    orderKey = f'{Conf("pepita.orderPrefix")}{poc.id}'
     xml = f"""<customerid>{customerid}</customerid>
                 <customercode>{customercode}</customercode>
                 <customeremail>{cust.email}</customeremail>
@@ -2082,7 +2105,7 @@ def toSymbolOrderXml(poc : PepitaOrder) -> str:
             <comment>{poc.courier_message}</comment>
 
             <!-- Productitems -->
-            { ' '.join([ f'<detail>{createOrderItem(itm)}</detail>' for itm in poc.products ]) }
+            { os.linesep.join([ f'<detail>{createOrderItem(itm)}</detail>' for itm in poc.products ]) }
             
             <feedbackurl>{UNAS_FEEDBACK_URL}/oke/pepitaorder?id={poc.id}&amp;symbolid=</feedbackurl>
             <errorurl>{UNAS_FEEDBACK_URL}/err/pepitaorder?id={poc.id}&amp;errormsg=</errorurl>
@@ -2099,12 +2122,77 @@ def loadPepitaOrdersHanging() -> Dict[int, PepitaOrder]:
                 with open(f'{pepitaOrdersFolder}/{fn}', "r") as text_file:      
                     poc = POC_fromJsonFile(text_file)
                     poc.tsId = int(fn.split('-')[0])
-                    PepitaOrderList[poc.id] = poc
+                    PepitaOrderList[int(poc.id)] = poc
     return PepitaOrderList
 
 ###############################
 # Kell ez ???
 ###############################
+CUSTOMER_SPEC_CATEGORIES : List[list] = [[]]
+PRODUCT_PRICECAT_SPECIALS : List[list] = [[]]
+PRODUCT_PRICECAT_UNIQUE : str = ''
+
+def restoreUnasCustomerGroup(groupName:str) -> str:
+    response = UCH.getSpecialGroupFromUnas(groupName)
+    grps = CustomerGroupResponse.from_xml(ET.fromstring(response.replace(XMLTAG, ""))).customer_group or []
+    group:CustomerGroup|None = None if len(grps or [])<1 else grps[0]
+    shadowGroup = mySqlIntance.getField(f"select id from customergroups where name = '{groupName}'")
+    if group is None:
+        checkUnasCustomerGroup(groupName)
+    elif shadowGroup is None:
+        execMySql("insert customergroups (id, name) values(%s, %s) ",( group.id , str(groupName)))
+        mySqlIntance.commit()
+    elif shadowGroup != group.id:
+        execMySql("update customergroups set id = %s where id = %s",( shadowGroup, group.id))
+        mySqlIntance.commit()
+    return groupName
+
+def checkUnasCustomerGroup(groupName:str) -> str:
+    xml = f"""<CustomerGroups><CustomerGroup><Action>modify</Action>
+        <Name><![CDATA[{groupName}]]></Name>
+        <VisibleForCustomers>no</VisibleForCustomers></CustomerGroup></CustomerGroups>"""
+    try:
+        shadowGroup = mySqlIntance.getRow(f"select id from customergroups where name = '{groupName}'")
+        if shadowGroup and len(shadowGroup) == 1:
+            print("Mar letezik? : ", shadowGroup)
+        else:
+            response = UCH.doPostReq("setCustomerGroup", xml)
+            groups = CustomerGroupResponse.from_xml(ET.fromstring(response.replace(XMLTAG, "")))
+            for grp in groups.customer_group:
+                if "ok" == grp.status:
+                    execMySql("insert customergroups (id, name) values(%s, %s) ",( grp.id , str(groupName)))
+                    mySqlIntance.commit()
+                else:
+                    getLogger().logError("Hibas Update", grp.error, groupName)
+        return groupName
+    except MUT.UnasCommErrException as uce:
+        raise MUT.MyProgramFlowErrorException(f"checkUnasCustomerGroup UNAS error: {uce.responseCode} / {uce.responseMessage}")
+
+def addCustomerToUnasCustomerGroup(unasId:int, email:str, groupName:str):
+    xml = f"""
+<Customers>
+	<Customer>
+        <Action>modify</Action>
+        <Id>{unasId}</Id>
+        <Email>{email}</Email>
+        <Group>
+            <Name>{groupName}</Name>
+        </Group>
+	</Customer>
+</Customers>
+"""
+    try:
+        checkUnasCustomerGroup(groupName)
+        response = UCH.doPostReq("setCustomer", xml)
+        print(response)
+        #groups = CustomerResponse.from_xml(ET.fromstring(response.replace(XMLTAG, "")))
+        #for grp in groups:
+        #    if "ok" == grp.status:
+        #        execMySql("update customer_offers set unas_id=%s where id=%s",( grp.id, offerId ))
+    except MUT.UnasCommErrException as uce:
+        print("ssszzaaar", uce)
+        raise MUT.MyProgramFlowErrorException(f"addCustomerToUnasCustomerGroup UNAS error: {uce.responseCode} / {uce.responseMessage}")
+#
 def mkUniqueGroupName(custId:int) -> str:
     customerName = FBU.getCustomerNameById(custId)
     if customerName:
@@ -2134,10 +2222,176 @@ def createShadowOffer(offer:CustomerOffer) -> bool:
         execMySql("insert into customer_offer_customers (id, customer, name, forbid, offer_id ) values( %s, %s, %s, %s, %s )"
                   , (c.id, c.customer, grpName, c.forbid, offer.id) )
     for d in [] if offer.customer_offer_details is None else offer.customer_offer_details.customer_offer_detail  or []:
-        execMySql("insert into customer_offer_details (id, product, currency_name, price_category_name, base_price , base_price_date, sales_percent, sales_price, offer_id)" + 
-                " values( %s, %s, %s, %s, %s, %s, %s, %s, %s )"
-                , (d.id, d.product, d.currency_name, d.price_category_name, d.base_price , d.base_price_date, d.sales_percent, d.sales_price, offer.id )
+        execMySql("insert into customer_offer_details (id, product, sku, currency_name, price_category_name, base_price , base_price_date, sales_percent, sales_price, offer_id)" + 
+                " values( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
+                , (d.id, d.product, getSkuBySymbolId(d.product or 0), d.currency_name, d.price_category_name, d.base_price , d.base_price_date, d.sales_percent, d.sales_price, offer.id )
             )
     #
     mySqlIntance.commit()
     return retval
+
+
+def createSpecialCustomerGroups():
+    global CUSTOMER_SPEC_CATEGORIES, PRODUCT_PRICECAT_UNIQUE
+    PRODUCT_PRICECAT_UNIQUE  = Conf("unas.product.pricecat.unique") # pyright: ignore[reportAssignmentType]
+    CUSTOMER_SPEC_CATEGORIES = Conf("unas.customer.specialCategories") # type: ignore
+    # groups = UCH.getSpecialGroupsFromUnas()
+    for gr1, specGr in CUSTOMER_SPEC_CATEGORIES:
+        restoreUnasCustomerGroup(specGr)
+        # checkUnasCustomerGroup(specGr)
+
+def presetBaseCategory(cust, ucc:UCC.UnasCustomerCache) -> str|None:
+    # YAML . customer.categoryName
+    groupName = cust.find("customercategory")
+    if Conf("unas.product.pricecat.unique") == cust.find("pricecategoryname"): # PriceCat - EGYEDI or 32
+        #ucc = next(( x for x in CUSTOMER_SPEC_CATEGORIES if x[0] == (None if groupName is None else cust.customercategory.text)), None)
+        unasCust = None if (ucc.unasId or 0) < 1 else getUnasCustomer(ucc.unasId)
+        if unasCust is None:
+            # raise MUT.MyProgramFlowErrorException(f"presetBaseCategory unasCust is None! Cust:{cust} / UCC:{ucc}")
+            return next(( x[1] for x in CUSTOMER_SPEC_CATEGORIES if x[0] == Conf("unas.customer.categoryName")), None)
+        elif unasCust.group is not None and unasCust.group.endswith(f'@{ucc.symbolId}'):
+            pass # Nothing toDo
+        else:
+            cg = mkUniqueGroupName(ucc.symbolId)
+            checkUnasCustomerGroup(cg)
+            # specials Fallback
+            setSpecialPrices(cust, ucc, cust.customercategory or None) 
+            return cg
+    else:
+        specCat =  next(( x for x in CUSTOMER_SPEC_CATEGORIES if x[0] == (None if groupName is None else cust.customercategory.text)), None)
+        if specCat:
+            checkUnasCustomerGroup(specCat[1])
+            return specCat[1]
+    return None
+
+def todayStr() -> str:
+    return datetime.today().strftime('%Y.%m.%d')
+
+def checkUnas_R_priceDetail(groupName:str, sku:str, netPrice:str, currency:str, offerStart:str, offerEnd:str):
+    #grossPrice = float(netPrice) * 1.27
+    xml = f"""
+<Products>
+	<Product>
+        <Action>modify</Action>
+        <Sku>{sku}</Sku>
+        <Prices>
+			<Price>
+				<Type>special</Type>
+				<GroupName>{groupName}</GroupName>
+				<Gross>{float(netPrice) * 1.27}</Gross>
+				<Currency>{currency}</Currency>
+			</Price>
+        </Prices>
+	</Product>
+</Products>
+"""
+    try:
+        response = UCH.doPostReq("setProduct", xml)
+        prods = ProductResponse.from_xml(ET.fromstring(response.replace(XMLTAG, "")))
+        for prod in prods.products:
+            if "ok" == prod.status:
+                print(f'setProduct Special: {groupName} / {sku} /')
+                pass # execMySql("update customer_offer_details set unas_id=%s where id=%s",( prod.id, offerDetail.id ))
+    except MUT.UnasCommErrException as uce:
+        print("ssszzaaar", uce)
+        raise MUT.MyProgramFlowErrorException(f"checkUnas_R_priceDetail UNAS error: {uce.responseCode} / {uce.responseMessage}")
+
+
+def hasFallbackPrice(fbProd, skuList) -> bool:
+    sku = fbProd["sku"]
+    fbProd["sku"] in UnasProductList.keys() and sku not in skuList
+    return False
+
+def fallbackPrices(specPriceCat:str, targetCategory:str):
+    # checkUnasCustomerGroup(targetCategory)
+    # get Products from FB
+    offerProductSkus = mySqlIntance.doSql("select distinct sku from customer_offer_details")
+    result = FBU.getProductsByPriceCategory(specPriceCat)
+    for pp in result:
+        print(pp)
+        if hasFallbackPrice(pp, offerProductSkus):
+            checkUnas_R_priceDetail(targetCategory, pp["sku"], pp["price"], pp["currency"], todayStr(), EPOCH_ENDDATE)
+
+def setSpecialPrices(cust, ucc: UCC.UnasCustomerCache, cg:str|None):
+        # add Customer to  EGYEDI + cust.name
+        UniqueName = mkUniqueGroupName(int(cust.id))  # f"EGYEDI-{cust.code}" OR ucc.symbolId
+        checkUnasCustomerGroup(UniqueName)   
+        if ucc.specialCustomerCategory == cg:  # check customergroup changed
+            return # Peti szerint nem kell setCustoernel az EGYEDIvel foglalkozni
+        ucc.specialCustomerCategory = cg or ''
+        specCat =  next(( x[1] for x in Conf("unas.customer.specialCategories") or [] if x[0] == cg), None)
+        if specCat:
+            fallbackPrices(specCat, UniqueName)
+            # Create fallbackProductPriceCategories if customercategory in PRODUCT_PRICECAT_SPECIALS
+            specials_ = [ x[1] for x in Conf('unas.product.pricecat.specials') or [] ]
+            for special in specials_:
+                specProds = doMySql("select * from customer_offer_details where price_category_name = %s", (special,))
+                for prod in specProds:
+                    sku = getSkuBySymbolId(  prod['product'])  # type: ignore
+                    upc = next((x for x in  UnasProductList.values() if x.sku == sku), None )
+                    if upc:
+                        checkUnas_R_priceDetail(special, sku, prod['sales_price'], prod['currency_name'], todayStr(), EPOCH_ENDDATE) # type: ignore
+                        getLogger().logger.debug("checkUnas_R_priceDetail / %s", cust)
+        #
+
+def getSkuBySymbolId(symbolId:int):
+    #checkCacheState()
+    prodCacheItem = next((x for x in  UnasProductList.values() if x.symbolId == symbolId), None )
+    if prodCacheItem is None:
+        fld = FBU.getField('select "Code" from "Product" where "Id" = ?',symbolId )
+        if fld:
+            return fld
+        else:
+            raise MUT.MyProgramFlowErrorException(f"Product(symbolId:{symbolId}) not exists in UNAS nor Symbol", MUT.ProxyErrCode.E42)
+    return str(prodCacheItem.sku)  # Nezem a cacheben
+
+def checkUnasCustomerDetail(groupName:str, offerDetail:CustomerOfferDetail,  sku:str):
+    checkUnasCustomerGroup(groupName)
+    xml = f"""
+<Products>
+	<Product>
+        <Action>modify</Action>
+        <Sku>{sku}</Sku>
+        <Prices>
+			<Price>
+				<Type>special</Type>
+				<GroupName>{groupName}</GroupName>
+				<Gross>{float(offerDetail.sales_price or 0) * 1.27}</Gross>
+				<Currency>{offerDetail.currency_name}</Currency>
+			</Price>
+        </Prices>
+	</Product>
+</Products>
+"""
+    try: # make Xml file
+        response = UCH.doPostReq("setProduct", xml)
+        prods = ProductResponse.from_xml(ET.fromstring(response.replace(XMLTAG, "")))
+        for prod in prods.products:
+            if "ok" == prod.status:
+                execMySql("update customer_offer_details set unas_id=%s where id=%s",( prod.id, offerDetail.id ))
+        return response
+    except MUT.UnasCommErrException as uce:
+        print("ssszzaaar", uce)
+        raise MUT.MyProgramFlowErrorException(f"Prod Price Offer UNAS error: {uce.responseCode} / {uce.responseMessage}")
+
+def pepitaCheckProductExists(sku:str, pid:int):
+    if not sku in UnasProductList:
+        symbolId = FBU.getField('select "Id" from "Product" where "Code" = ?', sku)
+        if symbolId is None:
+            symbolId = FBU.insSql('Product', '"Code","Name"', '?,?', (sku, f'PEPITA-teszt-{pid}'))
+        else:
+            FBU.doSql('update "Product" set "StrExB" = ? where "Code" = ?', (getTS(), sku))
+        ucc = UPC(0, sku, sid=symbolId, state=UPC.ProductState_PENDING)
+        UnasProductList[ sku ] = ucc
+        #raise MUT.MyProgramFlowErrorException(f"Pepita order: prod missing: {sku}")
+    
+
+def prettyFormattedXml(x:str) -> str:
+    try:
+        xf = ET.fromstring(x.replace(XMLTAG, '').replace('>  ', '>').replace('>  ', '>').replace('>  ', '>').replace('>  ', '>').replace('>  ', '>').replace('>  ', '>').replace('>  ', '>').replace('>  ', '>'))
+        xb = ET.tostring(xf, pretty_print=True)
+#        xs = xb.decode().replace('\n', os.linesep)
+        return xb.decode()
+    except Exception as e:
+        getLogger().logError(f'prettyFormattedXml: {e}')
+    return x

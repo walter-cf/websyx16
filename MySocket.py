@@ -14,6 +14,7 @@ import MyUtilsTypes as MUT
 
 class MyControlWebServer(BaseHTTPRequestHandler):
     def do_GET(self):
+        contentType = "text/plain"
         try:
             parsedUlParts = urlparse(self.path)
             pPath = parsedUlParts.path.split("/")
@@ -40,7 +41,7 @@ class MyControlWebServer(BaseHTTPRequestHandler):
                 htmlResponseMessage = MPC.doWebControlQuery(pPath[2:], queryParams)
             elif 'ctrl' == pPath[1]:
                 htmlResponseCode = 200
-                htmlResponseMessage, content_type = MPC.doWebControlCommand(pPath[2:], queryParams)
+                htmlResponseMessage, content_type = MPC.doWebControlCommand(pPath[2:], queryParams) # pyright: ignore[reportGeneralTypeIssues]
                 contentType = content_type or "application/json"
             elif 'tpl' == pPath[1]:
                 contentType = 'text/html'
@@ -99,7 +100,7 @@ class MyControlWebServer(BaseHTTPRequestHandler):
             htmlResponseCode = 400
         #        
         self.send_response(htmlResponseCode)
-        self.send_header("Content-type", contentType )
+        self.send_header("Content-type", contentType or "text/plain" )
         self.end_headers()
         if htmlResponseMessage is not None:
             respBytes = htmlResponseMessage if isinstance(htmlResponseMessage, bytes) else bytes(str(htmlResponseMessage),'utf-8')
@@ -157,9 +158,9 @@ def setSocketServer(host, port):
         print('Stopping socket server')
         mySocketServer.server_close()
     except MUT.ControlProcessSocketExit:
-        MU.getLogger().info("control Process Socketsever Thread exiting")
+        MU.getLogger().logger.info("control Process Socketsever Thread exiting")
     except Exception:
-        MU.getLogger().error("control Process Socketsever Thread ABORTED")
+        MU.getLogger().logger.error("control Process Socketsever Thread ABORTED")
 
 ###########################################################
 # https://github.com/r66ff/multithreaded-server/blob/master/src/server.py
@@ -182,9 +183,9 @@ def setWebServer(host, port):
         print('stopping controlServer')
         myControlWebServer.server_close()
     except MUT.ControlProcessWebExit:
-        MU.getLogger().info("control Process SocketServer Thread exiting")
+        MU.getLogger().logger.info("control Process SocketServer Thread exiting")
     except Exception:
-        MU.getLogger().error("control Process WebServer Thread ABORTED")
+        MU.getLogger().logger.error("control Process WebServer Thread ABORTED")
 
 def stopSocketServer():
     raise MUT.ControlProcessSocketExit

@@ -65,7 +65,11 @@ class MySqlWrapper():
         crsr.execute(sql, param)
         resultRow = crsr.fetchone()
         return resultRow
-    
+
+    def getField(self, sql, param = ()):
+        row = self.getRow(sql, param)
+        return None if not row else next(iter(row.values()))
+
     def doSqlList(self):
         pass
     

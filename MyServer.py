@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 import html
 import logging
-import logging.handlers
-import os
+import os, subprocess
 import sys
 import threading
 import time
@@ -588,9 +587,15 @@ def getGlobalLogLevel():
 
 import MyLogger
 localLogger : MyLogger.SyxLogger|None = None
-def changeLogFile():
+def changeLogFile(logFilename:str = 'Proxy'):
   global localLogger
-  logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
+  logFileName = 'syx{1}{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort), logFilename)
+  try:
+    localUser = os.getlogin()
+    if 'banjoe' == localUser:
+      subprocess.run([ 'sudo', 'chmod', 'ug+w', f'{os.getcwd()}/{logFileName}'])
+  except Exception as e:
+    print('getuser exception:', e)
   logLevel = getGlobalLogLevel()
   if localLogger is None:
     localLogger = MyLogger.SyxLogger(logFileName, level=logLevel)
@@ -625,7 +630,7 @@ if __name__ == "__main__":
 
   GBL_ErrorMessages = []
 
-  localLogger=changeLogFile()
+  localLogger=changeLogFile('Proxy')
   ## 
   ## logLevel = getGlobalLogLevel()
   ## logFileName = 'syxProxy{0}.log'.format( '' if MU.serverPort == 3301 else '_'+str(MU.serverPort))
@@ -659,6 +664,7 @@ if __name__ == "__main__":
     MU.checkCacheState(force=True)
     MU.loadPepitaOrdersHanging()
     # MU.UnasOrderList.clear()
+    MU.createSpecialCustomerGroups()
 
   if MU.isLogLevelWarn():
       _m = "Server started http://%s:%s, PID: %d" % (MU.hostName, MU.serverPort, os.getpid())

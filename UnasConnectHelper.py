@@ -1,5 +1,5 @@
 import datetime as date
-import logging
+import os
 import urllib.parse as urlParse
 
 import requests
@@ -123,6 +123,10 @@ def unasGetActiveCustomers():
     xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><ContentType>full</ContentType></Params>'
     return doPostReq('getCustomer', xmlParam)
 
+def unasGetCustomerById(unasId:int):
+    xmlParam = f'<?xml version="1.0" encoding="UTF-8" ?><Params><ContentType>full</ContentType><Id>{unasId}</Id></Params>'
+    return doPostReq('getCustomer', xmlParam)
+
 def unasGetActiveProducts( limitNum, limitStart ):
     if MU.UnasProductWebCategoryId is None:
         xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><Name>%s</Name><ContentType>minimal</ContentType></Params>' % MU.UnasProductWebCategoryName
@@ -193,6 +197,9 @@ def unasFreeXml(action, xmlTag):
     xmlParam = MU.XMLTAG + xmlTag
     return doPostReq(action, xmlParam)
 
+def unasFreeXmlData(action, xmlTag, xmlData):
+    raise Exception("`unasFreeXmlData` function Not implemented YET!")
+
 # TODO Ezekbe is kellene a hibakezeles
 def callGET(path):
     x = requests.get("http://%s:%d/%s" % (MU.hostName, MU.serverPort, path))
@@ -219,6 +226,8 @@ def doPostReq(action, xmlParam):
     MU.checkCommError()
     token = UnasAuth.doAuth()
     MU.createStatEntry(action, xmlParam)
+    with open(f"{MU.Conf("unas.xmlDir") or 'xmlfiles'}/{MU.getTS() or MU.getCurrTime()}.{action}", "a") as fp:
+        fp.write( MU.prettyFormattedXml(xmlParam ))
     if MU.isLogLevelTrace():
         print( "UCh-req:", action,  " TS:", MU.getTS())
         MU.getLogger().logDebug("UCh-req:%s TS:%d", action, MU.getTS())
@@ -226,6 +235,8 @@ def doPostReq(action, xmlParam):
     else:
         MU.getLogger().logDebug("UCh-req:%s", action)
     x = requests.post("%s/%s" % (MU.UNASAPI_URL, action), data=xmlParam.encode('utf-8'), headers={ "Authorization" : "Bearer " + token })
+    with open(f"{MU.Conf("unas.xmlDir") or 'xmlfiles'}/{MU.getTS() or MU.getCurrTime()}.{action}", "a") as fp:
+        fp.write( f"{os.linesep}<!-- reponse:{x.status_code} -->{os.linesep}{x.text}" )
     if x.status_code == 200:
         MU.getLogger().logDebug("Req returned st:%s", x.status_code)
         MU.createStatEntryOK(x.text)
@@ -236,7 +247,7 @@ def doPostReq(action, xmlParam):
         MU.getLogger().logError(f"Req returned ({x.status_code}) -> {x.text}") # Hibakezelest a hiva programban kell majd elvegezni!!!
         # msg = f"ERROR - UCh-req:{action}. TS:{ MU.getTS()}\r\n({x.status_code}) -> {x.text}"
         # SM.sendProxyMail(msg, MUT.AlertMailType(MUT.UnasTransactionType.UNAS_COMM_ERROR), '[UNAS-Comm-Err] Sikertelen UNAS keres ST:%s' % x.status_code )
-        raise UnasCommErrException(x.status_code, x.text)
+        #raise UnasCommErrException(x.status_code, x.text)
     return x.text
 #
 # Posts-End
@@ -406,3 +417,10 @@ def getProds(tag = None, val = None):
 def addProdsXml_NU(xmlTag:str):
     xmlParam =  MU.XMLTAG + f"<Products>{xmlTag}</Products>"
     return doPostReq('setProduct', xmlParam)
+
+def getSpecialGroupFromUnas(cg:str):
+    xmlParam =  MU.XMLTAG + f"<Params><Name><![CDATA[{cg}]]></Name></Params>"
+    return doPostReq('getCustomerGroup', xmlParam)
+
+def getSpecialGroupsFromUnas():
+    return doPostReq('getCustomerGroup', '')

@@ -480,3 +480,27 @@ def getCustomerById(id:int):
 
 def getCustomerNameById(id:int):
     return getField('select "Name" from "Customer" where "Id" = ?', (id,))
+
+def getProductsByPriceCategory(priceCat:str):
+    result = []
+    cur0 =  doSql(f'''select "Id" from "PriceCategory" where "Name" = '{priceCat}' ''')
+    priceCatId = cur0.fetchone()
+    if priceCatId and len(priceCatId) == 1:
+        priceCatId = priceCatId[0]
+        print("priceCatId", priceCatId)
+        sql_1 = f"""select distinct "Product" from  "ProductPrice" where "ValidFrom" <= current_date and "PriceCategory" = {priceCatId}"""
+        cur = doSql(sql_1, priceCat)
+        for r in cur.fetchall():
+            # print(r)
+            sql_2 =  f'''select first 1 "ProductPrice"."Product", "ProductPrice"."Price", "ProductPrice"."ValidFrom"
+                        , "Currency"."Name" as currencyName, "Product"."Code" as sku
+                        from "ProductPrice" join "Currency" on ("Currency"."Id" = "ProductPrice"."Currency")
+                        join "Product" on ("Product"."Id" = {r[0]})
+                        where "ProductPrice"."Product" = {r[0]} and "PriceCategory" = {priceCatId}
+                                    and "ValidFrom" <= current_date order by "ValidFrom" desc'''
+            cur2 = doSql(sql_2)
+            row = cur2.fetchone()
+            if row:
+                prodId, price, validFrom, currencyName, sku = row
+                result.append( { "id" : prodId, "price" : float(price), "validFrom": str(validFrom)[:10] , "currency": currencyName, "sku": sku } )
+    return result

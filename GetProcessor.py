@@ -13,6 +13,7 @@ import FdbUtils as FBU
 import MyServer
 import MySmtpClient as SM
 import MyUtils as MU
+from PepitaOrderCache import PepitaProduct
 import UnasConnectHelper as UCH
 import UnasCustomerCache as UCC
 import UnasOrderCache as UOC
@@ -150,6 +151,9 @@ def transformGetRequestObject(root, action, xmlPart):
                 pass
         if len(MU.PepitaOrderList) > 0:
             for ord in MU.PepitaOrderList.values():
+                for prod in ord.products:
+                    product = PepitaProduct(prod)
+                    MU.pepitaCheckProductExists(product.sku, int(product.id ))
                 pepitaOrdersXmls = ET.Element('pepitaOrdersXmls')
                 pepTag = ET.SubElement(pepitaOrdersXmls, 'pepXml')
                 pepTag.text = MU.toSymbolOrderXml(ord)
@@ -577,7 +581,7 @@ def doUnasFeedback(pathArray, path, queryParams):
                     MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.F50), level = logging.WARNING)
                     raise MyProgramFlowErrorException(_msg)
                 #  else
-                FBU.updateSymbolCode(symbolId, '%s-%s' % ( MU.getCfgVal("pepita.OrderPrefix"), unasId), 'CustomerOrder', 'PrimeVoucherNumber' )
+                FBU.updateSymbolCode(symbolId, '%s%s' % ( MU.getCfgVal("pepita.orderPrefix"), unasId), 'CustomerOrder', 'PrimeVoucherNumber' )
                 uoc.symbolId = symbolId
                 #
                 FBU.updateOrderStatus(symbolId, MU.SYMBOLORDERSTATUS)

@@ -14,9 +14,9 @@
             <Product>
                 <Action>modify</Action>
                 <Sku><xsl:value-of select="productcode" /></Sku>
+                <Prices>
                 <xsl:for-each select="price">
-                    <xsl:if test="retValValid > 1">
-                        <Prices>
+                    <!-- xsl:if test="retValValid > 1" -->
                             <xsl:if test="not(SkipThisItem)">
                                 <Price>
                                     <xsl:if test="not(unasPriceSpecial)">
@@ -35,9 +35,9 @@
                                     </xsl:if><!-- test="unasPriceSpecial > 0""  -->
                                 </Price>
                             </xsl:if> <!-- test="not(SkipThisItem)"  -->
-                        </Prices>
-                    </xsl:if><!-- test="retValValid > 1"  -->
+                    <!-- /xsl:if --><!-- test="retValValid > 1"  -->
                 </xsl:for-each>
+                </Prices>
                 <xsl:if test="$SymbolIdIsNull > 0">
                     <Params>
                         <Param>

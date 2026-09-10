@@ -22,12 +22,15 @@ controlWeb:
   port: 3348
 
 unas:
+  xmlDir: xmlfiles/posts
   # Lehet .hu es .eu is
   apiUrl: https://api.unas.eu/shop
   feedbackUrl: "'http://' + hostName + ':' + str(serverPort) + '/fbunas'"
   # a WewbShopban kell generalni a hozzaferesi kulcsot
   apiKey: 11538c5a19ee5cec8b2b38ccf4294fd9b7d8b9f0
-    # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
+  # marton.k@brill-clean.hu /Aa123456
+  # apiKey: fc63a447addd1f32cd822d89a90e651a7052f8b4
+  # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
   webcategory:
     # id: 187458
     name: Webáruházba
@@ -98,7 +101,8 @@ unas:
 
   customer:
     # Unas paarmeterek: symbolId, symbolCode
-    categoryName: HU / Channel / Haffner24 UNAS
+    categoryName: HU / Channel / R5
+    unique: EGYEDI
     specialCategories: 
         - [ "HU / Channel / R1", R1 ]
         - [ "HU / Channel / R2", R2 ]
@@ -157,8 +161,14 @@ pepita:
   folder:
     order: pepita/orders
     archive: pepita/orders-z
+    save: pepita/orders-s
     package: pepita/pckg-labels
-
+  resultPath: /var/www/b2c-xml/pepita/ledsound-pepita-products.xml
+  pepitaXsd: https://pepita.hu/feed/1.0
+  pepitaXsdFile: pepita.xsd
+  productLimitNum: 500
+  orderPrefix: PEP-
+  customerPrefix: PEP-
 
 ########################################################################
 mysql:
@@ -191,7 +201,7 @@ batch:
   processes:
     - orderStatus:
         startDelay: 10                     # initial delay after start BatchScheduler
-        frequency: 30                     # Batch thread raise/trigger interval
+        frequency: 30                      # Batch thread raise/trigger interval
         name: Rendeles Statusz - UNAS      # Batch threadName
         method: orderStatusUnasProxy       # called Entry point
         orderStatusCheckInterval: 600      # RovModified > NOW -orderStatusCheckInterval(seconds)
@@ -222,10 +232,21 @@ batch:
         method: refreshUnasCache
 
     - masterChallenge:
+        enabled: False
         startDelay: 600
         frequency:  1800
         name: Active machine promoter
         method: masterChallengeUnas
+
+    - logrotate:
+        enabled: True
+        startDelay: 36000
+        frequency:  864000
+        name: ZIP Logrotated files
+        method: batchMethodWrapper
+        logPath: logz
+        archivePath: logz-z
+        preserveDays: 105
 
 ###    - prc2:
 ###        startDelay: 7

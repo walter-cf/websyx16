@@ -41,14 +41,17 @@ class PepitaCustomer:
     tax_number: str| None = None
 
 @dataclass
-class PepitaProducts:
-    id: str
+class PepitaProduct:
+    id: int
     sku: str
     currency: str
     quantity: int
     price: int
     vat: int
-
+    def __init__(self, d=None):
+        if d is not None:
+            for key, value in d.items():
+                setattr(self, key, value)
 #@dataclass
 class PaymentModeEnum(Enum):
     cod = "cod" # Utanvet
@@ -77,8 +80,9 @@ class PepitaOrder:
     voucher: str
     delivery_mod: DeliveryModeEnum
     customer: PepitaCustomer
-    products: List[PepitaProducts]
+    products: List[PepitaProduct]
     package_label: str|None = None
+    package_label_number: str|None = None
     tsId : int = 0
     symbolId: int = 0
 
@@ -93,6 +97,7 @@ def from_jsonFile(fp) -> 'PepitaOrder':
 def toJson(po : PepitaOrder) -> str:
     return json.dumps(po)
 
+# Not used - i think
 def toSymbolOrderXml(po : PepitaOrder) -> str:
     pepitaPrefixOrderId = 'B2C'
     symbolVouchersequenceCode = 'B2C'

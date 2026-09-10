@@ -1,6 +1,7 @@
 #!/opt/pepita-test/.venv/bin/python
 import os,sys
-from lxml import objectify, etree as ET
+import lxml.objectify as objectify
+import lxml .etree as ET
 
 import MyUtils as MU
 from UnasConnectHelper import unasGetProducts
@@ -47,7 +48,7 @@ def getSymbolVat(p) -> float:
 
 
 def getProdz(limitStart:int) -> list:
-    prodXml = unasGetProducts("live", limitStart, MU.getConf("product.limitNum"))
+    prodXml = unasGetProducts("live", limitStart, MU.Conf("pepita.productLimitNum"))
     prodz = xmlToProductList(prodXml)
     return prodz
 
@@ -146,11 +147,15 @@ def createPepitaProductXml(limitNum:int, fn:str):
             idx += limitNum
         #
         f.write('</Catalog>')
-    MU.getLogger().info(f"processed {idx + len(products)} product records")
+    MU.getLogger().logger.info(f"processed {idx + len(products)} product records")
 
 def savePepitaOrders(queryParams, post_data) -> tuple[bool, str] :
     isError = False
     msg = ""
+    
+    with open(f"{MU.Conf("pepita.folder.save")}/{MU.getCurrTime()}.json.bin", "wb") as fp:
+        fp.write( post_data )
+
     try:
         # check API key
         if len(queryParams) > 0 and len(queryParams['apikey'])==1:
@@ -166,9 +171,9 @@ def savePepitaOrders(queryParams, post_data) -> tuple[bool, str] :
     return isError, msg
 
 def batchDoIt():
-    limitNum = MU.getConf("productLimitNum", "pepita")
-    fn = MU.getConf("resultPath", "pepita")
-    createPepitaProductXml(limitNum, fn)
+    limitNum = int(str(MU.Conf("pepita.productLimitNum") or '0'))
+    fn = str(MU.Conf("pepita.resultPath") or 'PepitaUtils-batchDoIt')
+    createPepitaProductXml(int(limitNum), fn or 'x')
 
 
 #*********************************
@@ -180,6 +185,6 @@ if __name__ == "__main__":
     if (len(sys.argv)>1):
         configPath = sys.argv[1]
     config = MU.readYaml(configPath)
-    limitNum = config["pepita"]["productLimitNum"]  #getConf("productLimitNum", "pepita")
-    fn = config["pepita"]["resultPath"]  #getConf("productLimitNum", "pepita")
-    createPepitaProductXml(limitNum, fn)
+    limitNum = int(str(MU.Conf("pepita.productLimitNum", config) or '0')) # type: ignore
+    fn = str(MU.Conf("pepita.resultPath", config) or 'PepitaUtils-batchDoIt') # type: ignore
+    createPepitaProductXml(int(limitNum), fn or 'x')

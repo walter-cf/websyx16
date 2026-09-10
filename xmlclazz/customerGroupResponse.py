@@ -8,6 +8,7 @@ class CustomerGroup:
     action: str|None = None  # XML element: Action
     status: str|None = None  # XML element: Status
     error: str|None = None  # XML element: Error text
+    name: str|None = None  # XML element: Error text
 
     @classmethod
     def from_xml(cls, xml_element: ET.Element) -> 'CustomerGroup':
@@ -24,6 +25,9 @@ class CustomerGroup:
         error_elem = xml_element.find('Error')
         if error_elem is not None:
             instance.error = error_elem.text
+        name_elem = xml_element.find('Name')
+        if name_elem is not None:
+            instance.name = name_elem.text
         return instance
 
 @dataclass
