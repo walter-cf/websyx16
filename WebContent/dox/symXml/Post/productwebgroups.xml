@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ProductWebGroups>
+    <ProductWebGroup> --Webes termékcsoport
+        <Id>5</Id>  --Csoport Symbol belső azonosítója (Nincs parent, ez egy főcsoport) (ProductWebCategory.Id)
+        <Name>Korcsolya</Name> --Csoport neve (ProductWebCategory.Name)
+        <description>leírás</description> --Csoport leírása (ProductWebCategory.WebDescription)
+		<webname>Korcsolya</webname> --Webes megnevezés (ProductWebCategory.WebName)
+		<webkeywords>Korcsolya, Kori</webkeywords> --Webes kulcsszavak (ProductWebCategory.WebKeywords)
+		<weburl>korcsolya</weburl> --Weblink (ProductWebCategory.WebUrl)
+		<webmetadescription>meta leírás</webmetadescription> --Meta leírás (ProductWebCategory-WebMetaDescription)
+    	<inactive>0</inactive> --Inaktív állapotú-e (0/1) (ProductWebCategory.Inactive)
+        <picture>BASE64Encoded string of PNG</picture> --Kép (ProductWebCategory.Picture)
+		<productwebgrouplangs>  -- Termék webes csoport idegen megnevezése (mindig az összes, ami a csoporthoz tartozik)
+			<productwebgrouplang>
+				<lang>EN</lang> --Idegen nyelv (ProductWebCategoryLang.Lang)
+				<name>English name of product web group</name> --Idegen megnevezés (ProductWebCategoryLang.Name)
+				<weburl>English url</weburl> --Idegen Weblink (ProductWebCategoryLang.WebUrl)
+				<webname>English name of product web group on web</webname> --Idegen Webes megnevezés (ProductWebCategoryLang.WebName)
+				<webdescription>English description of product web group</webdescription> --Idegen Webes leírás (ProductWebCategoryLang.WebDescription)
+				<webmetadescription>English meta description</webmetadescription> --Idegen Meta leírás (ProductWebCategoryLang.WebMetaDescription)
+				<webkeywords>english, keyword</webkeywords> --Idegen webes kulcsszavak (ProductWebCategoryLang.WebMetaDescription)
+			</productwebgrouplang>
+			<productwebgrouplang>
+			   <lang>HUEN</lang> --Idegen nyelv (ProductWebCategoryLang.Lang)
+				<name>Magyar név/English name of product web group</name> --Idegen megnevezés (ProductWebCategoryLang.Name)
+				<weburl>Magyar url/English url</weburl> --Idegen Weblink (ProductWebCategoryLang.WebUrl)
+				<webname>Magyar webes név/English name of product web group on web</webname> --Idegen Webes megnevezés (ProductWebCategoryLang.WebName)
+				<webdescription>Magyar webes leírás/English description of product web group</webdescription> --Idegen Webes leírás (ProductWebCategoryLang.WebDescription)
+				<webmetadescription>Magyar meta leírás/English meta description</webmetadescription> --Idegen Meta leírás (ProductWebCategoryLang.WebMetaDescription)
+				<webkeywords>magyar, kulcsszó, english, keyword</webkeywords> --Idegen webes kulcsszavak (ProductWebCategoryLang.WebMetaDescription)			
+			</productwebgrouplang>
+		</productwebgrouplangs>
+    </ProductWebGroup>
+    <ProductWebGroup> --Webes termékcsoport
+        <Id>5</Id>  --Csoport Symbol belső azonosítója (Nincs parent, ez egy főcsoport) (ProductWebCategory.Id)
+        <Name>Korcsolya</Name> --Csoport neve (ProductWebCategory.Name)
+        <description>leírás</description> --Csoport leírása (ProductWebCategory.WebDescription)
+		<webname>Korcsolya</webname> --Webes megnevezés (ProductWebCategory.WebName)
+		<webkeywords>Korcsolya, Kori</webkeywords> --Webes kulcsszavak (ProductWebCategory.WebKeywords)
+		<weburl>korcsolya</weburl> --Weblink (ProductWebCategory.WebUrl)
+		<webmetadescription>meta leírás</webmetadescription> --Meta leírás (ProductWebCategory-WebMetaDescription)
+    	<inactive>0</inactive> --Inaktív állapotú-e (0/1) (ProductWebCategory.Inactive)
+        <picture>BASE64Encoded string of PNG</picture> --Kép (ProductWebCategory.Picture)
+		<productwebgrouplangs>  -- Termék webes csoport idegen megnevezése (mindig az összes, ami a csoporthoz tartozik)
+			<productwebgrouplang>
+				<lang>EN</lang> --Idegen nyelv (ProductWebCategoryLang.Lang)
+				<name>English name of product web group</name> --Idegen megnevezés (ProductWebCategoryLang.Name)
+				<weburl>English url</weburl> --Idegen Weblink (ProductWebCategoryLang.WebUrl)
+				<webname>English name of product web group on web</webname> --Idegen Webes megnevezés (ProductWebCategoryLang.WebName)
+				<webdescription>English description of product web group</webdescription> --Idegen Webes leírás (ProductWebCategoryLang.WebDescription)
+				<webmetadescription>English meta description</webmetadescription> --Idegen Meta leírás (ProductWebCategoryLang.WebMetaDescription)
+				<webkeywords>english, keyword</webkeywords> --Idegen webes kulcsszavak (ProductWebCategoryLang.WebMetaDescription)
+			</productwebgrouplang>
+			<productwebgrouplang>
+			   <lang>HUEN</lang> --Idegen nyelv (ProductWebCategoryLang.Lang)
+				<name>Magyar név/English name of product web group</name> --Idegen megnevezés (ProductWebCategoryLang.Name)
+				<weburl>Magyar url/English url</weburl> --Idegen Weblink (ProductWebCategoryLang.WebUrl)
+				<webname>Magyar webes név/English name of product web group on web</webname> --Idegen Webes megnevezés (ProductWebCategoryLang.WebName)
+				<webdescription>Magyar webes leírás/English description of product web group</webdescription> --Idegen Webes leírás (ProductWebCategoryLang.WebDescription)
+				<webmetadescription>Magyar meta leírás/English meta description</webmetadescription> --Idegen Meta leírás (ProductWebCategoryLang.WebMetaDescription)
+				<webkeywords>magyar, kulcsszó, english, keyword</webkeywords> --Idegen webes kulcsszavak (ProductWebCategoryLang.WebMetaDescription)			
+			</productwebgrouplang>
+		</productwebgrouplangs>
+    </ProductWebGroup>
+</ProductWebGroups>

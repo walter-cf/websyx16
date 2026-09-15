@@ -1,0 +1,458 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="Products" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="Products" msdata:IsDataSet="true" msdata:Locale="en-US">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="Product">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="id" type="xs:string" minOccurs="0" />
+              <xs:element name="code" type="xs:string" minOccurs="0" />
+              <xs:element name="suppliercode" type="xs:string" minOccurs="0" />
+              <xs:element name="isacc" type="xs:string" minOccurs="0" />
+              <xs:element name="accproduct" type="xs:string" minOccurs="0" />
+              <xs:element name="name" type="xs:string" minOccurs="0" />
+              <xs:element name="barcode" type="xs:string" minOccurs="0" />
+              <xs:element name="customstariffnumber" type="xs:string" minOccurs="0" />
+              <xs:element name="productcategory" type="xs:string" minOccurs="0" />
+              <xs:element name="manufacturer" type="xs:string" minOccurs="0" />
+              <xs:element name="vat" type="xs:string" minOccurs="0" />
+              <xs:element name="weight" type="xs:string" minOccurs="0" />
+              <xs:element name="width" type="xs:string" minOccurs="0" />
+              <xs:element name="height" type="xs:string" minOccurs="0" />
+              <xs:element name="depth" type="xs:string" minOccurs="0" />
+              <xs:element name="qtypackage" type="xs:string" minOccurs="0" />
+              <xs:element name="qtylevel" type="xs:string" minOccurs="0" />
+              <xs:element name="qtypallet" type="xs:string" minOccurs="0" />
+              <xs:element name="active" type="xs:string" minOccurs="0" />
+              <xs:element name="quantityunit" type="xs:string" minOccurs="0" />
+              <xs:element name="deleted" type="xs:string" minOccurs="0" />
+              <xs:element name="grossprices" type="xs:string" minOccurs="0" />
+              <xs:element name="guaranteemonths" type="xs:string" minOccurs="0" />
+              <xs:element name="bestbeforeisday" type="xs:string" minOccurs="0" />
+              <xs:element name="bestbeforevalue" type="xs:string" minOccurs="0" />
+              <xs:element name="webdisplay" type="xs:string" minOccurs="0" />
+              <xs:element name="webname" type="xs:string" minOccurs="0" />
+              <xs:element name="webdescription" type="xs:string" minOccurs="0" />
+              <xs:element name="webmetadescription" type="xs:string" minOccurs="0" />
+              <xs:element name="weburl" type="xs:string" minOccurs="0" />
+              <xs:element name="webkeywords" type="xs:string" minOccurs="0" />
+              <xs:element name="mustmanufacturing" type="xs:string" minOccurs="0" />
+              <xs:element name="runout" type="xs:string" minOccurs="0" />
+              <xs:element name="sellbanned" type="xs:string" minOccurs="0" />
+              <xs:element name="buybanned" type="xs:string" minOccurs="0" />
+              <xs:element name="istatcountrycode" type="xs:string" minOccurs="0" />
+              <xs:element name="istatcountryname" type="xs:string" minOccurs="0" />
+              <xs:element name="istatcountryeu" type="xs:string" minOccurs="0" />
+              <xs:element name="strexa" type="xs:string" minOccurs="0" />
+              <xs:element name="strexb" type="xs:string" minOccurs="0" />
+              <xs:element name="strexc" type="xs:string" minOccurs="0" />
+              <xs:element name="strexd" type="xs:string" minOccurs="0" />
+              <xs:element name="strexe" type="xs:string" minOccurs="0" />
+              <xs:element name="strexf" type="xs:string" minOccurs="0" />
+              <xs:element name="strexg" type="xs:string" minOccurs="0" />
+              <xs:element name="strexh" type="xs:string" minOccurs="0" />
+              <xs:element name="strexi" type="xs:string" minOccurs="0" />
+              <xs:element name="strexj" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexa" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexb" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexc" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexd" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexe" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexf" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexg" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexh" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexi" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexj" type="xs:string" minOccurs="0" />
+              <xs:element name="numexa" type="xs:string" minOccurs="0" />
+              <xs:element name="numexb" type="xs:string" minOccurs="0" />
+              <xs:element name="numexc" type="xs:string" minOccurs="0" />
+              <xs:element name="numexd" type="xs:string" minOccurs="0" />
+              <xs:element name="numexe" type="xs:string" minOccurs="0" />
+              <xs:element name="numexf" type="xs:string" minOccurs="0" />
+              <xs:element name="numexg" type="xs:string" minOccurs="0" />
+              <xs:element name="numexh" type="xs:string" minOccurs="0" />
+              <xs:element name="numexi" type="xs:string" minOccurs="0" />
+              <xs:element name="numexj" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexa" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexb" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexc" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexd" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexe" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexf" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexg" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexh" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexi" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexj" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexa" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexb" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexc" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexd" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexe" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexf" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexg" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexh" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexi" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexj" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexa" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexb" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexc" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexd" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexe" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexf" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexg" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexh" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexi" type="xs:string" minOccurs="0" />
+              <xs:element name="memoexj" type="xs:string" minOccurs="0" />
+              <xs:element name="description" type="xs:string" minOccurs="0" />
+              <xs:element name="picture" type="xs:string" minOccurs="0" />
+              <xs:element name="multilookupexas" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexa" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexbs" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexb" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexcs" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexc" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexds" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexd" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexes" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexe" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexfs" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexf" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexgs" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexg" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexhs" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexh" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexis" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexi" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="multilookupexjs" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="multilookupexj" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productwebshops" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productwebshop" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                          <xs:element name="url" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productmaterials" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productmaterial" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="sourceproductid" type="xs:string" minOccurs="0" />
+                          <xs:element name="sourceproductcode" type="xs:string" minOccurs="0" />
+                          <xs:element name="sourceproductname" type="xs:string" minOccurs="0" />
+                          <xs:element name="sourcequantity" type="xs:string" minOccurs="0" />
+                          <xs:element name="accessory" type="xs:string" minOccurs="0" />
+                          <xs:element name="buildforbid" type="xs:string" minOccurs="0" />
+                          <xs:element name="pricecategoryid" type="xs:string" minOccurs="0" />
+                          <xs:element name="pricecategoryname" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productattributes" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productattribute" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                          <xs:element name="value" type="xs:string" minOccurs="0" />
+                          <xs:element name="postfix" type="xs:string" minOccurs="0" />
+                          <xs:element name="filter" type="xs:string" minOccurs="0" />
+                          <xs:element name="priority" type="xs:string" minOccurs="0" />
+                          <xs:element name="hidefromweb" type="xs:string" minOccurs="0" />
+                          <xs:element name="productattributelangs" minOccurs="0" maxOccurs="unbounded">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="productattributelang" minOccurs="0" maxOccurs="unbounded">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="lang" type="xs:string" minOccurs="0" />
+                                      <xs:element name="name" type="xs:string" minOccurs="0" />
+                                      <xs:element name="postfix" type="xs:string" minOccurs="0" />
+                                      <xs:element name="value" type="xs:string" minOccurs="0" />
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="ProductWebGroups" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="ProductWebGroup" nillable="true" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:simpleContent msdata:ColumnName="ProductWebGroup_Text" msdata:Ordinal="0">
+                          <xs:extension base="xs:string">
+                          </xs:extension>
+                        </xs:simpleContent>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productattachments" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productattachment" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="productid" type="xs:string" minOccurs="0" />
+                          <xs:element name="productcode" type="xs:string" minOccurs="0" />
+                          <xs:element name="productname" type="xs:string" minOccurs="0" />
+                          <xs:element name="quantity" type="xs:string" minOccurs="0" />
+                          <xs:element name="unitprice" type="xs:string" minOccurs="0" />
+                          <xs:element name="multiplied" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productassociations" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productassociation" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="productid" type="xs:string" minOccurs="0" />
+                          <xs:element name="productcode" type="xs:string" minOccurs="0" />
+                          <xs:element name="productname" type="xs:string" minOccurs="0" />
+                          <xs:element name="typename" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productsubstitutions" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productsubstitution" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="productid" type="xs:string" minOccurs="0" />
+                          <xs:element name="productcode" type="xs:string" minOccurs="0" />
+                          <xs:element name="productname" type="xs:string" minOccurs="0" />
+                          <xs:element name="quantity" type="xs:string" minOccurs="0" />
+                          <xs:element name="duplex" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productlangs" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productlang" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="lang" type="xs:string" minOccurs="0" />
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                          <xs:element name="description" type="xs:string" minOccurs="0" />
+                          <xs:element name="webname" type="xs:string" minOccurs="0" />
+                          <xs:element name="webdescription" type="xs:string" minOccurs="0" />
+                          <xs:element name="webmetadescription" type="xs:string" minOccurs="0" />
+                          <xs:element name="weburl" type="xs:string" minOccurs="0" />
+                          <xs:element name="webkeywords" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productworldcodes" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productworldcode" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="code" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productqtyunits" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productqtyunit" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="quantityunit" type="xs:string" minOccurs="0" />
+                          <xs:element name="multiplier" type="xs:string" minOccurs="0" />
+                          <xs:element name="commerce" type="xs:string" minOccurs="0" />
+                          <xs:element name="selldefault" type="xs:string" minOccurs="0" />
+                          <xs:element name="buydefault" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="productbarcodes" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="productbarcode" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="barcode" type="xs:string" minOccurs="0" />
+                          <xs:element name="quantityunit" type="xs:string" minOccurs="0" />
+                          <xs:element name="quantity" type="xs:string" minOccurs="0" />
+                          <xs:element name="multipleonly" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="tags" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="tag" nillable="true" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:simpleContent msdata:ColumnName="tag_Text" msdata:Ordinal="0">
+                          <xs:extension base="xs:string">
+                          </xs:extension>
+                        </xs:simpleContent>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

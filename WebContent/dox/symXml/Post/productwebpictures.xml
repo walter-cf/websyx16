@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ProductWebPictures>
+    <ProductWebPicture>
+  	    <product>1231</product> --Termék Symbol belső azonosítója (Product.Id)
+		<productcode>45645616P</productcode> --Termék kódja (Product.Code)
+        <WebPicture>
+            <caption>név</caption> --Képaláírás (ProductWebPicture.Caption)
+            <webpicture>BASE64Encoded string of PNG or JPG or ANY</webpicture> --Kép (ProductWebPicture.Data)
+            <prime>1</prime> --Elsődleges kép-e (0/1) (ProductWebPicture.Prime)
+	      		  <titletext>felirat</titletext> --IMG title tag (nem kötelező) (ProductWebPicture.Titletext)
+			      <alttext>alt szöveg</alttext> --IMG alt tag (nem kötelező) (ProductWebPicture.AltText)
+            <order>1</order> --Hányadik helyen szerepel a képek között (ProductWebPicture.RowOrder)
+        </WebPicture>
+        <WebPicture>
+            <caption>név2</caption> --Képaláírás (ProductWebPicture.Caption)
+            <webpicture>BASE64Encoded string of PNG or JPG or ANY</webpicture> --Kép (ProductWebPicture.Data)
+            <prime>0</prime> --Elsődleges kép-e (0/1) (ProductWebPicture.Prime)
+	      		  <titletext>felirat2</titletext> --IMG title tag (nem kötelező) (ProductWebPicture.Titletext)
+			      <alttext>alt szöveg2</alttext> --IMG alt tag (nem kötelező) (ProductWebPicture.AltText)
+            <order>2</order> --Hányadik helyen szerepel a képek között (ProductWebPicture.RowOrder)
+        </WebPicture>
+    </ProductWebPicture>
+    <ProductWebPicture>
+  	    <product>1231</product> --Termék Symbol belső azonosítója (Product.Id)
+		<productcode>45645616P</productcode> --Termék kódja (Product.Code)
+        <WebPicture>
+            <caption>név</caption> --Képaláírás (ProductWebPicture.Caption)
+            <webpicture>BASE64Encoded string of PNG or JPG or ANY</webpicture> --Kép (ProductWebPicture.Data)
+            <prime>1</prime> --Elsődleges kép-e (0/1) (ProductWebPicture.Prime)
+	      		  <titletext>felirat</titletext> --IMG title tag (nem kötelező) (ProductWebPicture.Titletext)
+			      <alttext>alt szöveg</alttext> --IMG alt tag (nem kötelező) (ProductWebPicture.AltText)
+            <order>1</order> --Hányadik helyen szerepel a képek között (ProductWebPicture.RowOrder)
+        </WebPicture>
+        <WebPicture>
+            <caption>név2</caption> --Képaláírás (ProductWebPicture.Caption)
+            <webpicture>BASE64Encoded string of PNG or JPG or ANY</webpicture> --Kép (ProductWebPicture.Data)
+            <prime>0</prime> --Elsődleges kép-e (0/1) (ProductWebPicture.Prime)
+	      		  <titletext>felirat2</titletext> --IMG title tag (nem kötelező) (ProductWebPicture.Titletext)
+			      <alttext>alt szöveg2</alttext> --IMG alt tag (nem kötelező) (ProductWebPicture.AltText)
+            <order>2</order> --Hányadik helyen szerepel a képek között (ProductWebPicture.RowOrder)
+        </WebPicture>
+    </ProductWebPicture>
+</ProductWebPictures>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomerOrderStatuses>
+    <CustomerOrder>
+        <Id>1</Id> --Vevői rendelés Symbol belső azonosítója (CustomerOrder.Id)
+        <VoucherNumber>R-2000-00001</VoucherNumber> --Vevői rendelés bizonylatszám (CustomerOrder.VoucherNumber)
+		<PrimeVoucherNumber>WEB00001</PrimeVoucherNumber> --Vevői rendelés eredeti bizonylatszám (CustomerOrder.PrimeVoucherNumber)
+		<VoucherSequenceCode>WEB</VoucherSequenceCode> --Bizonylattömb kód (VoucherSequence.Code)
+		<CustomerOrderStatus>1</CustomerOrderStatus> --Vevői rendelés állapot Symbol belső azonosítója (CustomerOrderStatus.Id)
+		<CustomerOrderStatusName>Félretéve</CustomerOrderStatusName> --Vevői rendelés állapot neve (CustomerOrderStatus.Name)
+    </CustomerOrder>
+	<CustomerOrder>
+        <Id>2</Id> --Vevői rendelés Symbol belső azonosítója (CustomerOrder.Id)
+        <VoucherNumber>R-2000-00002</VoucherNumber> --Vevői rendelés bizonylatszám (CustomerOrder.VoucherNumber)
+		<PrimeVoucherNumber>WEB00002</PrimeVoucherNumber> --Vevői rendelés eredeti bizonylatszám (CustomerOrder.PrimeVoucherNumber)
+		<VoucherSequenceCode>WEB</VoucherSequenceCode> --Bizonylattömb kód (VoucherSequence.Code)
+		<CustomerOrderStatus>1</CustomerOrderStatus> --Vevői rendelés állapot Symbol belső azonosítója (CustomerOrderStatus.Id)
+		<CustomerOrderStatusName>Félretéve</CustomerOrderStatusName> --Vevői rendelés állapot neve (CustomerOrderStatus.Name)
+    </CustomerOrder>
+</CustomerOrderStatuses>

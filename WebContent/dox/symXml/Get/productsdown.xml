@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ProductsDown>
+  <Product>
+    <id>1231</id> --Id (Product.Id)
+    <code>P12776</code> --Termékkód (Product.Code)
+	<webdisplay>1</webdisplay> --Weben megjelenik (Product.WebDisplay)
+    <webname>Óz, a Nagy Varázsló</webname> --Web megnevezés (Product.WebName)
+    <webdescription>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</webdescription> --Web leírás (Product.WebDescription)
+    <webmetadescription>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti...</webmetadescription> --Meta leírás (Product.WebMetaDescription)
+    <weburl>oz-a-nagy-varazslo</weburl> --Web Url (Product.WebUrl)
+	<webkeywords>oz, nagy, varazslo</webkeywords> --Webes kulcsszavak (Product.WebKeyWords)
+	<feedbackurl>http://www.valami.hu/commitproduct?id=1231&amp;symbolid=</feedbackurl> --Visszajelzés Url
+	<errorurl>http://www.valami.hu/commitproduct?id=1231&amp;errormsg=</errorurl> --Error Url
+  </Product>
+ <Product>
+    <id>1231</id> --Id (Product.Id)
+    <code>P12776</code> --Termékkód (Product.Code)
+	<webdisplay>1</webdisplay> --Weben megjelenik (Product.WebDisplay)
+    <webname>Óz, a Nagy Varázsló</webname> --Web megnevezés (Product.WebName)
+    <webdescription>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</webdescription> --Web leírás (Product.WebDescription)
+    <webmetadescription>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti...</webmetadescription> --Meta leírás (Product.WebMetaDescription)
+    <weburl>oz-a-nagy-varazslo</weburl> --Web Url (Product.WebUrl)
+	<webkeywords>oz, nagy, varazslo</webkeywords> --Webes kulcsszavak (Product.WebKeyWords)
+	<feedbackurl>http://www.valami.hu/commitproduct?id=1231&amp;symbolid=</feedbackurl> --Visszajelzés Url
+	<errorurl>http://www.valami.hu/commitproduct?id=1231&amp;errormsg=</errorurl> --Error Url
+  </Product>
+</ProductsDown>

@@ -94,6 +94,8 @@ class UnasTransactionType(IntEnum):
     TESTPOST = 54
     OFFER = 55
     PEPITA_ORDER = 56
+    SUPPLIER_ORDER = 57
+    CHANGED_ORDER_STATUS = 58
     #
     UNAS_COMM_ERROR = 60
     UNAS_LOGIN_ERROR = 61

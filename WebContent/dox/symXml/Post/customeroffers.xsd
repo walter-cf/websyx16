@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="CustomerOffers" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="CustomerOffers" msdata:IsDataSet="true" msdata:Locale="en-US">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="CustomerOffer">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Id" type="xs:string" minOccurs="0" />
+              <xs:element name="VoucherNumber" type="xs:string" minOccurs="0" />
+              <xs:element name="Name" type="xs:string" minOccurs="0" />
+              <xs:element name="ValidFrom" type="xs:string" minOccurs="0" />
+              <xs:element name="ValidTo" type="xs:string" minOccurs="0" />
+              <xs:element name="CustomerOfferCustomers" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="CustomerOfferCustomer" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Id" type="xs:string" minOccurs="0" />
+                          <xs:element name="CustomerCategory" type="xs:string" minOccurs="0" />
+                          <xs:element name="Customer" type="xs:string" minOccurs="0" />
+                          <xs:element name="Forbid" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="CustomerOfferDetails" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="CustomerOfferDetail" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Id" type="xs:string" minOccurs="0" />
+                          <xs:element name="Product" type="xs:string" minOccurs="0" />
+                          <xs:element name="ShareQuantity" type="xs:string" minOccurs="0" />
+                          <xs:element name="CurrencyName" type="xs:string" minOccurs="0" />
+                          <xs:element name="QuantityUnitName" type="xs:string" minOccurs="0" />
+                          <xs:element name="PriceCategoryName" type="xs:string" minOccurs="0" />
+                          <xs:element name="BasePrice" type="xs:string" minOccurs="0" />
+                          <xs:element name="BasePriceDate" type="xs:string" minOccurs="0" />
+                          <xs:element name="SalesPercent" type="xs:string" minOccurs="0" />
+                          <xs:element name="SalesPrice" type="xs:string" minOccurs="0" />
+                          <xs:element name="QuantityMinimum" type="xs:string" minOccurs="0" />
+                          <xs:element name="QuantityMaximum" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

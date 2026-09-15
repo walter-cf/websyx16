@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ProductQuantities>
+    <ProductQuantity>
+        <Warehouse>-1</Warehouse> --Raktár Symbol beslő azonosítója (WareHouse.Id)
+        <WarehouseName>Központ</WarehouseName> --Raktár neve (Warehouse.Name)
+		<WarehouseSite>1</WarehouseSite> --Raktár cég azonosító (Warehouse.Site)
+		<Product>482</Product> --Termék Symbol belső azonosítója (Product.Id)
+		<ProductCode>547P</ProductCode> --Termékkód (Product.Code)
+        <Quantity>48</Quantity> --Mennyiség (WareHouseBalance.Balance)
+        <StrictAllocate>5</StrictAllocate> --Szigorúan foglalt (WareHouseBalance.StrictAllocated)
+        <NonStrictAllocate>12</NonStrictAllocate> --Nem szigorúan foglalt
+    </ProductQuantity>
+	<ProductQuantity>
+        <Warehouse>-1</Warehouse> --Raktár Symbol beslő azonosítója (WareHouse.Id)
+        <WarehouseName>Központ</WarehouseName> --Raktár neve (Warehouse.Name)
+		<WarehouseSite>1</WarehouseSite> --Raktár cég azonosító (Warehouse.Site)
+		<Product>582</Product> --Termék Symbol belső azonosítója (Product.Id)
+		<ProductCode>547FGP</ProductCode> --Termékkód (Product.Code)
+        <Quantity>53</Quantity> --Mennyiség (WareHouseBalance.Balance)
+        <StrictAllocate>3</StrictAllocate> --Szigorúan foglalt (WareHouseBalance.StrictAllocated)
+        <NonStrictAllocate>10</NonStrictAllocate> --Nem szigorúan foglalt
+    </ProductQuantity>
+</ProductQuantities>

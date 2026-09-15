@@ -1,7 +1,7 @@
 import json
 import typing
 
-from lxml import etree as ET
+#import lxml.etree as ET
 
 import MyUtils as MU
 

@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="CustomersUp" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="CustomersUp" msdata:IsDataSet="true" msdata:Locale="en-US">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="Customer">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="id" type="xs:string" minOccurs="0" />
+              <xs:element name="code" type="xs:string" minOccurs="0" />
+              <xs:element name="customerstatus" type="xs:string" minOccurs="0" />
+              <xs:element name="supplierstatus" type="xs:string" minOccurs="0" />
+              <xs:element name="name" type="xs:string" minOccurs="0" />
+              <xs:element name="searchname" type="xs:string" minOccurs="0" />
+              <xs:element name="customercategory" type="xs:string" minOccurs="0" />
+              <xs:element name="suppliercategory" type="xs:string" minOccurs="0" />
+              <xs:element name="currency" type="xs:string" minOccurs="0" />
+              <xs:element name="invoicecountry" type="xs:string" minOccurs="0" />
+              <xs:element name="invoiceregion" type="xs:string" minOccurs="0" />
+              <xs:element name="invoicezip" type="xs:string" minOccurs="0" />
+              <xs:element name="invoicecity" type="xs:string" minOccurs="0" />
+              <xs:element name="invoicestreet" type="xs:string" minOccurs="0" />
+              <xs:element name="invoicehousenumber" type="xs:string" minOccurs="0" />
+              <xs:element name="mailcountry" type="xs:string" minOccurs="0" />
+              <xs:element name="mailregion" type="xs:string" minOccurs="0" />
+              <xs:element name="mailname" type="xs:string" minOccurs="0" />
+              <xs:element name="mailzip" type="xs:string" minOccurs="0" />
+              <xs:element name="mailcity" type="xs:string" minOccurs="0" />
+              <xs:element name="mailstreet" type="xs:string" minOccurs="0" />
+              <xs:element name="mailhousenumber" type="xs:string" minOccurs="0" />
+              <xs:element name="paymentmethod" type="xs:string" minOccurs="0" />
+              <xs:element name="paymentmethodtoleranceday" type="xs:string" minOccurs="0" />
+              <xs:element name="pricecategory" type="xs:string" minOccurs="0" />
+              <xs:element name="pricecategoryname" type="xs:string" minOccurs="0" />
+              <xs:element name="discountpercent" type="xs:string" minOccurs="0" />
+              <xs:element name="transportmode" type="xs:string" minOccurs="0" />
+              <xs:element name="taxnumber" type="xs:string" minOccurs="0" />
+              <xs:element name="eutaxnumber" type="xs:string" minOccurs="0" />
+              <xs:element name="bankaccount" type="xs:string" minOccurs="0" />
+              <xs:element name="bankaccountiban" type="xs:string" minOccurs="0" />
+              <xs:element name="bankname" type="xs:string" minOccurs="0" />
+              <xs:element name="bankswiftcode" type="xs:string" minOccurs="0" />
+              <xs:element name="contactname" type="xs:string" minOccurs="0" />
+              <xs:element name="phone" type="xs:string" minOccurs="0" />
+              <xs:element name="fax" type="xs:string" minOccurs="0" />
+              <xs:element name="sms" type="xs:string" minOccurs="0" />
+              <xs:element name="email" type="xs:string" minOccurs="0" />
+              <xs:element name="webusername" type="xs:string" minOccurs="0" />
+              <xs:element name="webpassword" type="xs:string" minOccurs="0" />
+              <xs:element name="iscompany" type="xs:string" minOccurs="0" />
+              <xs:element name="eumembership" type="xs:string" minOccurs="0" />
+              <xs:element name="description" type="xs:string" minOccurs="0" />
+              <xs:element name="deleted" type="xs:string" minOccurs="0" />
+              <xs:element name="strexa" type="xs:string" minOccurs="0" />
+              <xs:element name="strexb" type="xs:string" minOccurs="0" />
+              <xs:element name="strexc" type="xs:string" minOccurs="0" />
+              <xs:element name="strexd" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexa" type="xs:string" minOccurs="0" />
+              <xs:element name="dateexb" type="xs:string" minOccurs="0" />
+              <xs:element name="numexa" type="xs:string" minOccurs="0" />
+              <xs:element name="numexb" type="xs:string" minOccurs="0" />
+              <xs:element name="numexc" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexa" type="xs:string" minOccurs="0" />
+              <xs:element name="boolexb" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexa" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexb" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexc" type="xs:string" minOccurs="0" />
+              <xs:element name="lookupexd" type="xs:string" minOccurs="0" />
+              <xs:element name="customeraddresses" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="customeraddress" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="preferred" type="xs:string" minOccurs="0" />
+                          <xs:element name="id" type="xs:string" minOccurs="0" />
+                          <xs:element name="code" type="xs:string" minOccurs="0" />
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                          <xs:element name="country" type="xs:string" minOccurs="0" />
+                          <xs:element name="region" type="xs:string" minOccurs="0" />
+                          <xs:element name="zip" type="xs:string" minOccurs="0" />
+                          <xs:element name="city" type="xs:string" minOccurs="0" />
+                          <xs:element name="street" type="xs:string" minOccurs="0" />
+                          <xs:element name="housenumber" type="xs:string" minOccurs="0" />
+                          <xs:element name="contactname" type="xs:string" minOccurs="0" />
+                          <xs:element name="phone" type="xs:string" minOccurs="0" />
+                          <xs:element name="fax" type="xs:string" minOccurs="0" />
+                          <xs:element name="email" type="xs:string" minOccurs="0" />
+                          <xs:element name="iscompany" type="xs:string" minOccurs="0" />
+                          <xs:element name="companytaxnumber" type="xs:string" minOccurs="0" />
+                          <xs:element name="description" type="xs:string" minOccurs="0" />
+                          <xs:element name="deleted" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="customercontacts" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="customercontact" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="name" type="xs:string" minOccurs="0" />
+                          <xs:element name="id" type="xs:string" minOccurs="0" />
+                          <xs:element name="responsibility" type="xs:string" minOccurs="0" />
+                          <xs:element name="phone" type="xs:string" minOccurs="0" />
+                          <xs:element name="fax" type="xs:string" minOccurs="0" />
+                          <xs:element name="sms" type="xs:string" minOccurs="0" />
+                          <xs:element name="email" type="xs:string" minOccurs="0" />
+                          <xs:element name="url" type="xs:string" minOccurs="0" />
+                          <xs:element name="skype" type="xs:string" minOccurs="0" />
+                          <xs:element name="facebookurl" type="xs:string" minOccurs="0" />
+                          <xs:element name="msn" type="xs:string" minOccurs="0" />
+                          <xs:element name="description" type="xs:string" minOccurs="0" />
+                          <xs:element name="deleted" type="xs:string" minOccurs="0" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

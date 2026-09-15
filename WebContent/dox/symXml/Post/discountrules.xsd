@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="DiscountRules" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="DiscountRules" msdata:IsDataSet="true" msdata:Locale="en-US">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="TransportModes">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="TransportMode" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="TransportModeName" type="xs:string" minOccurs="0" />
+                    <xs:element name="DiscountPercent" type="xs:string" minOccurs="0" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="PaymentMethods">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="PaymentMethod" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="PaymentMethodName" type="xs:string" minOccurs="0" />
+                    <xs:element name="DiscountPercent" type="xs:string" minOccurs="0" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="ProductCategoryDiscounts">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ProductCategoryDiscount" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="ProductCategory" type="xs:string" minOccurs="0" />
+                    <xs:element name="Customer" type="xs:string" minOccurs="0" />
+                    <xs:element name="CustomerCode" type="xs:string" minOccurs="0" />
+                    <xs:element name="CustomerName" type="xs:string" minOccurs="0" />
+                    <xs:element name="CustomerCategory" type="xs:string" minOccurs="0" />
+                    <xs:element name="DiscountPercent" type="xs:string" minOccurs="0" />
+                    <xs:element name="Inherit" type="xs:string" minOccurs="0" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="ProductCustomerDiscounts">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ProductCustomerDiscount" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Product" type="xs:string" minOccurs="0" />
+                    <xs:element name="ProductCode" type="xs:string" minOccurs="0" />
+                    <xs:element name="ProductName" type="xs:string" minOccurs="0" />
+                    <xs:element name="Customer" type="xs:string" minOccurs="0" />
+                    <xs:element name="CustomerCode" type="xs:string" minOccurs="0" />
+                    <xs:element name="CustomerName" type="xs:string" minOccurs="0" />
+                    <xs:element name="DiscountPercent" type="xs:string" minOccurs="0" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="CustomerVoucherDiscounts">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="CustomerVoucherDiscount" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="VoucherType" type="xs:string" minOccurs="0" />
+                    <xs:element name="Customer" type="xs:string" minOccurs="0" />
+                    <xs:element name="CustomerCode" type="xs:string" minOccurs="0" />
+                    <xs:element name="CustomerName" type="xs:string" minOccurs="0" />
+                    <xs:element name="CustomerCategory" type="xs:string" minOccurs="0" />
+                    <xs:element name="ValidFrom" type="xs:string" minOccurs="0" />
+                    <xs:element name="ValidTo" type="xs:string" minOccurs="0" />
+                    <xs:element name="NetValue" type="xs:string" minOccurs="0" />
+                    <xs:element name="DiscountPercent" type="xs:string" minOccurs="0" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

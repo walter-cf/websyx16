@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ProductDocuments>
+    <ProductDocument> --Termék dokumentum (Document)
+  	    <product>1231</product> --Termék Symbol belső azonosító (Product.Id)
+		<productcode>564864P</productcode> --Termék kód (Product.Code)
+        <Document> --Dokumentum
+            <name>leírás</name> --Dokumentum megnevezése (Document.Name)
+            <document>BASE64Encoded string of PNG or XLS or ANY</document> --Dokumentum tartalma (Document.Data)
+            <category>leírás</category> --nem kötelező  --Dokumentum kategóriája (Document.CategoryName)
+			<folder>fold1/fol2</folder> --nem kötelező --Dokumentumot tartalmazó mappa (DocumentFolder.Name)
+        </Document>
+        <Document> --Dokumentum
+            <name>leírás2</name> --Dokumentum megnevezése (Document.Name)
+            <document>BASE64Encoded string of PNG or XLS or ANY</document> --Dokumentum tartalma (Document.Data)
+            <category>leírás2</category> --nem kötelező  --Dokumentum kategóriája (Document.CategoryName)
+			<folder>fold1/fol2</folder> --nem kötelező --Dokumentumot tartalmazó mappa (DocumentFolder.Name)
+        </Document>
+    </ProductDocument>
+    <ProductDocument> --Termék dokumentum
+  	    <product>1234</product>  --Termék Symbol belső azonosító (Product.Id)
+		<productcode>874P</productcode> --Termék kód (Product.Code)
+        <Document> --Dokumentum
+            <name>leírás4</name> --Dokumentum megnevezése (Document.Name)
+            <document>BASE64Encoded string of PNG or XLS or ANY</document> --Dokumentum tartalma (Document.Data)
+            <category>leírás4</category> --nem kötelező --Dokumentum kategóriája (Document.CategoryName)
+			<folder>fold1/fol2</folder> --nem kötelező --Dokumentumot tartalmazó mappa (DocumentFolder.Name)
+        </Document>
+        <Document> --Dokumentum
+            <name>leírás8</name> --Dokumentum megnevezése (Document.Name)
+            <document>BASE64Encoded string of PNG or XLS or ANY</document> --Dokumentum tartalma (Document.Data)
+            <category>leírás8</category> --nem kötelező --Dokumentum kategóriája (Document.CategoryName)
+			<folder>fold1/fol2</folder> --nem kötelező --Dokumentumot tartalmazó mappa (DocumentFolder.Name
+        </Document>
+    </ProductDocument>
+</ProductDocuments>

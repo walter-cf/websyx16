@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="ProductsDown" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="ProductsDown" msdata:IsDataSet="true" msdata:Locale="en-US">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="Product">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="id" type="xs:string" minOccurs="0" />
+              <xs:element name="code" type="xs:string" minOccurs="0" />
+              <xs:element name="webdisplay" type="xs:string" minOccurs="0" />
+              <xs:element name="webname" type="xs:string" minOccurs="0" />
+              <xs:element name="webdescription" type="xs:string" minOccurs="0" />
+              <xs:element name="webmetadescription" type="xs:string" minOccurs="0" />
+              <xs:element name="weburl" type="xs:string" minOccurs="0" />
+              <xs:element name="webkeywords" type="xs:string" minOccurs="0" />
+              <xs:element name="feedbackurl" type="xs:string" minOccurs="0" />
+              <xs:element name="errorurl" type="xs:string" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

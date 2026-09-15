@@ -1,4 +1,5 @@
 logLevel: DEBUG
+
 proxy:
   # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
   hostName: syxproxy.lan
@@ -94,6 +95,18 @@ unas:
         closed:   6540061 # Lezarva
         returned: 0       # NU. in UNAS (yet)
         cancel:   0       # NU. in UNAS (yet)
+  
+    statusNameOrId: "name"
+    statusNames:
+        - [ "Új rendelés", 'joe-New' ]
+        - [ "Szedhető"   , 'joe-Szedhető' ]
+        - [ "Számlázható", 'joe-Számlázható' ]
+        - [ "Back Order" , 'joe-Visszáru' ]
+    statusIds:
+        - [ 1, 6611991 ]
+        - [ 2, 6611986 ]
+        - [ 3, 6611191 ]
+        - [ 4, 6611996 ]
     autoAcknowledge: False
     flow:
       getUnregistered: False
@@ -101,7 +114,7 @@ unas:
 
   customer:
     # Unas paarmeterek: symbolId, symbolCode
-    categoryName: HU / Channel / Haffner24 UNAS
+    categoryName: HU / Channel / R5
     unique: EGYEDI
     specialCategories: 
         - [ "HU / Channel / R1", R1 ]
@@ -155,15 +168,17 @@ unas:
          - [ R4, R4 ]
          - [ R5, R5 ]
          - [ R8, R8 ]
-
+    supplierOrderParam:
+      name: 'Várható beérkezés'
+      id: 8822851
 pepita:
   apikey: P5s5Ns329Mhg8NNeEMWt8v6aAmF74Bq2kYyFD7xB 
   folder:
     order: pepita/orders
     archive: pepita/orders-z
-    package: pepita/pckg-labels
     save: pepita/orders-s
-  resultPath: pepita/test/ledsound-pepita-products.xml
+    package: pepita/pckg-labels
+  resultPath: /var/www/b2c-xml/pepita/ledsound-pepita-products.xml
   pepitaXsd: https://pepita.hu/feed/1.0
   pepitaXsdFile: pepita.xsd
   productLimitNum: 500

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomerOffers>
+    <CustomerOffer> --Vevői akció (CustomerOffer)
+		<Id>1</Id> --Vevői akció azonosító (CustomerOffer.Id)
+		<VoucherNumber>AK-2000-00001</VoucherNumber> --Vevői akció bizonylatszám (CustomerOffer.VoucherNumber)
+		<Name>Akció</Name> --Vevői akció neve (CustomerOffer.Name)
+		<ValidFrom>2012-01-01</ValidFrom> --Érvényesség kezdete (CustomerOffer.ValidFrom)
+        <ValidTo>2013-06-01</ValidTo> --Érvényesség vége (CustomerOffer.ValidTo)
+		<CustomerOfferCustomers> --Vevői akcióhoz hozzárendelt vevők és vevőcsoportok
+			<CustomerOfferCustomer>
+				<Id>1</Id> --Vevői akció hozzárendelés azonosítója (CustomerOfferCustomer.Id)
+				<Customer>123</Customer> --Vevői akcióhoz hozzárendelt vevő azonosítója (CustomerOfferCustomer.Customer)
+				<Forbid>0</Forbid> --Vevői akcióból kizárás (CustomerOfferCustomer.Forbid)
+			</CustomerOfferCustomer>
+			<CustomerOfferCustomer>
+				<Id>1</Id> --Vevői akció hozzárendelés azonosítója (CustomerOfferCustomer.Id)
+				<CustomerCategory>12</CustomerCategory> --Vevői akcióhoz hozzárendelt vevőcsoport azonosítója (CustomerOfferCustomer.CustomerCategory)
+				<Forbid>1</Forbid> --Vevői akcióból kizárás (CustomerOfferCustomer.Forbid)
+			</CustomerOfferCustomer>
+		</CustomerOfferCustomers>
+		<CustomerOfferDetails> --Vevői akció tételei
+			<CustomerOfferDetail> --Vevői akció tétel (CustomerOfferDetail)
+				<Id>1</Id> --Vevői akció tétel azonosítója (CustomerOfferDetail.Id)
+				<Product>123</Product> --Vevői akció tétel termék azonosítója (CustomerOfferDetail.Product)
+				<ShareQuantity>5.5</ShareQuantity> --Vevői akció tétel felhasználható mennyisége (CustomerOfferDetail.ShareQuantity)
+				<CurrencyName>HUF</CurrencyName> --Vevői akció tétel pénznemének megnevezése (CustomerOfferDetail.CurrencyName)
+				<QuantityUnitName>db</QuantityUnitName> --Vevői akció tétel mennyiségi egységének megnevezése (CustomerOfferDetail.QuantityUnitName)
+				<PriceCategoryName>Lista ár</PriceCategoryName> --Vevői akció tétel árkategóriájának megnevezése (CustomerOfferDetail.PriceCategoryName)
+				<BasePrice>5.5</BasePrice> --Vevői akció tétel korábbi ára (CustomerOfferDetail.BasePrice)
+				<BasePriceDate>2012-01-01</BasePriceDate> --Vevői akció tétel korábbi ár dátuma (CustomerOfferDetail.BasePriceDate)
+				<SalesPercent>5.5</SalesPercent> --Vevői akció tétel százalékos kedvezménye (CustomerOfferDetail.SalesPercent)
+				<SalesPrice>5.5</SalesPrice> --Vevői akció tétel egységára (CustomerOfferDetail.SalesPrice)
+				<QuantityMinimum>1.5</QuantityMinimum> --Vevői akció tétel minimum mennyisége (CustomerOfferDetail.QuantityMinimum)
+				<QuantityMaximum>9.5</QuantityMaximum> --Vevői akció tétel maximum mennyisége (CustomerOfferDetail.QuantityMaximum)
+			</CustomerOfferDetail>
+			<CustomerOfferDetail> --Vevői akció tétel (CustomerOfferDetail)
+				<Id>1</Id> --Vevői akció tétel azonosítója (CustomerOfferDetail.Id)
+				<Product>123</Product> --Vevői akció tétel termék azonosítója (CustomerOfferDetail.Product)
+				<ShareQuantity>5.5</ShareQuantity> --Vevői akció tétel felhasználható mennyisége (CustomerOfferDetail.ShareQuantity)
+				<CurrencyName>HUF</CurrencyName> --Vevői akció tétel pénznemének megnevezése (CustomerOfferDetail.CurrencyName)
+				<QuantityUnitName>db</QuantityUnitName> --Vevői akció tétel mennyiségi egységének megnevezése (CustomerOfferDetail.QuantityUnitName)
+				<PriceCategoryName>Lista ár</PriceCategoryName> --Vevői akció tétel árkategóriájának megnevezése (CustomerOfferDetail.PriceCategoryName)
+				<BasePrice>5.5</BasePrice> --Vevői akció tétel korábbi ára (CustomerOfferDetail.BasePrice)
+				<BasePriceDate>2012-01-01</BasePriceDate> --Vevői akció tétel korábbi ár dátuma (CustomerOfferDetail.BasePriceDate)
+				<SalesPercent>5.5</SalesPercent> --Vevői akció tétel százalékos kedvezménye (CustomerOfferDetail.SalesPercent)
+				<SalesPrice>5.5</SalesPrice> --Vevői akció tétel egységára (CustomerOfferDetail.SalesPrice)
+				<QuantityMinimum>1.5</QuantityMinimum> --Vevői akció tétel minimum mennyisége (CustomerOfferDetail.QuantityMinimum)
+				<QuantityMaximum>9.5</QuantityMaximum> --Vevői akció tétel maximum mennyisége (CustomerOfferDetail.QuantityMaximum)
+			</CustomerOfferDetail>
+		</CustomerOfferDetails>
+    </CustomerOffer>
+	<CustomerOffer> --Vevői akció (CustomerOffer)
+		<Id>1</Id> --Vevői akció azonosító (CustomerOffer.Id)
+		<VoucherNumber>AK-2000-00001</VoucherNumber> --Vevői akció bizonylatszám (CustomerOffer.VoucherNumber)
+		<Name>Akció</Name> --Vevői akció neve (CustomerOffer.Name)
+		<ValidFrom>2012-01-01</ValidFrom> --Érvényesség kezdete (CustomerOffer.ValidFrom)
+        <ValidTo>2013-06-01</ValidTo> --Érvényesség vége (CustomerOffer.ValidTo)
+		<CustomerOfferCustomers> --Vevői akcióhoz hozzárendelt vevők és vevőcsoportok
+			<CustomerOfferCustomer>
+				<Id>1</Id> --Vevői akció hozzárendelés azonosítója (CustomerOfferCustomer.Id)
+				<Customer>123</Customer> --Vevői akcióhoz hozzárendelt vevő azonosítója (CustomerOfferCustomer.Customer)
+				<Forbid>0</Forbid> --Vevői akcióból kizárás (CustomerOfferCustomer.Forbid)
+			</CustomerOfferCustomer>
+			<CustomerOfferCustomer>
+				<Id>1</Id> --Vevői akció hozzárendelés azonosítója (CustomerOfferCustomer.Id)
+				<CustomerCategory>12</CustomerCategory> --Vevői akcióhoz hozzárendelt vevőcsoport azonosítója (CustomerOfferCustomer.CustomerCategory)
+				<Forbid>1</Forbid> --Vevői akcióból kizárás (CustomerOfferCustomer.Forbid)
+			</CustomerOfferCustomer>
+		</CustomerOfferCustomers>
+		<CustomerOfferDetails> --Vevői akció tételei
+			<CustomerOfferDetail> --Vevői akció tétel (CustomerOfferDetail)
+				<Id>1</Id> --Vevői akció tétel azonosítója (CustomerOfferDetail.Id)
+				<Product>123</Product> --Vevői akció tétel termék azonosítója (CustomerOfferDetail.Product)
+				<ShareQuantity>5.5</ShareQuantity> --Vevői akció tétel felhasználható mennyisége (CustomerOfferDetail.ShareQuantity)
+				<CurrencyName>HUF</CurrencyName> --Vevői akció tétel pénznemének megnevezése (CustomerOfferDetail.CurrencyName)
+				<QuantityUnitName>db</QuantityUnitName> --Vevői akció tétel mennyiségi egységének megnevezése (CustomerOfferDetail.QuantityUnitName)
+				<PriceCategoryName>Lista ár</PriceCategoryName> --Vevői akció tétel árkategóriájának megnevezése (CustomerOfferDetail.PriceCategoryName)
+				<BasePrice>5.5</BasePrice> --Vevői akció tétel korábbi ára (CustomerOfferDetail.BasePrice)
+				<BasePriceDate>2012-01-01</BasePriceDate> --Vevői akció tétel korábbi ár dátuma (CustomerOfferDetail.BasePriceDate)
+				<SalesPercent>5.5</SalesPercent> --Vevői akció tétel százalékos kedvezménye (CustomerOfferDetail.SalesPercent)
+				<SalesPrice>5.5</SalesPrice> --Vevői akció tétel egységára (CustomerOfferDetail.SalesPrice)
+				<QuantityMinimum>1.5</QuantityMinimum> --Vevői akció tétel minimum mennyisége (CustomerOfferDetail.QuantityMinimum)
+				<QuantityMaximum>9.5</QuantityMaximum> --Vevői akció tétel maximum mennyisége (CustomerOfferDetail.QuantityMaximum)
+			</CustomerOfferDetail>
+			<CustomerOfferDetail> --Vevői akció tétel (CustomerOfferDetail)
+				<Id>1</Id> --Vevői akció tétel azonosítója (CustomerOfferDetail.Id)
+				<Product>123</Product> --Vevői akció tétel termék azonosítója (CustomerOfferDetail.Product)
+				<ShareQuantity>5.5</ShareQuantity> --Vevői akció tétel felhasználható mennyisége (CustomerOfferDetail.ShareQuantity)
+				<CurrencyName>HUF</CurrencyName> --Vevői akció tétel pénznemének megnevezése (CustomerOfferDetail.CurrencyName)
+				<QuantityUnitName>db</QuantityUnitName> --Vevői akció tétel mennyiségi egységének megnevezése (CustomerOfferDetail.QuantityUnitName)
+				<PriceCategoryName>Lista ár</PriceCategoryName> --Vevői akció tétel árkategóriájának megnevezése (CustomerOfferDetail.PriceCategoryName)
+				<BasePrice>5.5</BasePrice> --Vevői akció tétel korábbi ára (CustomerOfferDetail.BasePrice)
+				<BasePriceDate>2012-01-01</BasePriceDate> --Vevői akció tétel korábbi ár dátuma (CustomerOfferDetail.BasePriceDate)
+				<SalesPercent>5.5</SalesPercent> --Vevői akció tétel százalékos kedvezménye (CustomerOfferDetail.SalesPercent)
+				<SalesPrice>5.5</SalesPrice> --Vevői akció tétel egységára (CustomerOfferDetail.SalesPrice)
+				<QuantityMinimum>1.5</QuantityMinimum> --Vevői akció tétel minimum mennyisége (CustomerOfferDetail.QuantityMinimum)
+				<QuantityMaximum>9.5</QuantityMaximum> --Vevői akció tétel maximum mennyisége (CustomerOfferDetail.QuantityMaximum)
+			</CustomerOfferDetail>
+		</CustomerOfferDetails>
+    </CustomerOffer>
+</CustomerOffers>

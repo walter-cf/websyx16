@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<bidrequests>
+  <bidrequest>
+    <date>2010-07-12 16:07:21</date> --Partnerkapcsolat dátuma (CustomerTouch.TouchDateTime)
+    <customer>234</customer> --Web-es vevőid, ami már talán lejött korábban, nem kötelező 
+    <lead> --Érdeklődő adatok, ha még nem vevő az ajánlatkérő
+      <companyname>Példa Kft.</companyname> --Cégnév (Lead.CompanyName)
+      <name>Kovács Izabella</name> --Név (Lead.Name)
+      <country>Hungary</country> --Ország (Lead.Country)
+      <region>Baranya</region> --Megye (Lead.Region)
+      <zip>1139</zip> --Irányítószám (Lead.Zip)
+      <city>Budapest</city> --Város (Lead.City)
+      <street>Fő utca</street> --Utca (Lead.Street)
+      <housenumber>1.</housenumber> --Házszám (Lead.HouseNumber)
+      <phone>1-785-4544</phone> --Telefon (Lead.Phone)
+      <fax>1-785-4545</fax> --Fax (Lead.Fax)
+      <sms>70-555-7898</sms> --SMS (Lead.Sms)
+      <email>info@cegnev.hu</email> --Email (Lead.Email)
+      <leadcategory>Főcsoport 1/Alcsoport 1A/Alcsoport 1AA</leadcategory> --Érdeklődő csoport (LeadCategory.Name)
+      <customercategory>Főcsoport 1/Alcsoport 1A/Alcsoport 1AA</customercategory> Vevőcsoport (CustomerCategory.Name)
+      <leadsource>Forrás neve</leadsource> --Forrás neve (LeadSource.Name)
+      <leadsourcecomment>Forrás megjegyzése</leadsourcecomment> --Forrás megjegyzés (Lead.LeadSourceComment)
+      <leadtarget>Cél neve</leadtarget> --Cél neve (LeadTarget.Name)
+      <leadtargetcomment>Cél megjegyzése</leadtargetcomment> --Cél megjegyzés (Lead.LeadTargetComment)
+      <agent>Dolgozó neve</agent> --Üzletkötő neve (Employee.Name)
+      <leadstate>Állapot neve</leadstate> --Állapot neve (LeadState.Name)
+      <leadstatecomment>Állapot neve</leadstatecomment> --Állapot megjegyzés (Lead.LeadStateComment)
+    </lead>
+    <category>Vásárlás előtti információk</category> --Partnerkapcsolat csoport (CustomerTouchCategory.Name)
+    <subject>Tárgy</subject> --Tárgy (CustomerTouch.Subject)
+    <comment>Ajánlatkérés megjegyzése</comment> --Megjegyzés (CustomerTouch.Comment)
+    <feedbackurl>http://www.valami.hu/commitbidrequest?id=246&amp;symbolid=</feedbackurl> --Visszacsatolás Url
+    <errorurl>http://www.valami.hu/errorbidrequest?id=246&amp;errormsg=</errorurl> --Error Url
+    <detail>
+      <productid>1</productid> --Termék ID
+      <quantity>3</quantity> --Mennyiség
+    </detail>
+    <detail>
+      <productid>4</productid> --Termék ID
+      <quantity>2</quantity> --Mennyiség
+    </detail>
+    <detail>
+      <productid>7</productid> --Termék ID
+      <quantity>1</quantity> --Mennyiség
+    </detail>
+  </bidrequest>
+  <bidrequest>
+    <date>2010-07-12 16:07:21</date> --Partnerkapcsolat dátuma (CustomerTouch.TouchDateTime)
+    <customer>234</customer> --Web-es vevőid, ami már talán lejött korábban, nem kötelező 
+    <lead> --Érdeklődő adatok, ha még nem vevő az ajánlatkérő
+      <companyname>Példa Kft.</companyname> --Cégnév (Lead.CompanyName)
+      <name>Kovács Izabella</name> --Név (Lead.Name)
+      <country>Hungary</country> --Ország (Lead.Country)
+      <region>Baranya</region> --Megye (Lead.Region)
+      <zip>1139</zip> --Irányítószám (Lead.Zip)
+      <city>Budapest</city> --Város (Lead.City)
+      <street>Fő utca</street> --Utca (Lead.Street)
+      <housenumber>1.</housenumber> --Házszám (Lead.HouseNumber)
+      <phone>1-785-4544</phone> --Telefon (Lead.Phone)
+      <fax>1-785-4545</fax> --Fax (Lead.Fax)
+      <sms>70-555-7898</sms> --SMS (Lead.Sms)
+      <email>info@cegnev.hu</email> --Email (Lead.Email)
+      <leadcategory>Főcsoport 1/Alcsoport 1A/Alcsoport 1AA</leadcategory> --Érdeklődő csoport (LeadCategory.Name)
+      <customercategory>Főcsoport 1/Alcsoport 1A/Alcsoport 1AA</customercategory> Vevőcsoport (CustomerCategory.Name)
+      <leadsource>Forrás neve</leadsource> --Forrás neve (LeadSource.Name)
+      <leadsourcecomment>Forrás megjegyzése</leadsourcecomment> --Forrás megjegyzés (Lead.LeadSourceComment)
+      <leadtarget>Cél neve</leadtarget> --Cél neve (LeadTarget.Name)
+      <leadtargetcomment>Cél megjegyzése</leadtargetcomment> --Cél megjegyzés (Lead.LeadTargetComment)
+      <agent>Dolgozó neve</agent> --Üzletkötő neve (Employee.Name)
+      <leadstate>Állapot neve</leadstate> --Állapot neve (LeadState.Name)
+      <leadstatecomment>Állapot neve</leadstatecomment> --Állapot megjegyzés (Lead.LeadStateComment)
+    </lead>
+    <category>Vásárlás előtti információk</category> --Partnerkapcsolat csoport (CustomerTouchCategory.Name)
+    <subject>Tárgy</subject> --Tárgy (CustomerTouch.Subject)
+    <comment>Ajánlatkérés megjegyzése</comment> --Megjegyzés (CustomerTouch.Comment)
+    <feedbackurl>http://www.valami.hu/commitbidrequest?id=246&amp;symbolid=</feedbackurl> --Visszacsatolás Url
+    <errorurl>http://www.valami.hu/errorbidrequest?id=246&amp;errormsg=</errorurl> --Error Url
+    <detail>
+      <productid>1</productid> --Termék ID
+      <quantity>3</quantity> --Mennyiség
+    </detail>
+    <detail>
+      <productid>4</productid> --Termék ID
+      <quantity>2</quantity> --Mennyiség
+    </detail>
+    <detail>
+      <productid>7</productid> --Termék ID
+      <quantity>1</quantity> --Mennyiség
+    </detail>
+  </bidrequest>
+</bidrequests>

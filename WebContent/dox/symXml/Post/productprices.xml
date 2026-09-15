@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ProductPrices>
+	<ProductPrice> --Termék ár (ProductPrice)
+		<product>1231</product> --Termék Symbol belső azonosítója (Product.Id)
+		<productcode>65456P</productcode> --Termék kódja (Product.Code)
+      <price> 
+        <pricecategory>-1</pricecategory> --Árkategória Symbol belső azonosítója (PriceCategory.Id)
+        <pricecategoryName>Lista ár</pricecategoryName> --Árkategória neve (PriceCategory.Name)
+        <priceCurrency>HUF</priceCurrency> --Pénznem (Currency.Name)
+        <quantityunit>db</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <value>14580</value> --Termék ára (ProductPrice.Price)
+		<validfrom>2010-07-12</validfrom> --Érvényesség kezdete (ProductPrice.ValidFrom)
+      </price>
+      <price>
+        <pricecategory>-1</pricecategory> --Árkategória Symbol belső azonosítója (PriceCategory.Id)
+        <pricecategoryName>Lista ár</pricecategoryName> --Árkategória neve (PriceCategory.Name)
+        <priceCurrency>EUR</priceCurrency> --Pénznem (Currency.Name)
+        <quantityunit>kg</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <value>12.5</value> --Termék ára (ProductPrice.Price)
+		<validfrom>2010-07-12</validfrom> --Érvényesség kezdete (ProductPrice.ValidFrom)
+      </price>
+      <price>
+       <pricecategory>4</pricecategory> --Árkategória Symbol belső azonosítója (PriceCategory.Id)
+        <pricecategoryName>Nagyker ár</pricecategoryName> --Árkategória neve (PriceCategory.Name)
+        <priceCurrency>HUF</priceCurrency> --Pénznem (Currency.Name)
+        <quantityunit>db</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <value>11580</value> --Termék ára (ProductPrice.Price)
+		<validfrom>2010-07-12</validfrom> --Érvényesség kezdete (ProductPrice.ValidFrom)
+      </price>
+	</ProductPrice>
+	<ProductPrice> --Termék ár (ProductPrice)
+		<product>1232</product> --Termék Symbol belső azonosítója (Product.Id)
+		<productcode>65786P</productcode> --Termék kódja (Product.Code)
+      <price> 
+        <pricecategory>-1</pricecategory> --Árkategória Symbol belső azonosítója (PriceCategory.Id)
+        <pricecategoryName>Lista ár</pricecategoryName> --Árkategória neve (PriceCategory.Name)
+        <priceCurrency>HUF</priceCurrency> --Pénznem (Currency.Name)
+        <quantityunit>db</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <value>14580</value> --Termék ára (ProductPrice.Price)
+		<validfrom>2010-07-12</validfrom> --Érvényesség kezdete (ProductPrice.ValidFrom)
+      </price>
+      <price>
+        <pricecategory>-1</pricecategory> --Árkategória Symbol belső azonosítója (PriceCategory.Id)
+        <pricecategoryName>Lista ár</pricecategoryName> --Árkategória neve (PriceCategory.Name)
+        <priceCurrency>EUR</priceCurrency> --Pénznem (Currency.Name)
+        <quantityunit>kg</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <value>12.5</value> --Termék ára (ProductPrice.Price)
+		<validfrom>2010-07-12</validfrom> --Érvényesség kezdete (ProductPrice.ValidFrom)
+      </price>
+      <price>
+       <pricecategory>4</pricecategory> --Árkategória Symbol belső azonosítója (PriceCategory.Id)
+        <pricecategoryName>Nagyker ár</pricecategoryName> --Árkategória neve (PriceCategory.Name)
+        <priceCurrency>HUF</priceCurrency> --Pénznem (Currency.Name)
+        <quantityunit>db</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <value>11580</value> --Termék ára (ProductPrice.Price)
+		<validfrom>2010-07-12</validfrom> --Érvényesség kezdete (ProductPrice.ValidFrom)
+      </price>
+	</ProductPrice>
+</ProductPrices>

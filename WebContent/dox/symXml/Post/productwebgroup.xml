@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ProductWebGroup> --Webes termékcsoport
+	<Product> --Termék
+		<id>1231</id> --Termék Symbol belső azonosítója (Product.Id)
+		<code>P12776</code> --Termék kódja (Product.Code)
+		<ProductWebGroups> --Webes termékcsoportok
+            <ProductWebGroup>5</ProductWebGroup> --Webes termékcsoport (ProductWebGroups.ProductWebGroup)
+            <ProductWebGroup>12</ProductWebGroup> --Webes termékcsoport (ProductWebGroups.ProductWebGroup)
+		</ProductWebGroups>
+	</Product>
+	<Product> --Termék
+		<id>1231</id> --Termék Symbol belső azonosítója (Product.Id)
+		<code>P12776</code> --Termék kódja (Product.Code)
+		<ProductWebGroups> --Webes termékcsoportok
+            <ProductWebGroup>5</ProductWebGroup> --Webes termékcsoport (ProductWebGroups.ProductWebGroup)
+            <ProductWebGroup>12</ProductWebGroup> --Webes termékcsoport (ProductWebGroups.ProductWebGroup)
+		</ProductWebGroups>
+	</Product>
+	<Product> --Termék
+		<id>1231</id> --Termék Symbol belső azonosítója (Product.Id)
+		<code>P12776</code> --Termék kódja (Product.Code)
+		<ProductWebGroups> --Webes termékcsoportok
+            <ProductWebGroup>5</ProductWebGroup> --Webes termékcsoport (ProductWebGroups.ProductWebGroup)
+            <ProductWebGroup>12</ProductWebGroup> --Webes termékcsoport (ProductWebGroups.ProductWebGroup)
+		</ProductWebGroups>
+	</Product>
+</ProductWebGroup>

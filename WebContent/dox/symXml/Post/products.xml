@@ -1,0 +1,755 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Products>
+  <Product> --Termék
+    <id>1231</id> --Termék Symbol belső azonosítója (Product.Id)
+    <code>P12776</code> --Termék kódja (Product.Code)
+    <suppliercode>P12776</suppliercode> -- Szállítói cikkszám (Product.SupplierCode)
+    <isacc>1</isacc>  -- Gyűjtőtermék-e (0/1) (Product.Accumulate)
+    <accproduct>P00007</accproduct>  -- Gyűjtőtermék CODE-ja 
+    <name>Óz, a Nagy Varázsló</name> --Termék neve (Product.Name)
+    <barcode>4587874545457</barcode> --Vonalkód (Product.Barcode)
+	<customstariffnumber>123456</customstariffnumber>  --VTSZ/SZJ szám (Product.CustomsTariffNumber)
+    <productcategory>Pintinox/Pohár</productcategory> --Termékcsoport (ProductCategory.Name)
+    <manufacturer>IBM-Compaq</manufacturer>  --Gyártó (Manufacturer.Name)
+    <vat>25</vat> --Termékhez tartozó ÁFA (Vat.Name)
+    <weight>14.6</weight> --Súly (Product.Weight)
+    <width>0.3</width> --Szélesség (Product.Width)
+    <height>0.8</height> --Magasság (Product.Height)
+    <depth>0.01</depth> --Mélység (Product.Depth)
+    <qtypackage>2</qtypackage> --Termék gyűjtő (Product.QtyPackage)
+    <qtylevel>3</qtylevel> --Termék gyűjtősor(Product.QtyLevel)
+    <qtypallet>40</qtypallet> --Termék gyűjtő raklap(Product.QtyPallet)
+    <active>1</active> --Aktív állpotú-e (Product.Active)
+    <quantityunit>db</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+    <deleted>0</deleted> --Törölt állapotú-e a termék (Product.Deleted)
+    <grossprices>0</grossprices> --Bruttó árú-e a termék (Product.GrossPrices)
+    <guaranteemonths>6 hónap</guaranteemonths> --Garancia idő (hónapokban) (Product.GuaranteeMonths)
+    <bestbeforeisday></bestbeforeisday> --Termékszavatosság napokban van megadva (0/1)(Product.BestBeforeIsDay)
+    <bestbeforevalue></bestbeforevalue> --Termékszavatosság(Product.BestBeforeValue)
+	<webdisplay>1</webdisplay> --Weben megjelenik-e (Product.WebDisplay)
+    <webname>Óz, a Nagy Varázsló</webname> --Webes név (Product.WebName)
+    <webdescription>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</webdescription> --Webes leírás (Product.WebDescription)
+	<webmetadescription>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti...</webmetadescription> --Meta leírás (Product.WebMetaDescription)
+    <weburl>oz-a-nagy-varazslo</weburl>  --SEO Url (Product.WebUrl)
+	<webkeywords>oz, nagy, varazslo</webkeywords> --Webes kulcsszavak (Product.WebKeywords)
+	<mustmanufacturing>0</mustmanufacturing> -- Gyártandó termék-e (0/1) (Product.MustManufacturing)
+	<runout>0</runout> -- Kifutó termék-e (0/1) (Porduct.RunOut)
+	<sellbanned>0</sellbanned> -- Nem értékesíthető termék-e (0/1) (Product.SellBanned)
+	<buybanned>0</buybanned> -- Nem beszerezhető termék-e (0/1) (Product.BuyBanned)
+	<istatcountrycode>aaa</istatcountrycode> --Származási ország kódja (IstatCountry.Code)
+	<istatcountryname>aaa</istatcountryname> --Származási ország neve (IstatCountry.Name)
+	<istatcountryeu>0</istatcountryeu> --Származási ország EU tag-e (0/1) (IstatCountry.EU)
+    <strexa>aaa</strexa> --Termék szöveges egyedi mező (Product.StrExA)
+    <strexb>bbb</strexb> --Termék szöveges egyedi mező (Product.StrExB)
+    <strexc>ccc</strexc> --Termék szöveges egyedi mező (Product.StrExC)
+    <strexd>ddd</strexd> --Termék szöveges egyedi mező (Product.StrExD)
+	<strexe>eee</strexe> --Termék szöveges egyedi mező (Product.StrExE)
+	<strexf>fff</strexf> --Termék szöveges egyedi mező (Product.StrExF)
+	<strexg>ggg</strexg> --Termék szöveges egyedi mező (Product.StrExG)
+	<strexh>hhh</strexh> --Termék szöveges egyedi mező (Product.StrExH)
+	<strexi>iii</strexi> --Termék szöveges egyedi mező (Product.StrExI)
+	<strexj>jjj</strexj> --Termék szöveges egyedi mező (Product.StrExJ)
+    <dateexa>2010-07-12</dateexa> --Termék egyedi dátummező (Product.DateExA)
+    <dateexb>2010-07-12</dateexb> --Termék egyedi dátummező (Product.DateExB)
+	<dateexc>2010-07-12</dateexc> --Termék egyedi dátummező (Product.DateExC)
+	<dateexd>2010-07-12</dateexd> --Termék egyedi dátummező (Product.DateExD)
+	<dateexe>2010-07-12</dateexe> --Termék egyedi dátummező (Product.DateExE)
+	<dateexf>2010-07-12</dateexf> --Termék egyedi dátummező (Product.DateExF)
+	<dateexg>2010-07-12</dateexg> --Termék egyedi dátummező (Product.DateExG)
+	<dateexh>2010-07-12</dateexh> --Termék egyedi dátummező (Product.DateExH)
+	<dateexi>2010-07-12</dateexi> --Termék egyedi dátummező (Product.DateExI)
+	<dateexj>2010-07-12</dateexj> --Termék egyedi dátummező (Product.DateExJ)
+    <numexa>111</numexa> --Termék egyedi számmező (ProductNumExA)
+    <numexb>222</numexb> --Termék egyedi számmező (ProductNumExB)
+    <numexc>333</numexc> --Termék egyedi számmező (ProductNumExC)
+	<numexd>444</numexd> --Termék egyedi számmező (ProductNumExD)
+	<numexe>444</numexe> --Termék egyedi számmező (ProductNumExE)
+	<numexf>444</numexf> --Termék egyedi számmező (ProductNumExF)
+	<numexg>444</numexg> --Termék egyedi számmező (ProductNumExG)
+	<numexh>444</numexh> --Termék egyedi számmező (ProductNumExH)
+	<numexi>444</numexi> --Termék egyedi számmező (ProductNumExI)
+	<numexj>444</numexj> --Termék egyedi számmező (ProductNumExJ)
+    <boolexa>0</boolexa> --Termék egyedi logikai mező (Product.BoolExA)
+    <boolexb>1</boolexb> --Termék egyedi logikai mező (Product.BoolExB)
+	<boolexc>0</boolexc> --Termék egyedi logikai mező (Product.BoolExC)
+	<boolexd>1</boolexd> --Termék egyedi logikai mező (Product.BoolExD)
+	<boolexe>1</boolexe> --Termék egyedi logikai mező (Product.BoolExE)
+	<boolexf>1</boolexf> --Termék egyedi logikai mező (Product.BoolExF)
+	<boolexg>1</boolexg> --Termék egyedi logikai mező (Product.BoolExG)
+	<boolexh>1</boolexh> --Termék egyedi logikai mező (Product.BoolExH)
+	<boolexi>1</boolexi> --Termék egyedi logikai mező (Product.BoolExI)
+	<boolexj>1</boolexj> --Termék egyedi logikai mező (Product.BoolExJ)
+    <lookupexa>Főcsoport/Alcsoport</lookupexa> --Termék egyedi kiválasztó mező (Product.LookupExA)
+    <lookupexb>Főcsoport/Alcsoport</lookupexb> --Termék egyedi kiválasztó mező (Product.LookupExB)
+    <lookupexc>Főcsoport/Alcsoport</lookupexc> --Termék egyedi kiválasztó mező (Product.LookupExC)
+    <lookupexd>Főcsoport/Alcsoport</lookupexd> --Termék egyedi kiválasztó mező (Product.LookupExD)
+	<lookupexe>Főcsoport/Alcsoport</lookupexe> --Termék egyedi kiválasztó mező (Product.LookupExE)
+	<lookupexf>Főcsoport/Alcsoport</lookupexf> --Termék egyedi kiválasztó mező (Product.LookupExF)
+	<lookupexg>Főcsoport/Alcsoport</lookupexg> --Termék egyedi kiválasztó mező (Product.LookupExG)
+	<lookupexh>Főcsoport/Alcsoport</lookupexh> --Termék egyedi kiválasztó mező (Product.LookupExH)
+	<lookupexi>Főcsoport/Alcsoport</lookupexi> --Termék egyedi kiválasztó mező (Product.LookupExI)
+	<lookupexj>Főcsoport/Alcsoport</lookupexj> --Termék egyedi kiválasztó mező (Product.LookupExJ)
+	<multilookupexas> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexa>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexa>
+		<multilookupexa>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexa>
+	</multilookupexas>
+	<multilookupexbs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexb>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexb>
+		<multilookupexb>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexb>
+	</multilookupexbs>
+	<multilookupexcs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexc>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexc>
+		<multilookupexc>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexc>
+	</multilookupexcs>
+	<multilookupexds> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexd>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexd>
+		<multilookupexd>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexd>
+	</multilookupexds>
+	<multilookupexes> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexe>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexe>
+		<multilookupexe>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexe>
+	</multilookupexes>
+	<multilookupexfs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexf>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexf>
+		<multilookupexf>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexf>
+	</multilookupexfs>
+	<multilookupexgs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexg>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexg>
+		<multilookupexg>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexg>
+	</multilookupexgs>
+	<multilookupexhs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexh>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexh>
+		<multilookupexh>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexh>
+	</multilookupexhs>
+	<multilookupexis> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexi>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexi>
+		<multilookupexi>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexi>
+	</multilookupexis>
+	<multilookupexjs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexj>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexj>
+		<multilookupexj>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexj>
+	</multilookupexjs>
+    <memoexa>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexa> --Termék egyedi leíró mező (Product.MemoExA)
+    <memoexb>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexb> --Termék egyedi leíró mező (Product.MemoExA)
+	<memoexc>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexc> --Termék egyedi leíró mező (Product.MemoExC)
+	<memoexd>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexd> --Termék egyedi leíró mező (Product.MemoExD)
+	<memoexe>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexe> --Termék egyedi leíró mező (Product.MemoExE)
+	<memoexf>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexf> --Termék egyedi leíró mező (Product.MemoExF)
+	<memoexg>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexg> --Termék egyedi leíró mező (Product.MemoExG)
+	<memoexh>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexh> --Termék egyedi leíró mező (Product.MemoExH)
+	<memoexi>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexi> --Termék egyedi leíró mező (Product.MemoExI)
+	<memoexj>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexj> --Termék egyedi leíró mező (Product.MemoExJ)
+    <productwebshops> --Termék webáruházai (ProductWebshop)
+		<productwebshop>
+			<name>aaa</name> --Webáruház neve (Webshop.Name)
+			<url>http://aaa.hu</url> --Webáruház neve (Webshop.Url)
+		</productwebshop>
+		<productwebshop>
+			<name>bbb</name> --Webáruház neve (Webshop.Name)
+			<url>http://bbb.hu</url> --Webáruház neve (Webshop.Url)
+		</productwebshop>
+	</productwebshops>
+	<productmaterials> -- termék összetevői (darabjegyzéke) gyártandó termék esetén
+      <productmaterial>
+        <sourceproductid>123</sourceproductid> --Összetevő termék Symbol belső azonosítója (ProductMaterial.SourceProduct.Id)
+        <sourceproductcode>23452T</sourceproductcode> --Összetevő termék kódja (ProductMaterial.SourceProduct.Code)
+        <sourceproductname>Ragadós termék</sourceproductname> -- Összetevő termék neve (ProductMaterial.SourceProduct.Name)
+        <sourcequantity>4</sourcequantity> -- Összetevő mennyiség (ProductMaterial.SourceQuantity)
+        <accessory>1</accessory> -- Felszereltség-e (0/1) (ProductMaterial.Accessory)
+		<buildforbid>1</buildforbid> -- Utólag nem beépíthető-e (0/1) (ProductMaterial.BuildForbid)
+        <pricecategoryid>123</pricecategoryid> -- Összetevő árkategória Symbol belső azonosítója (ProductMaterial.PriceCategory.Id)
+		<pricecategoryname>Lista ár</pricecategoryname> -- Összetevő árkategória neve (ProductMaterial.PriceCategory.Name)
+      </productmaterial>
+	  <productmaterial>
+        <sourceproductid>123</sourceproductid> --Összetevő termék Symbol belső azonosítója (ProductMaterial.SourceProduct.Id)
+        <sourceproductcode>23452T</sourceproductcode> --Összetevő termék kódja (ProductMaterial.SourceProduct.Code)
+        <sourceproductname>Ragadós termék</sourceproductname> -- Összetevő termék neve (ProductMaterial.SourceProduct.Name)
+        <sourcequantity>4</sourcequantity> -- Összetevő mennyiség (ProductMaterial.SourceQuantity)
+        <accessory>1</accessory> -- Felszereltség-e (0/1) (ProductMaterial.Accessory)
+		<buildforbid>1</buildforbid> -- Utólag nem beépíthető-e (0/1) (ProductMaterial.BuildForbid)
+        <pricecategoryid>123</pricecategoryid> -- Összetevő árkategória Symbol belső azonosítója (ProductMaterial.PriceCategory.Id)
+		<pricecategoryname>Lista ár</pricecategoryname> -- Összetevő árkategória neve (ProductMaterial.PriceCategory.Name)
+      </productmaterial>
+	</productmaterials>
+	<productattributes>  -- egyedi termékjellemzők (mindig az összes, ami a termékhez tartozik)
+      <productattribute>
+        <name>Térfogat</name> --Termékjellemző neve (ProductAttribute.Name)
+        <value>87</value> -- Értéke (szöveges formátumú) (ProductAttributes.ValueString)
+        <postfix>m3</postfix> -- Mennyiségi egysége (ProductAttribute.Postfix)
+        <filter>1</filter> -- Osztályozó vagy csak információs mező (ProductAttribute.Filter)
+        <priority>2</priority> --Prioritása (ProductAttribute.Priority)
+        <hidefromweb>0</hidefromweb> --Weben megjelenik-e (ProductAttribute.HideFromWeb)
+        <productattributelangs>  -- termékjellemző idegen megnevezése (mindig az összes)
+          <productattributelang>
+            <lang>EN</lang> --Nyelv (ProductAttributesLang.Lang)
+            <name>English name of product attribute</name> --Idegen megnevezése (ProductAttributesLang.Name)
+            <postfix>English postfix of product attribute</postfix> --Idegen mennyiségi egység (ProductAttributes.Postfix)
+            <value>English value of product attribute</value> --Idegen értéke (ProductAttributesLang.ValueString)
+          </productattributelang>
+          <productattributelang>
+		    <lang>HUEN</lang> --Nyelv (ProductAttributesLang.Lang)
+            <name>Magyar megnevezés/English name of product attribute</name> --Idegen megnevezése (ProductAttributesLang.Name)
+            <postfix>Magyar mee/English postfix of product attribute</postfix> --Idegen mennyiségi egység (ProductAttributes.Postfix)
+            <value>Magyar érték/English value of product attribute</value> --Idegen értéke (ProductAttributesLang.ValueString)       
+          </productattributelang>
+        </productattributelangs>
+      </productattribute>
+      <productattribute>
+      <name>Életkor</name> --Termékjellemző neve (ProductAttribute.Name)
+        <value>3-8</value> -- Értéke (szöveges formátumú) (ProductAttributes.ValueString)
+        <postfix>0</postfix> -- Mennyiségi egysége (ProductAttribute.Postfix)
+        <filter>0</filter> -- Osztályozó vagy csak információs mező (ProductAttribute.Filter)
+        <priority>1</priority> --Prioritása (ProductAttribute.Priority)
+        <hidefromweb>0</hidefromweb> --Weben megjelenik-e (ProductAttribute.HideFromWeb)
+        <productattributelangs>  -- termékjellemző idegen megnevezése (mindig az összes)
+          <productattributelang>
+            <lang>EN</lang> --Nyelv (ProductAttributesLang.Lang)
+            <name>English name of product attribute</name> --Idegen megnevezése (ProductAttributesLang.Name)
+            <postfix>English postfix of product attribute</postfix> --Idegen mennyiségi egység (ProductAttributes.Postfix)
+            <value>English value of product attribute</value> --Idegen értéke (ProductAttributesLang.ValueString)
+          </productattributelang>
+          <productattributelang>
+		    <lang>HUEN</lang> --Nyelv (ProductAttributesLang.Lang)
+            <name>Magyar megnevezés/English name of product attribute</name> --Idegen megnevezése (ProductAttributesLang.Name)
+            <postfix>Magyar mee/English postfix of product attribute</postfix> --Idegen mennyiségi egység (ProductAttributes.Postfix)
+            <value>Magyar érték/English value of product attribute</value> --Idegen értéke (ProductAttributesLang.ValueString)       
+          </productattributelang>
+        </productattributelangs>
+      </productattribute>
+    </productattributes>
+    <ProductWebGroups> --Webes termékcsoportok
+      <ProductWebGroup>5</ProductWebGroup> --Webes termékcsoport Symbol belső azonosítója (ProductWebGroups.ProductWebGroup)
+      <ProductWebGroup>12</ProductWebGroup> --Webes termékcsoport Symbol belső azonosítója (ProductWebGroups.ProductWebGroup)
+    </ProductWebGroups>
+    <productattachments>  -- Ragadós termék (mindig az összes, ami a termékhez tartozik)
+      <productattachment>
+        <productid>123</productid> --Ragadós termék Symbol belső azonosítója (Product.IdÖ
+        <productcode>23452T</productcode> --Ragadós termék kódja (Product.Code)
+        <productname>Ragadós termék</productname> -- Ragadós termék neve (Product.Name)
+        <quantity>4</quantity> -- Mennyiség (ProductAttachment.Quantity)
+        <unitprice>1510</unitprice> -- Egység ár (ProductAttachment.UnitPrice)
+        <multiplied>1</multiplied> -- Többszörözés (0 vagy 1) (ProductAttachment.Multipled)
+      </productattachment>
+      <productattachment>
+	   <productid>124</productid> --Ragadós termék Symbol belső azonosítója (Product.IdÖ
+        <productcode>23454T</productcode> --Ragadós termék kódja (Product.Code)
+        <productname>Ragadós termék B</productname> -- Ragadós termék neve (Product.Name)
+        <quantity>1</quantity> -- Mennyiség (ProductAttachment.Quantity)
+        <unitprice>1344</unitprice> -- Egység ár (ProductAttachment.UnitPrice)
+        <multiplied>0</multiplied> -- Többszörözés (0 vagy 1) (ProductAttachment.Multiplied)
+      </productattachment>
+    </productattachments>
+    <productassociations>  -- Kapcsolódó termék (mindig az összes, ami a termékhez tartozik)
+      <productassociation>
+        <productid>124</productid> --Kapcsolódó termék Symbol belső azonosítója (Product.Id)
+        <productcode>23452T</productcode> --Kapcsolódó termék kódja (Product.Code)
+        <productname>Kapcsolódó termék</productname> --Neve (Product.Name)
+        <typename>Kapcsolat típusa</typename> -- Kapcsolat típusneve (ProductAssociationType.Name)
+      </productassociation>
+      <productassociation>
+        <productid>123</productid> --Kapcsolódó termék Symbol belső azonosítója (Product.Id)
+        <productcode>23453T</productcode> --Kapcsolódó termék kódja (Product.Code)
+        <productname>Kapcsolódó termékB</productname> --Neve (Product.Name)
+        <typename>Kapcsolat típusa</typename> -- Kapcsolat típusneve (ProductAssociationType.Name)
+      </productassociation>
+    </productassociations>
+    <productsubstitutions>  -- Helyettesítő termék (mindig az összes, ami a termékhez tartozik)
+      <productsubstitution>
+        <productid>125</productid> --Helyettesítő termék Symbol belső azonosítója (Product.Id)
+        <productcode>23452T</productcode> --Helyettesítő termék kódja (Product.Code)
+        <productname>Helyettesítő termék</productname> -- Neve (Product.Name)
+        <quantity>4</quantity> -- Mennyiség (ProductSubstitution.Quantity)
+        <duplex>1</duplex> -- Oda-vissza helyettesít-e (0 vagy 1) (ProductSubstitution.Duplex)
+      </productsubstitution>
+      <productsubstitution>
+	    <productid>126</productid> --Helyettesítő termék Symbol belső azonosítója (Product.Id)
+        <productcode>23452T</productcode> --Helyettesítő termék kódja (Product.Code)
+        <productname>Helyettesítő termékB</productname> -- Neve (Product.Name)
+        <quantity>4</quantity> -- Mennyiség (ProductSubstitution.Quantity)
+        <duplex>0</duplex> -- Oda-vissza helyettesít-e (0 vagy 1) (ProductSubstitution.Duplex)
+      </productsubstitution>
+    </productsubstitutions>
+    <productlangs>  -- Termék idegen megnevezése (mindig az összes, ami a termékhez tartozik)
+      <productlang>
+        <lang>EN</lang> --Idegen nyelv (ProductLang.Lang)
+        <name>English name of product</name> --Idegen megnevezése (ProductLang.Name)
+        <description>English description of product</description> --Idegen leírás (ProductLang.Comment)
+        <webname>English name of product</webname> --Idegen webes megnevézse (ProductLang.WebName)
+        <webdescription>English description of product</webdescription> --Idegen webes leírás (ProductLang.WebDescription)
+		<webmetadescription>English meta description</webmetadescription> --Idegen meta leírás (ProductLang.WebMetaDescription)
+		<weburl>en-oz-a-nagy-varazslo</weburl> --Idegen weblink (ProductLang.WebUrl)
+		<webkeywords>oz, grand, wizard</webkeywords> --Idegen webes kulcsszavak (ProductLang.WebKeywords)
+      </productlang>
+      <productlang>
+	    <lang>HUEN</lang> --Idegen nyelv (ProductLang.Lang)
+        <name>Magyar terméknév/English name of product</name> --Idegen megnevezése (ProductLang.Name)
+        <description>Magyar leírás/English description of product</description> --Idegen leírás (ProductLang.Comment)
+        <webname>Magyar terméknév/English name of product</webname> --Idegen webes megnevézse (ProductLang.WebName)
+        <webdescription>Magyar leírás/English description of product</webdescription> --Idegen webes leírás (ProductLang.WebDescription)
+		<webmetadescription>Magyar/English meta description</webmetadescription> --Idegen meta leírás (ProductLang.WebMetaDescription)
+		<weburl>huen-oz-a-nagy-varazslo</weburl> --Idegen weblink (ProductLang.WebUrl)
+		<webkeywords>oz, grand, wizard, varázsló</webkeywords> --Idegen webes kulcsszavak (ProductLang.WebKeywords)
+      </productlang>
+    </productlangs>
+    <productworldcodes>  -- Gyártói kódok
+      <productworldcode>
+        <code>DF2340531241</code> --Termék gyártói kódja (ProductWorldCode.Code)
+      </productworldcode>
+      <productworldcode>
+        <code>CA2340532342</code> --Termék gyártói kódja (ProductWorldCode.Code)
+      </productworldcode>
+    </productworldcodes>
+    <productqtyunits>  -- Mee átváltás
+      <productqtyunit>
+        <quantityunit>kg</quantityunit> --Mennyiségi egség (QuantityUnit.Name)
+        <multiplier>3.2</multiplier> --Szorzó (ProductQtyUnit.Multipler)
+		<commerce>1</commerce> -- Összehasonlító (ProductQtyUnit.Commerce)
+		<selldefault>1</selldefault> -- Értékesítés alapértelmezett (ProductQtyUnit.SellDefault)
+		<buydefault>1</buydefault> -- Beszerzés alapértelmezett (ProductQtyUnit.BuyDefault)
+      </productqtyunit>
+      <productqtyunit>
+        <quantityunit>csom</quantityunit> --Mennyiségi egség (QuantityUnit.Name)
+        <multiplier>3.2</multiplier> --Szorzó (ProductQtyUnit.Multipler)
+		<commerce>0</commerce> -- Összehasonlító (ProductQtyUnit.Commerce)
+		<selldefault>0</selldefault> -- Értékesítés alapértelmezett (ProductQtyUnit.SellDefault)
+		<buydefault>0</buydefault> -- Beszerzés alapértelmezett (ProductQtyUnit.BuyDefault)
+      </productqtyunit>
+    </productqtyunits>
+	<productbarcodes>  -- Vonalkódok
+      <productbarcode>
+	    <barcode>246224356</barcode> --Termék vonalkódja (ProductBarcode.Barcode)
+        <quantityunit>kg</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <quantity>3.2</quantity> --Mennyiség (ProductBarcode.Quantity)
+		<multipleonly>1</multipleonly> --Csak többszörös-e (0/1) (ProductBarcode.MultipleOnly)
+      </productbarcode>
+      <productbarcode>
+	   <barcode>4564358</barcode> --Termék vonalkódja (ProductBarcode.Barcode)
+        <quantityunit>csom</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <quantity>3.2</quantity> --Mennyiség (ProductBarcode.Quantity)
+		<multipleonly>0</multipleonly> --Csak többszörös-e (0/1) (ProductBarcode.MultipleOnly)
+      </productbarcode>
+    </productbarcodes>
+    <tags> --Címkék
+      <tag>Első</tag> --Címke neve (Tag.Name)
+      <tag>Második</tag> --Címke neve (Tag.Name)
+    </tags>
+    <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description> --Termék megjegyzés (Product.Comment)
+    <picture>BASE64Encoded string of PNG</picture> --Termékkép (Product.Picture)
+  </Product>
+  <Product> --Termék
+    <id>1231</id> --Termék Symbol belső azonosítója (Product.Id)
+    <code>P12776</code> --Termék kódja (Product.Code)
+    <suppliercode>P12776</suppliercode> -- Szállítói cikkszám (Product.SupplierCode)
+    <isacc>1</isacc>  -- Gyűjtőtermék-e (0/1) (Product.Accumulate)
+    <accproduct>P00007</accproduct>  -- Gyűjtőtermék CODE-ja 
+    <name>Óz, a Nagy Varázsló</name> --Termék neve (Product.Name)
+    <barcode>4587874545457</barcode> --Vonalkód (Product.Barcode)
+	<customstariffnumber>123456</customstariffnumber>  --VTSZ/SZJ szám (Product.CustomsTariffNumber)
+    <productcategory>Pintinox/Pohár</productcategory> --Termékcsoport (ProductCategory.Name)
+    <manufacturer>IBM-Compaq</manufacturer>  --Gyártó (Manufacturer.Name)
+    <vat>25</vat> --Termékhez tartozó ÁFA (Vat.Name)
+    <weight>14.6</weight> --Súly (Product.Weight)
+    <width>0.3</width> --Szélesség (Product.Width)
+    <height>0.8</height> --Magasság (Product.Height)
+    <depth>0.01</depth> --Mélység (Product.Depth)
+    <qtypackage>2</qtypackage> --Termék gyűjtő (Product.QtyPackage)
+    <qtylevel>3</qtylevel> --Termék gyűjtősor(Product.QtyLevel)
+    <qtypallet>40</qtypallet> --Termék gyűjtő raklap(Product.QtyPallet)
+    <active>1</active> --Aktív állpotú-e (Product.Active)
+    <quantityunit>db</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+    <deleted>0</deleted> --Törölt állapotú-e a termék (Product.Deleted)
+    <grossprices>1</grossprices> --Bruttó árú-e a termék (Product.GrossPrices)
+    <guaranteemonths>6 hónap</guaranteemonths> --Garancia idő (hónapokban) (Product.GuaranteeMonths)
+    <bestbeforeisday></bestbeforeisday> --(Product.BestBeforeIsDay)
+    <bestbeforevalue></bestbeforevalue> --(Product.BestBeforeValue)
+	<webdisplay>1</webdisplay> --Weben megjelenik-e (Product.WebDisplay)
+    <webname>Óz, a Nagy Varázsló</webname> --Webes név (Product.WebName)
+    <webdescription>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</webdescription> --Webes leírás (Product.WebDescription)
+	<webmetadescription>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti...</webmetadescription> --Meta leírás (Product.WebMetaDescription)
+    <weburl>oz-a-nagy-varazslo</weburl>  --SEO Url (Product.WebUrl)
+	<webkeywords>oz, nagy, varazslo</webkeywords> --Webes kulcsszavak (Product.WebKeywords)
+	<mustmanufacturing>0</mustmanufacturing> -- Gyártandó termék-e (0/1) (Product.MustManufacturing)
+	<runout>0</runout> -- Kifutó termék-e (0/1) (Porduct.RunOut)
+	<sellbanned>0</sellbanned> -- Nem értékesíthető termék-e (0/1) (Product.SellBanned)
+	<buybanned>0</buybanned> -- Nem beszerezhető termék-e (0/1) (Product.BuyBanned)
+	<istatcountrycode>aaa</istatcountrycode> --Származási ország kódja (IstatCountry.Code)
+	<istatcountryname>aaa</istatcountryname> --Származási ország neve (IstatCountry.Name)
+	<istatcountryeu>0</istatcountryeu> --Származási ország EU tag-e (0/1) (IstatCountry.EU)
+    <strexa>aaa</strexa> --Termék szöveges egyedi mező (Product.StrExA)
+    <strexb>bbb</strexb> --Termék szöveges egyedi mező (Product.StrExB)
+    <strexc>ccc</strexc> --Termék szöveges egyedi mező (Product.StrExC)
+    <strexd>ddd</strexd> --Termék szöveges egyedi mező (Product.StrExD)
+	<strexe>eee</strexe> --Termék szöveges egyedi mező (Product.StrExE)
+	<strexf>fff</strexf> --Termék szöveges egyedi mező (Product.StrExF)
+	<strexg>ggg</strexg> --Termék szöveges egyedi mező (Product.StrExG)
+	<strexh>hhh</strexh> --Termék szöveges egyedi mező (Product.StrExH)
+	<strexi>iii</strexi> --Termék szöveges egyedi mező (Product.StrExI)
+	<strexj>jjj</strexj> --Termék szöveges egyedi mező (Product.StrExJ)
+    <dateexa>2010-07-12</dateexa> --Termék egyedi dátummező (Product.DateExA)
+    <dateexb>2010-07-12</dateexb> --Termék egyedi dátummező (Product.DateExB)
+	<dateexc>2010-07-12</dateexc> --Termék egyedi dátummező (Product.DateExC)
+	<dateexd>2010-07-12</dateexd> --Termék egyedi dátummező (Product.DateExD)
+	<dateexe>2010-07-12</dateexe> --Termék egyedi dátummező (Product.DateExE)
+	<dateexf>2010-07-12</dateexf> --Termék egyedi dátummező (Product.DateExF)
+	<dateexg>2010-07-12</dateexg> --Termék egyedi dátummező (Product.DateExG)
+	<dateexh>2010-07-12</dateexh> --Termék egyedi dátummező (Product.DateExH)
+	<dateexi>2010-07-12</dateexi> --Termék egyedi dátummező (Product.DateExI)
+	<dateexj>2010-07-12</dateexj> --Termék egyedi dátummező (Product.DateExJ)
+    <numexa>111</numexa> --Termék egyedi számmező (ProductNumExA)
+    <numexb>222</numexb> --Termék egyedi számmező (ProductNumExB)
+    <numexc>333</numexc> --Termék egyedi számmező (ProductNumExC)
+	<numexd>444</numexd> --Termék egyedi számmező (ProductNumExD)
+	<numexe>444</numexe> --Termék egyedi számmező (ProductNumExE)
+	<numexf>444</numexf> --Termék egyedi számmező (ProductNumExF)
+	<numexg>444</numexg> --Termék egyedi számmező (ProductNumExG)
+	<numexh>444</numexh> --Termék egyedi számmező (ProductNumExH)
+	<numexi>444</numexi> --Termék egyedi számmező (ProductNumExI)
+	<numexj>444</numexj> --Termék egyedi számmező (ProductNumExJ)
+    <boolexa>0</boolexa> --Termék egyedi logikai mező (Product.BoolExA)
+    <boolexb>1</boolexb> --Termék egyedi logikai mező (Product.BoolExB)
+	<boolexc>0</boolexc> --Termék egyedi logikai mező (Product.BoolExC)
+	<boolexd>1</boolexd> --Termék egyedi logikai mező (Product.BoolExD)
+	<boolexe>1</boolexe> --Termék egyedi logikai mező (Product.BoolExE)
+	<boolexf>1</boolexf> --Termék egyedi logikai mező (Product.BoolExF)
+	<boolexg>1</boolexg> --Termék egyedi logikai mező (Product.BoolExG)
+	<boolexh>1</boolexh> --Termék egyedi logikai mező (Product.BoolExH)
+	<boolexi>1</boolexi> --Termék egyedi logikai mező (Product.BoolExI)
+	<boolexj>1</boolexj> --Termék egyedi logikai mező (Product.BoolExJ)
+    <lookupexa>Főcsoport/Alcsoport</lookupexa> --Termék egyedi kiválasztó mező (Product.LookupExA)
+    <lookupexb>Főcsoport/Alcsoport</lookupexb> --Termék egyedi kiválasztó mező (Product.LookupExB)
+    <lookupexc>Főcsoport/Alcsoport</lookupexc> --Termék egyedi kiválasztó mező (Product.LookupExC)
+    <lookupexd>Főcsoport/Alcsoport</lookupexd> --Termék egyedi kiválasztó mező (Product.LookupExD)
+	<lookupexe>Főcsoport/Alcsoport</lookupexe> --Termék egyedi kiválasztó mező (Product.LookupExE)
+	<lookupexf>Főcsoport/Alcsoport</lookupexf> --Termék egyedi kiválasztó mező (Product.LookupExF)
+	<lookupexg>Főcsoport/Alcsoport</lookupexg> --Termék egyedi kiválasztó mező (Product.LookupExG)
+	<lookupexh>Főcsoport/Alcsoport</lookupexh> --Termék egyedi kiválasztó mező (Product.LookupExH)
+	<lookupexi>Főcsoport/Alcsoport</lookupexi> --Termék egyedi kiválasztó mező (Product.LookupExI)
+	<lookupexj>Főcsoport/Alcsoport</lookupexj> --Termék egyedi kiválasztó mező (Product.LookupExJ)
+	<multilookupexas> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexa>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexa>
+		<multilookupexa>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexa>
+	</multilookupexas>
+	<multilookupexbs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexb>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexb>
+		<multilookupexb>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexb>
+	</multilookupexbs>
+	<multilookupexcs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexc>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexc>
+		<multilookupexc>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexc>
+	</multilookupexcs>
+	<multilookupexds> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexd>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexd>
+		<multilookupexd>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexd>
+	</multilookupexds>
+	<multilookupexes> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexe>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexe>
+		<multilookupexe>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexe>
+	</multilookupexes>
+	<multilookupexfs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexf>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexf>
+		<multilookupexf>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexf>
+	</multilookupexfs>
+	<multilookupexgs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexg>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexg>
+		<multilookupexg>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexg>
+	</multilookupexgs>
+	<multilookupexhs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexh>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexh>
+		<multilookupexh>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexh>
+	</multilookupexhs>
+	<multilookupexis> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexi>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexi>
+		<multilookupexi>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexi>
+	</multilookupexis>
+	<multilookupexjs> --Termék egyedi többes kiválasztó mező (ProductCatExMulti)
+		<multilookupexj>
+			<name>aaa</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexj>
+		<multilookupexj>
+			<name>bbb</name> --Termék egyedi többes kiválasztó mező értéke(ProductCatExMulti.Name)
+		</multilookupexj>
+	</multilookupexjs>
+    <memoexa>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexa> --Termék egyedi leíró mező (Product.MemoExA)
+    <memoexb>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexb> --Termék egyedi leíró mező (Product.MemoExA)
+	<memoexc>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexc> --Termék egyedi leíró mező (Product.MemoExC)
+	<memoexd>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexd> --Termék egyedi leíró mező (Product.MemoExD)
+	<memoexe>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexe> --Termék egyedi leíró mező (Product.MemoExE)
+	<memoexf>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexf> --Termék egyedi leíró mező (Product.MemoExF)
+	<memoexg>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexg> --Termék egyedi leíró mező (Product.MemoExG)
+	<memoexh>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexh> --Termék egyedi leíró mező (Product.MemoExH)
+	<memoexi>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexi> --Termék egyedi leíró mező (Product.MemoExI)
+	<memoexj>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél ...</memoexj> --Termék egyedi leíró mező (Product.MemoExJ)
+	<productwebshops> --Termék webáruházai (ProductWebshop)
+		<productwebshop>
+			<name>aaa</name> --Webáruház neve (Webshop.Name)
+			<url>http://aaa.hu</url> --Webáruház neve (Webshop.Url)
+		</productwebshop>
+		<productwebshop>
+			<name>bbb</name> --Webáruház neve (Webshop.Name)
+			<url>http://bbb.hu</url> --Webáruház neve (Webshop.Url)
+		</productwebshop>
+	</productwebshops>
+	<productmaterials> -- termék összetevői (darabjegyzéke) gyártandó termék esetén
+      <productmaterial>
+        <sourceproductid>123</sourceproductid> --Összetevő termék Symbol belső azonosítója (ProductMaterial.SourceProduct.Id)
+        <sourceproductcode>23452T</sourceproductcode> --Összetevő termék kódja (ProductMaterial.SourceProduct.Code)
+        <sourceproductname>Ragadós termék</sourceproductname> -- Összetevő termék neve (ProductMaterial.SourceProduct.Name)
+        <sourcequantity>4</sourcequantity> -- Összetevő mennyiség (ProductMaterial.SourceQuantity)
+        <accessory>1</accessory> -- Felszereltség-e (0/1) (ProductMaterial.Accessory)
+		<buildforbid>1</buildforbid> -- Utólag nem beépíthető-e (0/1) (ProductMaterial.BuildForbid)
+        <pricecategoryid>123</pricecategoryid> -- Összetevő árkategória Symbol belső azonosítója (ProductMaterial.PriceCategory.Id)
+		<pricecategoryname>Lista ár</pricecategoryname> -- Összetevő árkategória neve (ProductMaterial.PriceCategory.Name)
+      </productmaterial>
+	  <productmaterial>
+        <sourceproductid>123</sourceproductid> --Összetevő termék Symbol belső azonosítója (ProductMaterial.SourceProduct.Id)
+        <sourceproductcode>23452T</sourceproductcode> --Összetevő termék kódja (ProductMaterial.SourceProduct.Code)
+        <sourceproductname>Ragadós termék</sourceproductname> -- Összetevő termék neve (ProductMaterial.SourceProduct.Name)
+        <sourcequantity>4</sourcequantity> -- Összetevő mennyiség (ProductMaterial.SourceQuantity)
+        <accessory>1</accessory> -- Felszereltség-e (0/1) (ProductMaterial.Accessory)
+		<buildforbid>1</buildforbid> -- Utólag nem beépíthető-e (0/1) (ProductMaterial.BuildForbid)
+        <pricecategoryid>123</pricecategoryid> -- Összetevő árkategória Symbol belső azonosítója (ProductMaterial.PriceCategory.Id)
+		<pricecategoryname>Lista ár</pricecategoryname> -- Összetevő árkategória neve (ProductMaterial.PriceCategory.Name)
+      </productmaterial>
+	</productmaterials>
+    <productattributes>  -- egyedi termékjellemzők (mindig az összes, ami a termékhez tartozik)
+      <productattribute>
+        <name>Térfogat</name> --Termékjellemző neve (ProductAttribute.Name)
+        <value>87</value> -- Értéke (szöveges formátumú) (ProductAttributes.ValueString)
+        <postfix>m3</postfix> -- Mennyiségi egysége (ProductAttribute.Postfix)
+        <filter>1</filter> -- Osztályozó vagy csak információs mező (ProductAttribute.Filter)
+        <priority>2</priority> --Prioritása (ProductAttribute.Priority)
+        <hidefromweb>0</hidefromweb> --Weben megjelenik-e (ProductAttribute.HideFromWeb)
+        <productattributelangs>  -- termékjellemző idegen megnevezése (mindig az összes)
+          <productattributelang>
+            <lang>EN</lang> --Nyelv (ProductAttributesLang.Lang)
+            <name>English name of product attribute</name> --Idegen megnevezése (ProductAttributesLang.Name)
+            <postfix>English postfix of product attribute</postfix> --Idegen mennyiségi egység (ProductAttributes.Postfix)
+            <value>English value of product attribute</value> --Idegen értéke (ProductAttributesLang.ValueString)
+          </productattributelang>
+          <productattributelang>
+		    <lang>HUEN</lang> --Nyelv (ProductAttributesLang.Lang)
+            <name>Magyar megnevezés/English name of product attribute</name> --Idegen megnevezése (ProductAttributesLang.Name)
+            <postfix>Magyar mee/English postfix of product attribute</postfix> --Idegen mennyiségi egység (ProductAttributes.Postfix)
+            <value>Magyar érték/English value of product attribute</value> --Idegen értéke (ProductAttributesLang.ValueString)       
+          </productattributelang>
+        </productattributelangs>
+      </productattribute>
+      <productattribute>
+      <name>Életkor</name> --Termékjellemző neve (ProductAttribute.Name)
+        <value>3-8</value> -- Értéke (szöveges formátumú) (ProductAttributes.ValueString)
+        <postfix>0</postfix> -- Mennyiségi egysége (ProductAttribute.Postfix)
+        <filter>0</filter> -- Osztályozó vagy csak információs mező (ProductAttribute.Filter)
+        <priority>1</priority> --Prioritása (ProductAttribute.Priority)
+        <hidefromweb>0</hidefromweb> --Weben megjelenik-e (ProductAttribute.HideFromWeb)
+        <productattributelangs>  -- termékjellemző idegen megnevezése (mindig az összes)
+          <productattributelang>
+            <lang>EN</lang> --Nyelv (ProductAttributesLang.Lang)
+            <name>English name of product attribute</name> --Idegen megnevezése (ProductAttributesLang.Name)
+            <postfix>English postfix of product attribute</postfix> --Idegen mennyiségi egység (ProductAttributes.Postfix)
+            <value>English value of product attribute</value> --Idegen értéke (ProductAttributesLang.ValueString)
+          </productattributelang>
+          <productattributelang>
+		    <lang>HUEN</lang> --Nyelv (ProductAttributesLang.Lang)
+            <name>Magyar megnevezés/English name of product attribute</name> --Idegen megnevezése (ProductAttributesLang.Name)
+            <postfix>Magyar mee/English postfix of product attribute</postfix> --Idegen mennyiségi egység (ProductAttributes.Postfix)
+            <value>Magyar érték/English value of product attribute</value> --Idegen értéke (ProductAttributesLang.ValueString)       
+          </productattributelang>
+        </productattributelangs>
+      </productattribute>
+    </productattributes>
+    <ProductWebGroups> --Webes termékcsoportok
+      <ProductWebGroup>5</ProductWebGroup> --Webes termékcsoport Symbol belső azonosítója (ProductWebGroups.ProductWebGroup)
+      <ProductWebGroup>12</ProductWebGroup> --Webes termékcsoport Symbol belső azonosítója (ProductWebGroups.ProductWebGroup)
+    </ProductWebGroups>
+    <productattachments>  -- Ragadós termék (mindig az összes, ami a termékhez tartozik)
+      <productattachment>
+        <productid>123</productid> --Ragadós termék Symbol belső azonosítója (Product.IdÖ
+        <productcode>23452T</productcode> --Ragadós termék kódja (Product.Code)
+        <productname>Ragadós termék</productname> -- Ragadós termék neve (Product.Name)
+        <quantity>4</quantity> -- Mennyiség (ProductAttachment.Quantity)
+        <unitprice>1510</unitprice> -- Egység ár (ProductAttachment.UnitPrice)
+        <multiplied>1</multiplied> -- Többszörözés (0 vagy 1) (ProductAttachment.Multipled)
+      </productattachment>
+      <productattachment>
+	   <productid>124</productid> --Ragadós termék Symbol belső azonosítója (Product.IdÖ
+        <productcode>23454T</productcode> --Ragadós termék kódja (Product.Code)
+        <productname>Ragadós termék B</productname> -- Ragadós termék neve (Product.Name)
+        <quantity>1</quantity> -- Mennyiség (ProductAttachment.Quantity)
+        <unitprice>1344</unitprice> -- Egység ár (ProductAttachment.UnitPrice)
+        <multiplied>0</multiplied> -- Többszörözés (0 vagy 1) (ProductAttachment.Multiplied)
+      </productattachment>
+    </productattachments>
+    <productassociations>  -- Kapcsolódó termék (mindig az összes, ami a termékhez tartozik)
+      <productassociation>
+        <productid>124</productid> --Kapcsolódó termék Symbol belső azonosítója (Product.Id)
+        <productcode>23452T</productcode> --Kapcsolódó termék kódja (Product.Code)
+        <productname>Kapcsolódó termék</productname> --Neve (Product.Name)
+        <typename>Kapcsolat típusa</typename> -- Kapcsolat típusneve (ProductAssociationType.Name)
+      </productassociation>
+      <productassociation>
+        <productid>123</productid> --Kapcsolódó termék Symbol belső azonosítója (Product.Id)
+        <productcode>23453T</productcode> --Kapcsolódó termék kódja (Product.Code)
+        <productname>Kapcsolódó termékB</productname> --Neve (Product.Name)
+        <typename>Kapcsolat típusa</typename> -- Kapcsolat típusneve (ProductAssociationType.Name)
+      </productassociation>
+    </productassociations>
+    <productsubstitutions>  -- Helyettesítő termék (mindig az összes, ami a termékhez tartozik)
+      <productsubstitution>
+        <productid>125</productid> --Helyettesítő termék Symbol belső azonosítója (Product.Id)
+        <productcode>23452T</productcode> --Helyettesítő termék kódja (Product.Code)
+        <productname>Helyettesítő termék</productname> -- Neve (Product.Name)
+        <quantity>4</quantity> -- Mennyiség (ProductSubstitution.Quantity)
+        <duplex>1</duplex> -- Oda-vissza helyettesít-e (0 vagy 1) (ProductSubstitution.Duplex)
+      </productsubstitution>
+      <productsubstitution>
+	    <productid>126</productid> --Helyettesítő termék Symbol belső azonosítója (Product.Id)
+        <productcode>23452T</productcode> --Helyettesítő termék kódja (Product.Code)
+        <productname>Helyettesítő termékB</productname> -- Neve (Product.Name)
+        <quantity>4</quantity> -- Mennyiség (ProductSubstitution.Quantity)
+        <duplex>0</duplex> -- Oda-vissza helyettesít-e (0 vagy 1) (ProductSubstitution.Duplex)
+      </productsubstitution>
+    </productsubstitutions>
+    <productlangs>  -- Termék idegen megnevezése (mindig az összes, ami a termékhez tartozik)
+      <productlang>
+        <lang>EN</lang> --Idegen nyelv (ProductLang.Lang)
+        <name>English name of product</name> --Idegen megnevezése (ProductLang.Name)
+        <description>English description of product</description> --Idegen leírás (ProductLang.Comment)
+        <webname>English name of product</webname> --Idegen webes megnevézse (ProductLang.WebName)
+        <webdescription>English description of product</webdescription> --Idegen webes leírás (ProductLang.WebDescription)
+		<webmetadescription>English meta description</webmetadescription> --Idegen meta leírás (ProductLang.WebMetaDescription)
+		<weburl>en-oz-a-nagy-varazslo</weburl> --Idegen weblink (ProductLang.WebUrl)
+		<webkeywords>oz, grand, wizard</webkeywords> --Idegen webes kulcsszavak (ProductLang.WebKeywords)
+      </productlang>
+      <productlang>
+	    <lang>HUEN</lang> --Idegen nyelv (ProductLang.Lang)
+        <name>Magyar terméknév/English name of product</name> --Idegen megnevezése (ProductLang.Name)
+        <description>Magyar leírás/English description of product</description> --Idegen leírás (ProductLang.Comment)
+        <webname>Magyar terméknév/English name of product</webname> --Idegen webes megnevézse (ProductLang.WebName)
+        <webdescription>Magyar leírás/English description of product</webdescription> --Idegen webes leírás (ProductLang.WebDescription)
+		<webmetadescription>Magyar/English meta description</webmetadescription> --Idegen meta leírás (ProductLang.WebMetaDescription)
+		<weburl>huen-oz-a-nagy-varazslo</weburl> --Idegen weblink (ProductLang.WebUrl)
+		<webkeywords>oz, grand, wizard, varázsló</webkeywords> --Idegen webes kulcsszavak (ProductLang.WebKeywords)
+      </productlang>
+    </productlangs>
+    <productworldcodes>  -- Gyártói kódok
+      <productworldcode>
+        <code>DF2340531241</code> --Termék gyártói kódja (ProductWorldCode.Code)
+      </productworldcode>
+      <productworldcode>
+        <code>CA2340532342</code> --Termék gyártói kódja (ProductWorldCode.Code)
+      </productworldcode>
+    </productworldcodes>
+    <productqtyunits>  -- Mee átváltás
+      <productqtyunit>
+        <quantityunit>kg</quantityunit> --Mennyiségi egség (QuantityUnit.Name)
+        <multiplier>3.2</multiplier> --Szorzó (ProductQtyUnit.Multipler)
+		<commerce>1</commerce> -- Összehasonlító (ProductQtyUnit.Commerce)
+		<selldefault>1</selldefault> -- Értékesítés alapértelmezett (ProductQtyUnit.SellDefault)
+		<buydefault>1</buydefault> -- Beszerzés alapértelmezett (ProductQtyUnit.BuyDefault)
+      </productqtyunit>
+      <productqtyunit>
+        <quantityunit>csom</quantityunit> --Mennyiségi egség (QuantityUnit.Name)
+        <multiplier>3.2</multiplier> --Szorzó (ProductQtyUnit.Multipler)
+		<commerce>0</commerce> -- Összehasonlító (ProductQtyUnit.Commerce)
+		<selldefault>0</selldefault> -- Értékesítés alapértelmezett (ProductQtyUnit.SellDefault)
+		<buydefault>0</buydefault> -- Beszerzés alapértelmezett (ProductQtyUnit.BuyDefault)
+      </productqtyunit>
+    </productqtyunits>
+	<productbarcodes>  -- Vonalkódok
+      <productbarcode>
+	    <barcode>246224356</barcode> --Termék vonalkódja (ProductBarcode.Barcode)
+        <quantityunit>kg</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <quantity>3.2</quantity> --Mennyiség (ProductBarcode.Quantity)
+		<multipleonly>1</multipleonly> --Csak többszörös-e (0/1) (ProductBarcode.MultipleOnly)
+      </productbarcode>
+      <productbarcode>
+	   <barcode>4564358</barcode> --Termék vonalkódja (ProductBarcode.Barcode)
+        <quantityunit>csom</quantityunit> --Mennyiségi egység (QuantityUnit.Name)
+        <quantity>3.2</quantity> --Mennyiség (ProductBarcode.Quantity)
+		<multipleonly>0</multipleonly> --Csak többszörös-e (0/1) (ProductBarcode.MultipleOnly)
+      </productbarcode>
+    </productbarcodes>
+    <tags> --Címkék
+      <tag>Első</tag> --Címke neve (Tag.Name)
+      <tag>Második</tag> --Címke neve (Tag.Name)
+    </tags>
+    <description>A kansasi rónaság közepéről Dorkát és Toto kutyát a forgószél csodás vidékre repíti, a mumpicok országába. Kiderül, hogy a kislány messzire elkerült otthonától. A jóságos Északi Boszorkánytól megtudja, hogy Smaragdvárosba kell eljutnia Ozhoz, a legnagyobb varázslóhoz, mert csak az ő segítségével juthat vissza az otthonába. A hosszú vándorút során Dorka igaz barátokra talál: a Madárijesztőre, a Bádog Favágóra és a Gyáva Oroszlánra, ők is a Bölcsek Bölcse segítségére vágynak. Számtalan kaland után elérkeznek Oz fényes palotájába. A nagy varázsló "megajándékozza" a Madárijesztőt ésszel, a Bádogembert szívvel s a Gyáva Oroszlánt is bátorrá teszi. De Dorkát csak a jó Déli Boszorkány útmutatása segíti haza szeretett otthonába.</description> --Termék megjegyzés (Product.Comment)
+    <picture>BASE64Encoded string of PNG</picture> --Termékkép (Product.Picture)
+  </Product>
+</Products>

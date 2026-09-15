@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<DiscountRules>
+    <TransportModes>
+        <TransportMode> --Szállítási mód (TransportMode)
+            <TransportModeName>Személyes átvétel</TransportModeName> --Szállítási mód neve (TransportMode.Name)
+            <DiscountPercent>13.5</DiscountPercent> --Szállítási módhoz tartozó kedvezmény % (TransportMode.DiscountPercent)
+        </TransportMode>
+        <TransportMode> --Szállítási mód (TransportMode)
+            <TransportModeName>Csomagküldés</TransportModeName> --Szállítási mód neve (TransportMode.Name)
+            <DiscountPercent>0</DiscountPercent> --Szállítási módhoz tartozó kedvezmény % (TransportMode.DiscountPercent)
+        </TransportMode>
+    </TransportModes>
+    <PaymentMethods>
+        <PaymentMethod> --Fizetési mód (PaymentMethod)
+            <PaymentMethodName>Készpénz</PaymentMethodName> --Fizetési mód neve (PaymentMethod.Name)
+            <DiscountPercent>8.5</DiscountPercent> --Fizetési módhoz tartozó kedvezmény % (PaymentMethod.DiscountPercent)
+        </PaymentMethod>
+        <PaymentMethod> --Fizetési mód (PaymentMethod)
+            <PaymentMethodName>Utánvét</PaymentMethodName> --Fizetési mód neve (PaymentMethod.Name)
+            <DiscountPercent>3</DiscountPercent> --Fizetési módhoz tartozó kedvezmény % (PaymentMethod.DiscountPercent)
+        </PaymentMethod>
+        <PaymentMethod>
+            <PaymentMethodName>Átutalás</PaymentMethodName> --Fizetési mód neve (PaymentMethod.Name)
+            <DiscountPercent>-1</DiscountPercent> --Fizetési módhoz tartozó kedvezmény % (PaymentMethod.DiscountPercent)
+        </PaymentMethod>
+    </PaymentMethods>
+    <ProductCategoryDiscounts>
+        <ProductCategoryDiscount> --Termékcsoport kedvezmény (ProductCategoryDiscount)
+            <ProductCategory>Tányér/Pintinox</ProductCategory> --Termékkategória neve (ProductCategory.Name)
+            <Customer>129</Customer> --Vevő Symbol belső azonosítója (ProductCategoryDiscount.Customer)
+            <CustomerCode>147V</CustomerCode> --Vevő kódja (Customer.Code)
+            <CustomerName>Kiss István</CustomerName> --Vevő neve (Customer.Name)
+            <CustomerCategory>Vevő/Nagyker</CustomerCategory> --Vevőcsoport (CustomerCategory.Name)
+            <DiscountPercent>8.5</DiscountPercent> --Kedvezmény % (ProductCategoryDiscount.DiscountPercent)
+            <Inherit>1</Inherit> --Kedvezmény örökölhető-e (ProductCategoryDiscount.Inherit)
+        </ProductCategoryDiscount>
+        <ProductCategoryDiscount> --Termékcsoport kedvezmény (ProductCategoryDiscount)
+            <ProductCategory>Tányér/Csuppa</ProductCategory> --Termékkategória neve (ProductCategory.Name)
+            <Customer>512</Customer> --Vevő Symbol belső azonosítója (ProductCategoryDiscount.Customer)
+            <CustomerCode>177V</CustomerCode> --Vevő kódja (Customer.Code)
+            <CustomerName>Nagy János</CustomerName> --Vevő neve (Customer.Name)
+            <CustomerCategory>Vevő/Kisker</CustomerCategory> --Vevőcsoport (CustomerCategory.Name)
+            <DiscountPercent>3</DiscountPercent> --Kedvezmény % (ProductCategoryDiscount.DiscountPercent)
+            <Inherit>0</Inherit> --Kedvezmény örökölhető-e (ProductCategoryDiscount.Inherit)
+        </ProductCategoryDiscount>
+    </ProductCategoryDiscounts>
+    <ProductCustomerDiscounts>
+        <ProductCustomerDiscount> --Termék-Vevő kedvezmény (ProductCustomerDiscount)
+            <Product>4785</Product> --Termék Symbol belső azonosítója (Product.Id)
+            <ProductCode>555T</ProductCode> --Termék kódja (Product.Code)
+            <ProductName>Tányér Piros</ProductName> --Termék neve (Product.Name)
+            <Customer>129</Customer> --Vevő Symbol belső azonosítója (Customer.Id)
+            <CustomerCode>147V</CustomerCode> --Vevő kódja (Customer.Code)
+            <CustomerName>Kiss István</CustomerName> --Vevő neve (Customer.Name)
+            <DiscountPercent>5.5</DiscountPercent> --Kedvezmény % (ProductCustomerDiscount.DiscountPercent)
+        </ProductCustomerDiscount>
+        <ProductCustomerDiscount> --Termék-Vevő kedvezmény (ProductCustomerDiscount)
+            <Product>1234</Product> --Termék Symbol belső azonosítója (Product.Id)
+            <ProductCode>678T</ProductCode> --Termék kódja (Product.Code)
+            <ProductName>Tányér Zöld</ProductName> --Termék neve (Product.Name)
+            <Customer>129</Customer> --Vevő Symbol belső azonosítója (Customer.Id)
+            <CustomerCode>147V</CustomerCode> --Vevő kódja (Customer.Code)
+            <CustomerName>Kiss István</CustomerName> --Vevő neve (Customer.Name)
+            <DiscountPercent>6.5</DiscountPercent> --Kedvezmény % (ProductCustomerDiscount.DiscountPercent)
+        </ProductCustomerDiscount>
+    </ProductCustomerDiscounts>
+    <CustomerVoucherDiscounts>
+        <CustomerVoucherDiscount> --Egyösszegű vásárlás kedvezmények (CustomerVoucherDiscount)
+            <VoucherType>Invoice</VoucherType> --Bizonylattípus (CustomerVoucherDiscount.VoucherType)
+            <Customer>129</Customer> --Vevő Symbol belső azonosítója (Customer.Id)
+            <CustomerCode>147V</CustomerCode> --Vevő kódja (Customer.Code)
+            <CustomerName>Kiss István</CustomerName> --Vevő neve (Customer.Name)
+            <CustomerCategory>Vevő/Kisker</CustomerCategory> --Vevőcsoport neve (CustomerCategory.Name)
+            <ValidFrom>2012-01-01</ValidFrom> --Érvényesség kezdete (CustomerVoucherDiscount.ValidFrom)
+            <ValidTo>2013-06-01</ValidTo> --Érvényesség vége (CustomerVoucherDiscount.ValidTo)
+            <NetValue>150000</NetValue> --Nettó érték (CustomerVoucherDiscount.NetValue)
+            <DiscountPercent>1.5</DiscountPercent> --Kedvezmény % (CustomerVoucherDiscount.DiscountPercent)
+        </CustomerVoucherDiscount>
+        <CustomerVoucherDiscount> --Egyösszegű vásárlás kedvezmények (CustomerVoucherDiscount)
+            <VoucherType>Invoice</VoucherType> --Bizonylattípus (CustomerVoucherDiscount.VoucherType)
+            <Customer>124</Customer> --Vevő Symbol belső azonosítója (Customer.Id)
+            <CustomerCode>177V</CustomerCode> --Vevő kódja (Customer.Code)
+            <CustomerName>Nagy István</CustomerName> --Vevő neve (Customer.Name)
+            <CustomerCategory>Vevő/Nagyker</CustomerCategory> --Vevőcsoport neve (CustomerCategory.Name)
+            <ValidFrom>2012-01-01</ValidFrom> --Érvényesség kezdete (CustomerVoucherDiscount.ValidFrom)
+            <ValidTo>2013-06-01</ValidTo> --Érvényesség vége (CustomerVoucherDiscount.ValidTo)
+            <NetValue>350000</NetValue> --Nettó érték (CustomerVoucherDiscount.NetValue)
+            <DiscountPercent>1.7</DiscountPercent> --Kedvezmény % (CustomerVoucherDiscount.DiscountPercent)
+        </CustomerVoucherDiscount>
+    </CustomerVoucherDiscounts>
+</DiscountRules>

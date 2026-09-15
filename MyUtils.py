@@ -520,22 +520,22 @@ def mkCustomerCode( ucc : UCC.UnasCustomerCache, prefix : str = 'unregistered'):
 #             ucc.lastmod = 0
 #     return ucc # type: ignore
 
-def getCustomerFromCacheByOrder( cust ) -> UCC.UnasCustomerCache:
+def getCustomerFromCacheByOrder( cust ) -> UCC.UnasCustomerCache|None:
     unasId = 0 if len(cust.findall('Id')) == 0 else int(cust.find('Id').text)
     return getCustomerFromCache(unasId)
 
-def getCustomerFormCacheByCode(code:str ) -> UCC.UnasCustomerCache:
+def getCustomerFormCacheByCode(code:str ) -> UCC.UnasCustomerCache|None:
     ucc = next((x for x in  UnasCustomerList.values() if x.code == code), None )
-    return ucc # type: ignore
+    return ucc
 
-def getCustomerFromCache(unasId:int ) -> UCC.UnasCustomerCache:
+def getCustomerFromCache(unasId:int ) -> UCC.UnasCustomerCache|None:
     ucc = UnasCustomerList.get( unasId )
     if ucc is not None:
         if ucc.symbolId is None:
             ucc.symbolId = 0
         if ucc.lastmod is None:
             ucc.lastmod = 0
-    return ucc # type: ignore
+    return ucc
 
 #def putCustomerIntoCache_NU(ucc : UCC.UnasCustomerCache, cc:int):
 #    azon = ucc.custAzon if cc is None else cc
@@ -1983,7 +1983,7 @@ def getCfgVal(path:str, fromTag:str=''):
     return Conf(path, itm) # pyright: ignore[reportArgumentType]
 
 #def Conf(path:str, fromCfg:Dict= dict({})):
-def Conf(path:str, fromCfg:Dict = PROXYCONFIG):
+def Conf(path:str, fromCfg:Dict = PROXYCONFIG) -> dict | None:
     val = fromCfg or PROXYCONFIG
     # print(val)
     if val is not None:
@@ -2254,7 +2254,7 @@ def presetBaseCategory(cust, ucc:UCC.UnasCustomerCache) -> str|None:
         else:
             cg = mkUniqueGroupName(ucc.symbolId)
             checkUnasCustomerGroup(cg)
-            # specials Fallback
+            # UNIQUE Offers and specials fallback
             setSpecialPrices(cust, ucc, cust.customercategory or None) 
             return cg
     else:
@@ -2299,13 +2299,16 @@ def checkUnas_R_priceDetail(groupName:str, sku:str, netPrice:str, currency:str, 
 
 def hasFallbackPrice(fbProd, skuList) -> bool:
     sku = fbProd["sku"]
-    fbProd["sku"] in UnasProductList.keys() and sku not in skuList
-    return False
+    return sku in UnasProductList.keys() and sku not in skuList
 
-def fallbackPrices(specPriceCat:str, targetCategory:str):
+def fallbackPrices(custId:int, specPriceCat:str, targetCategory:str):
     # checkUnasCustomerGroup(targetCategory)
     # get Products from FB
-    offerProductSkus = mySqlIntance.doSql("select distinct sku from customer_offer_details")
+    sql = '''select distinct sku from customer_offers O
+            join customer_offer_customers C on C.offer_id = O.id
+            join customer_offer_details P on P.offer_id=O.id 
+            where C.customer = ?'''
+    offerProductSkus = mySqlIntance.doSql(sql, (custId))
     result = FBU.getProductsByPriceCategory(specPriceCat)
     for pp in result:
         print(pp)
@@ -2313,15 +2316,16 @@ def fallbackPrices(specPriceCat:str, targetCategory:str):
             checkUnas_R_priceDetail(targetCategory, pp["sku"], pp["price"], pp["currency"], todayStr(), EPOCH_ENDDATE)
 
 def setSpecialPrices(cust, ucc: UCC.UnasCustomerCache, cg:str|None):
+        customerSymbolId = int(cust.id)
         # add Customer to  EGYEDI + cust.name
-        UniqueName = mkUniqueGroupName(int(cust.id))  # f"EGYEDI-{cust.code}" OR ucc.symbolId
+        UniqueName = mkUniqueGroupName(customerSymbolId)  # f"EGYEDI-{cust.code}" OR ucc.symbolId
         checkUnasCustomerGroup(UniqueName)   
         if ucc.specialCustomerCategory == cg:  # check customergroup changed
             return # Peti szerint nem kell setCustoernel az EGYEDIvel foglalkozni
         ucc.specialCustomerCategory = cg or ''
         specCat =  next(( x[1] for x in Conf("unas.customer.specialCategories") or [] if x[0] == cg), None)
         if specCat:
-            fallbackPrices(specCat, UniqueName)
+            fallbackPrices(customerSymbolId, specCat, UniqueName)
             # Create fallbackProductPriceCategories if customercategory in PRODUCT_PRICECAT_SPECIALS
             specials_ = [ x[1] for x in Conf('unas.product.pricecat.specials') or [] ]
             for special in specials_:

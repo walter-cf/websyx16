@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SyncLogs>
+  <SyncLog>
+    <EventType></EventType> --Esemény típusa (LogPlugIn.EventType)
+    <EventDate></EventDate> --Esemény dátuma (LogPlugIn.EventDateÖ
+    <Employee></Employee> --Felhasználó (LogPlugIn.Employee)
+    <Subject></Subject> --Tárgy (LogPlugIn.Subject)
+    <Description></Description> --Leírás (LogPlugIn.Description)
+  </SyncLog>
+  <SyncLog>
+    <EventType></EventType> --Esemény típusa (LogPlugIn.EventType)
+    <EventDate></EventDate> --Esemény dátuma (LogPlugIn.EventDate)
+    <Employee></Employee> --Felhasználó (LogPlugIn.Employee)
+    <Subject></Subject> --Tárgy (LogPlugIn.Subject)
+    <Description></Description> --Leírás (LogPlugIn.Description)
+  </SyncLog>
+</SyncLogs>
