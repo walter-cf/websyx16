@@ -9,6 +9,8 @@ mail:
   server: 192.168.10.6
   sender: web6proxy-alert@ledsound.hu
   operator: unas3-operator@ledsound.hu # web6proxy-operator@ledsound.hu
+  systemId: DEVEL
+  firstLine: FEJLESZTOI rendszer uzenet - figyelmen kivul hagyhato.
 #
 # Control socket elavult , ki kellene szednem
 controlSocket:

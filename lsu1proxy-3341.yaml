@@ -1,4 +1,4 @@
-logLevel: DEBUG
+logLevel: INFO 
 
 proxy:
   # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
@@ -10,6 +10,8 @@ mail:
   sender: web6proxy-alert@ledsound.hu
   # unas3-operator@ledsound.hu # web6proxy-operator@ledsound.hu
   operator: joelenovo@nepextel.hu
+  systemId: TEST
+  firstLine: TESZT rendszer uzenet - figyelmen kivul hagyhato.
 #
 # Control socket elavult , ki kellene szednem
 controlSocket:
