@@ -130,6 +130,9 @@ class MyServer(BaseHTTPRequestHandler):
           elif pPath[2] == "createProductXml":
             createPepitaProductXml()
             retData = "OK"
+          elif (pPath[2] == "pepita-loadfiles"):
+            MU.loadPepitaOrdersHanging(False)
+            retData = str(MU.putPepitaOrderIntoCache().values())
           elif pPath[2] == "dummy":
             retData = "OK"
           else:

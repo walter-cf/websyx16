@@ -2112,9 +2112,10 @@ def toSymbolOrderXml(poc : PepitaOrder) -> str:
     """
     return xml
 
-def loadPepitaOrdersHanging() -> Dict[int, PepitaOrder]:
+def loadPepitaOrdersHanging(clear = True) -> Dict[int, PepitaOrder]:
     global PepitaOrderList
-    PepitaOrderList.clear()
+    if clear:
+        PepitaOrderList.clear()
     pepitaOrdersFolder = str(Conf("pepita.folder.order")) or '.'
     if os.path.exists(pepitaOrdersFolder):
         for fn in os.listdir(pepitaOrdersFolder):
