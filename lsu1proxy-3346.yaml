@@ -8,7 +8,7 @@ proxy:
 mail:
   server: 192.168.10.6
   sender: web6proxy-alert@ledsound.hu
-  operator: unas3-operator@ledsound.hu # web6proxy-operator@ledsound.hu
+  operator: joelenovo@nepextel.hu # web6proxy-operator@ledsound.hu
 #
 # Control socket elavult , ki kellene szednem
 controlSocket:
@@ -28,9 +28,9 @@ unas:
   apiUrl: https://api.unas.eu/shop
   feedbackUrl: "'http://' + hostName + ':' + str(serverPort) + '/fbunas'"
   # a WewbShopban kell generalni a hozzaferesi kulcsot
-  apiKey: 11538c5a19ee5cec8b2b38ccf4294fd9b7d8b9f0
+  # apiKey: 11538c5a19ee5cec8b2b38ccf4294fd9b7d8b9f0
   # marton.k@brill-clean.hu /Aa123456
-  # apiKey: fc63a447addd1f32cd822d89a90e651a7052f8b4
+  apiKey: bbd1c8083514e15d3c0f5b70f9992c376bd6e152
   # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
   webcategory:
     # id: 187458
@@ -187,7 +187,7 @@ pepita:
 
 ########################################################################
 mysql:
-  dbFile: lsu3proxyTEST
+  dbFile: lsu3proxyDEV
   dbHost: localhost
   dbUser: w6pusr
   dbPass: w6p-Abc+123
@@ -200,12 +200,20 @@ mysql:
 #  dbPass: Bertalan11
 
 firebird:
-  dbRoot: "C:\\SymbolUgyvitelDB_TEST"
+  dbRoot: "C:\\SymbolUgyvitelDB_DEV"
   dbFile: default_a.database
   dbHost: 192.168.10.4
   dbUser: SYSDBA
   dbPass: masterkey
 
+
+########################################################################
+# Python TEST
+test:
+  folder:
+    script: 'test'
+    xml: test/xml
+    result: test/result
 
 ########################################################################
 # Batch

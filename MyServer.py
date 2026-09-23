@@ -49,7 +49,7 @@ def logrotate(fn:str):
           maxIdx = maxIdx if idx < maxIdx else idx
     os.rename(fn , f'./{LOGDIR}/{fn[:-4]}-{1+maxIdx}.log')
 
-class MyServer(BaseHTTPRequestHandler):
+class   MyServer(BaseHTTPRequestHandler):
   
   def do_GET(self): # the do_GET method is inherited from BaseHTTPRequestHandler
     global GBL_ErrorMessages
@@ -318,7 +318,9 @@ class MyServer(BaseHTTPRequestHandler):
               htmlResponseMessage = 'No POST DATA!?'
             elif 'xmldata' == list(parsedFields.keys())[0]: # type: ignore
               xmlData = parsedFields['xmldata'][0]
-              htmlResponseMessage = PPU.doUnasRequest(pPath[2], xmlData, 17, errors=GBL_ErrorMessages)
+              htmlResponseMessage = PPU.doUnasRequest(pPath[2], xmlData, 17, errors=GBL_ErrorMessages) or 'OK'
+              if htmlResponseMessage != 'OK':
+                htmlResponseCode = 500
             else:
               cFld = list(parsedFields.keys())[0] # type: ignore
               xmlData = parsedFields[cFld][0]
@@ -572,7 +574,6 @@ def startBatchThread():
       print('BATCH-Server started (inline)')
     except Exception as x:
       MU.getLogger().logger.info('BATCH Server closing:', x)
-
 
 def getGlobalLogLevel():
   if MU.LOGLEVEL[0].upper() == 'I':

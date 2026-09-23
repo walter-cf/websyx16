@@ -1,0 +1,49 @@
+<Customer>
+  <Action>modify</Action>
+  <Email>demo4@brill-clean.hu</Email>
+  <Name>Demo Negy</Name>
+  <Group>
+    <Name>Demo Negy (@365)</Name>
+  </Group>
+  <Params>
+    <Param>
+      <Name>symbolId</Name>
+      <Value>365</Value>
+    </Param>
+    <Param>
+      <Name>symbolCode</Name>
+      <Value>UCO-364378361</Value>
+    </Param>
+  </Params>
+  <Contact>
+    <Name>Demo Negy</Name>
+    <Phone>+3600000000</Phone>
+    <Mobile>+36301234567</Mobile>
+    <Lang>hu</Lang>
+  </Contact>
+  <Addresses>
+    <Invoice>
+      <Name>Demo Negy</Name>
+      <ZIP>1111</ZIP>
+      <City>Budapest, XI.</City>
+      <Street>Barton 4125 / bb</Street>
+      <County/>
+      <Country>Magyarország</Country>
+      <CountryCode>hu</CountryCode>
+      <TaxNumber>20657202-2-41</TaxNumber>
+      <EUTaxNumber/>
+      <CustomerType>company</CustomerType>
+    </Invoice>
+    <Shipping>
+      <Name>Demo Negy</Name>
+      <ZIP>1111</ZIP>
+      <City>Budapest, XI.</City>
+      <Street>Barton 4</Street>
+      <County/>
+      <Country>Magyarország</Country>
+      <CountryCode>hu</CountryCode>
+      <TaxNumber/>
+      <CustomerType>private</CustomerType>
+    </Shipping>
+  </Addresses>
+</Customer>
