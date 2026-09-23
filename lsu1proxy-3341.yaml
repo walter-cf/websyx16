@@ -160,9 +160,11 @@ unas:
     overwriteName: False
     pricecat:
       # Symbol arkategoria ID. Ha tobb van, akkor ezeket - sorrendben - elonyben reszesiti; egyebkent a listaban az utolso ar lesz(vagy lehet, az elso)
+      # ELAVULT! Nem hasznalom mar.
       base: 18
       fallback1: -9999999
       fallback2: -9999999
+      # Elavult a fenti, szerintem nincs ra hivatkozas
       unique: EGYEDI
       specials: 
          - [ R1, R1 ]
@@ -174,6 +176,10 @@ unas:
     supplierOrderParam:
       name: 'Várható beérkezés'
       id: 8822851
+    supplierOrderWarehouse:
+      id: 6617416
+      name: Beérkező
+
 pepita:
   apikey: P5s5Ns329Mhg8NNeEMWt8v6aAmF74Bq2kYyFD7xB 
   folder:
