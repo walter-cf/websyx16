@@ -194,12 +194,12 @@ mysql:
   dbUser: w6pusr
   dbPass: w6p-Abc+123
 
-#firebird:
-#  dbRoot: /opt/firebird/data
-#  dbFile: default_a.database
-#  dbHost: localhost
-#  dbUser: SYSDBA
-#  dbPass: Bertalan11
+# firebird:
+#   dbRoot: /opt/firebird/data/joeHome
+#   dbFile: default.database
+#   dbHost: localhost
+#   dbUser: SYSDBA
+#   dbPass: Bertalan11
 
 firebird:
   dbRoot: "C:\\SymbolUgyvitelDB_DEV"
