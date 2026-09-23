@@ -409,6 +409,7 @@ def transformUnasRequestObject(root, xsltFilename):
                     prod.supplierParamId = paramConf["id"]
                 if len(paramConf["name"] or '') > 0:
                     prod.supplierParamName = paramConf["name"]
+                MU.sendQuantity(prod)
             else:
                 prod.SkipThisItem = 1
                 MU.getLogger().logTrace(f"ProductSupplierOrder - Product missed from cache: {prod.ProductCode}/{prod.Product}")

@@ -1,4 +1,4 @@
-logLevel: DEBUG
+logLevel: INFO 
 
 proxy:
   # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
@@ -10,6 +10,8 @@ mail:
   sender: web6proxy-alert@ledsound.hu
   # unas3-operator@ledsound.hu # web6proxy-operator@ledsound.hu
   operator: joelenovo@nepextel.hu
+  systemId: TEST
+  firstLine: TESZT rendszer uzenet - figyelmen kivul hagyhato.
 #
 # Control socket elavult , ki kellene szednem
 controlSocket:
@@ -158,9 +160,11 @@ unas:
     overwriteName: False
     pricecat:
       # Symbol arkategoria ID. Ha tobb van, akkor ezeket - sorrendben - elonyben reszesiti; egyebkent a listaban az utolso ar lesz(vagy lehet, az elso)
+      # ELAVULT! Nem hasznalom mar.
       base: 18
       fallback1: -9999999
       fallback2: -9999999
+      # Elavult a fenti, szerintem nincs ra hivatkozas
       unique: EGYEDI
       specials: 
          - [ R1, R1 ]
@@ -172,6 +176,10 @@ unas:
     supplierOrderParam:
       name: 'Várható beérkezés'
       id: 8822851
+    supplierOrderWarehouse:
+      id: 6617416
+      name: Beérkező
+
 pepita:
   apikey: P5s5Ns329Mhg8NNeEMWt8v6aAmF74Bq2kYyFD7xB 
   folder:

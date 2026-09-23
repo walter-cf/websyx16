@@ -2112,9 +2112,10 @@ def toSymbolOrderXml(poc : PepitaOrder) -> str:
     """
     return xml
 
-def loadPepitaOrdersHanging() -> Dict[int, PepitaOrder]:
+def loadPepitaOrdersHanging(clear = True) -> Dict[int, PepitaOrder]:
     global PepitaOrderList
-    PepitaOrderList.clear()
+    if clear:
+        PepitaOrderList.clear()
     pepitaOrdersFolder = str(Conf("pepita.folder.order")) or '.'
     if os.path.exists(pepitaOrdersFolder):
         for fn in os.listdir(pepitaOrdersFolder):
@@ -2399,3 +2400,30 @@ def prettyFormattedXml(x:str) -> str:
     except Exception as e:
         getLogger().logError(f'prettyFormattedXml: {e}')
     return x
+
+def sendQuantity(prod):
+    row = mySqlIntance.getRow("select indat from supplier_orders where product_id = %s", (prod.Product.text,))
+    if row is None or len(row) == 0:
+        # set quantity in warehouse
+        xml = f'''
+<Products>
+	<Product>
+		<Sku>{prod.ProductCode}</Sku>
+		<Stocks>
+			<Stock>
+				<WarehouseId>{Conf("unas.product.supplierOrderWarehouse.id")}</WarehouseId>
+				<Qty>{prod.Quantity}</Qty>
+			</Stock>
+		</Stocks>
+	</Product>
+</Products>
+'''
+        response = UCH.doPostReq('setStock', xml)
+        print(response)
+        getLogger().logDebug('Suppplier Order response')
+        getLogger().logDebug(response)
+        resp = mySqlIntance.execSql('insert into supplier_orders values(%s,%s,%s)', (prod.Product.text, prod.DeliveryDate.text, prod.Quantity.text))
+    elif str(row['indat']) <= prod.DeliveryDate: # type: ignore
+        pass
+    else:
+        pass
