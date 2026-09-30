@@ -50,6 +50,8 @@ class ProxyErrCode(IntEnum):
     E40 = 40
     E41 = 41
     E42 = 42 # masterChallengeUnas -> Nout USED !!!
+    E43_BADXML = 43
+    E44_CODEERROR = 44
     F50 = 50 # PepitaCache missed item
 
 class UnasTransactionType(IntEnum):

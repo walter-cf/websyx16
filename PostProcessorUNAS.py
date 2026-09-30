@@ -28,6 +28,18 @@ def isCustomerTypeChecked(cust):
         return True
     return cust.customerstatus == 1 and cust.supplierstatus == 0 and cust.code.text.startswith(MU.CUSTOMER_CODE_PREFIXES["default"])
 
+def checkXmlTypeByRootTag(xsltFilename:str, xmlTag:str):
+        match (xsltFilename):
+            case "ProductQuantity": expected = 'ProductQuantities'
+            case "OrderStatus": expected = 'CustomerOrderStatuses'
+            case "ProductQuantit2": expected = 'ProductQuantities'
+            case _:
+                MyProgramFlowErrorException(f'checkXmlTypeByRootTag - Unhandled xslt:{xsltFilename}', ProxyErrCode.E44)
+
+        if xmlTag != expected:
+            raise MyProgramFlowErrorException(f'Hibas xmlRequest! Action:{xsltFilename}, xmlRoot:{xmlTag}', ProxyErrCode.E43_BADXML)
+
+
 #TRANSFORMERS
 def transformUnasRequestObject(root, xsltFilename):
     if   xsltFilename == 'Product':
@@ -132,6 +144,7 @@ def transformUnasRequestObject(root, xsltFilename):
             print("isPriceFound: ", next(('xFalse' for x in prod.findall('price') if x.find('SkipThisItem') is None ), 'xTrue'))
         # ProductPrice endz
     elif xsltFilename == 'ProductQuantity':
+        checkXmlTypeByRootTag(xsltFilename, root.tag) # Exception if failed
         for prod in root.getchildren():
             upc = MU.UnasProductList.get(prod.ProductCode)
             upc = None if not hasattr(prod,'ProductCode') else MU.UnasProductList.get(str(prod.ProductCode))
@@ -418,10 +431,11 @@ def transformUnasRequestObject(root, xsltFilename):
         pos = 1 + len(MU.Conf("unas.order.symbolOrderPrefix") or '')
         statCfgIsNAME = 'name' == MU.Conf("unas.order.statusNameOrId" )
         statCfg = MU.Conf("unas.order.statusNames")  if statCfgIsNAME else MU.Conf("unas.order.statusIds")
+        checkXmlTypeByRootTag(xsltFilename, root.tag)
         for orderTag in root.getchildren():
             uoc:UOC|None = MU.UnasOrderList.get(str(orderTag.PrimeVoucherNumber)[pos:])
             if uoc is None:
-                MU.getLogger().logDebug(uoc)
+                MU.getLogger().logDebug(f'OrderStatus-UOC missed: Id{orderTag.Id}, {orderTag.VoucherNumber}')
                 orderTag.SkipThisItem = 1
             else:
                 orderTag.sendOrderStatusEmail = 'no' if not MU.Conf("unas.order.sendOrderStatusEmail") else 'yes'
@@ -731,17 +745,14 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
     transStarted = MU.getCurrTime()
     # print(postData)
     # XXXXtoken = UnasAuth.doAuth() # '7526191af38b98c0ce0334b0325a6be92adb7df3'
-    MU.getLogger().logInfo("unasPost-path:%s", action)
-    MU.getLogger().logDebug("token:%s, xml:%s", 'xxx', postData)
+    MU.getLogger().logInfo("unasPost-path:%s" % action)
+    if MU.isLogLevelDebug():
+        MU.getLogger().logDebug("PostData:", postData)
     MU.checkCacheState()
-    unasResp ='OK'
+    unasResp = None  # Visszateresi ERTEK!!!
     if (action == 'product'):
-        unasResp = "???"
         uts = MU.createTransactionId( UnasTransactionType.PRODUCT )
         MU.getLogger().logDebug("setProduct-TS:%d" % uts)
-        if MU.isLogLevelDebug():
-            print(postData)
-
         xmlReq = preProcessUnasPostRequest(action, postData)
         if xmlReq.count('<?xml version="1.0"') > 1:
             _m=f"Multiple xml tag in product request! TS:{MU.getTS()}"
@@ -761,7 +772,6 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
     elif action == 'inventory':
         uts = MU.createTransactionId( UnasTransactionType.INVENTORY )
         MU.getLogger().logDebug("setInventory-TS:%d" % uts)
-        unasResp = "???"
         xmlReq_0 = preProcessUnasPostRequest(action, postData)
         xmlReq = prepareUnasReply(xmlReq_0, "ProductQuantity" )
         # Ha nem csinaltam UNAS requestet vmilyen feltetel teljesulese miatt!
@@ -774,11 +784,9 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
             else:
                 MU.UnasSetProductsXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
                 MU.LastActivity = MU.UtcNow(0)
-        # return "OK"
     elif action == 'price':
         uts = MU.createTransactionId( UnasTransactionType.PRICE )
         MU.getLogger().logDebug("setPrice-TS:%d" % uts)
-        unasResp = "???"
         #
         xmlReq_0 = preProcessUnasPostRequest(action, postData)
         xmlReq = prepareUnasReply(xmlReq_0, "ProductPrice" )
@@ -791,7 +799,6 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
             else:
                 MU.UnasSetProductsXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
                 MU.LastActivity = MU.UtcNow(0)
-        # return "OK"
     elif action == 'doc':
         uts = MU.createTransactionId( UnasTransactionType.DOC )
         MU.getLogger().logDebug("setDocuments-TS:%d" % uts)
@@ -809,7 +816,6 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         xmlResp = UCH.unasDummyAction( xmlReq, action )
         #  ????? preProcessUnasPostRequest ??? transformResponse(xmlResp, 'Picture')
         unasResp = postProcessUnasPostRequest(action, xmlResp)
-        # return "OK"
     elif action == 'cat':
         uts = MU.createTransactionId( UnasTransactionType.CAT )
         MU.getLogger().logDebug("setCategory-TS:%d" % uts)
@@ -819,25 +825,22 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         # xmlReq = prepareUnasReply(xmlReq_0, "Category", ts )
         # xmlResp = unasCats( xmlReq, token )
         # unasResp = postProcessUnasPostRequest(action, xmlResp, ts)
-        unasResp = "OK"
     elif action == 'customer':
-        unasResp = "???"
         uts = MU.createTransactionId( UnasTransactionType.CUSTOMER )
         MU.getLogger().logDebug("setCustomer-TS:%d" % uts)
 
         postData = postData.replace('&amp;#', '&#')
         xmlReq_0 = preProcessUnasPostRequest(action, postData)
         xmlReq = prepareUnasReply(xmlReq_0, "Customer")
-        if len('' if xmlReq is None else xmlReq) > 0:
+        if len((xmlReq or '').trim()) > 0:
             # xmlReq = xmlReq.replace('<?xml version="1.0"?>', '')            
             if (not MU.CUSTOMER_BULK) or (pathParam3 == 'direct'):
                 xmlResp = UCH.unasCustomer_Direct(xmlReq)
                 unasResp = postProcessUnasPostRequest(action, xmlResp)
             else:
-                MU.UnasSetCustomersXmlPart += xmlReq # type: ignore
-                MU.getLogger().logDebug("LEN xml:%i, tot:%s", len( xmlReq ), len( MU.UnasSetCustomersXmlPart )) # type: ignore
+                MU.UnasSetCustomersXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
+                MU.getLogger().logDebug("LEN xml:%i, tot:%s", len( xmlReq or ''), len( MU.UnasSetCustomersXmlPart  or ''))
                 MU.LastActivity = MU.UtcNow(0)
-        # return "OK"
     elif action == 'pricerule':
         uts = MU.createTransactionId( UnasTransactionType.PRICERULE )
         MU.getLogger().logDebug("Pricerule-TS:%d" % uts)
@@ -862,9 +865,7 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
             # meg hozzadadoik ... !!! unasResp += "\n" + postProcessUnasPostRequest(action, xmlResp, ts)
         xmlResp = xmlResp + '</PriRulz>'
         unasResp = postProcessUnasPostRequest(action, xmlResp)
-        #return "OK"
     elif action == 'supplierorder':
-        unasResp = "OK"
         uts = MU.createTransactionId( UnasTransactionType.SUPPLIER_ORDER )
         MU.getLogger().logDebug("setProductSupplierOrder-TS:%d" % uts)
 
@@ -881,9 +882,7 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
             else:
                 MU.UnasSetProductsXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
                 MU.LastActivity = MU.UtcNow(0)
-        # return "OK"
     elif action == 'changedorderstatus':
-        unasResp = "???"
         uts = MU.createTransactionId( UnasTransactionType.CHANGED_ORDER_STATUS )
         MU.getLogger().logDebug("setProductSupplierOrder-TS:%d" % uts)
 
@@ -891,24 +890,26 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         xmlReq_0 = preProcessUnasPostRequest(action, postData)
         xmlReq = prepareUnasReply(xmlReq_0, "OrderStatus" )
         # Ha nem csinaltam UNAS requestet vmilyen feltetel teljesulese miatt!
-        if xmlReq == None:            # Lehet NEM OK-val kellene visszaterni?
-            unasResp = "OK"
-        else:
+        if xmlReq != None:            # Lehet NEM OK-val kellene visszaterni?
             xmlReq = xmlReq.replace('<?xml version="1.0" encoding="utf8"?>', '')            
             #xmlReq = xmlReq.replace('<?xml version="1.0"?>', '')            
-            # xmlResp = UCH.unasOrder_Direct(xmlReq)
-            # unasResp = postProcessUnasPostRequest(action, xmlResp)
+            unasResp = postProcessUnasPostRequest(action, xmlResp)
+            if (not MU.PRODUCT_BULK) or (pathParam3 == 'direct'):
+                xmlResp = UCH.unasOrder_Direct(xmlReq)
+                unasResp = postProcessUnasPostRequest(action, xmlResp)
+            else:
+                MU.UnasSetProductsXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
+                MU.LastActivity = MU.UtcNow(0)
     elif action == 'offer':
         uts = MU.createTransactionId( UnasTransactionType.OFFER )
         MU.getLogger().logDebug("Vevoi akcio - TS:%d" % uts)
         if MU.isLogLevelDebug():
             print(postData)
         xmlReq = preProcessUnasPostRequest(action, postData)
-        xmlReq = prepareUnasReply(xmlReq, "CustomerOffer")
-        #if xmlReq != None:            # Lehet NEM OK-val kellene visszaterni?
-        #    xmlResp = "pillanatnyilag SKIP ALL !" # UCH.unasOrder_Direct(xmlReq)
-        #    unasResp = postProcessUnasPostRequest(action, xmlResp)
-        return "OK" if xmlReq is None else xmlReq # Always return OK!!!
+        xmlReq = prepareUnasReply(xmlReq, "ProductPriceOfferFallback")
+        if xmlReq != None:  #n Offer-Price Fallback!
+            xmlResp = UCH.unasProduct_Direct(xmlReq)
+            unasResp = postProcessUnasPostRequest(action, xmlResp)
     elif action == 'fulfilled':
         uts = MU.createTransactionId( UnasTransactionType.BILLED )
         MU.getLogger().logDebug("Order - szamlazva-TS:%d" % uts)
@@ -934,15 +935,11 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         MU.getLogger().logDebug("returnOK-TS:%d" % uts)
         xmlReq = preProcessUnasPostRequest(action, postData)
         MU.getLogger().logDebug(xmlReq)
-        unasResp = "OK"
+        return "OK"
     elif action.startswith('synclog'):
         # MU.getLogger().logError("synclog NOT IMPLEMENTED")
         xmlReq = preProcessUnasPostRequest(action, postData)
         uts = MU.createTransactionId( UnasTransactionType.SYNCLOG )
-        MU.getLogger().logDebug("syncLog-TS:%d" % uts)
-        MU.getLogger().logDebug(xmlReq)
-        # print(xmlReq)
-        unasResp = ''
     elif action =='proxycontrol':
         uts = MU.createTransactionId( UnasTransactionType.PROXYCONTROL )
         MU.getLogger().logDebug("setProduct-TS:%d" % uts)
@@ -956,7 +953,7 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
     if len(GBL_ErrorMessages) > 0:
         for errItm in GBL_ErrorMessages:
             errors.append(errItm)
-    return unasResp
+    return unasResp or 'OK'
 
 def doProxyControl(postData, pPath = []):
     postData = postData.replace('&amp;#', '&#')
@@ -1133,7 +1130,7 @@ def postProcessUnasPostRequest(action, xmlResp) -> str|None:
         root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
         MU.getLogger().logDebug(root.tag)
         # return 'OK'  # No normal response
-    elif action == 'changedofferstatus':
+    elif action == 'changedorderstatus':
         root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
         MU.getLogger().logDebug(root.tag)
         return getErrorTextOrder(action, xmlResp)
