@@ -166,6 +166,7 @@ unas:
       fallback2: -9999999
       # Elavult a fenti, szerintem nincs ra hivatkozas
       unique: EGYEDI
+      currencies: [ HUF, EUR, USD, RON, PLN, CZK, BGN, MDL ]
       specials: 
          - [ R1, R1 ]
          - [ R2, R2 ]

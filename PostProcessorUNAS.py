@@ -28,6 +28,12 @@ def isCustomerTypeChecked(cust):
         return True
     return cust.customerstatus == 1 and cust.supplierstatus == 0 and cust.code.text.startswith(MU.CUSTOMER_CODE_PREFIXES["default"])
 
+def i18nBasePrice(pi) -> str|None:
+    if pi.pricecategory == -1:
+        # print(pi)
+        return next((x for x in MU.PRODUCT_PRICECAT_CURRENCIES if x[0] == pi.priceCurrency), None)
+    return None
+
 #TRANSFORMERS
 def transformUnasRequestObject(root, xsltFilename):
     if   xsltFilename == 'Product':
@@ -94,7 +100,7 @@ def transformUnasRequestObject(root, xsltFilename):
                 upc = None if not hasattr(prod,'productcode') else MU.UnasProductList.get(str(prod.productcode))
                 if upc == None: # UNAS-bol hianyzik
                     MU.getLogger().logWarn("Skipped - UNASban nem letezo termek CODE/Sku: " + str(prod.productcode))
-                    #prod.SkipThisItem = '1'
+                    prod.SkipThisItem = '1'
                 else:  # UNAS-ban azonositottam SKU alapjan es LIVE
                     prod.unasProductId = upc.unasId
                     prod.symbolIdIsNull = 1 if upc.symbolId == 0 else 0
@@ -120,7 +126,21 @@ def transformUnasRequestObject(root, xsltFilename):
                             isPriceFound = True
                             MU.checkUnasCustomerGroup(pi.groupName)
                         else:
-                            pi.SkipThisItem = 1  # Issue:0003 - joe@20250625 Multiple Price in PriceCat:18
+                            i18nPrice = i18nBasePrice(pi)
+                            #if prod.productcode == 'PT-6445' and pi.priceCategory == -1:
+                            #    print(1)
+                            if i18nPrice:
+                                pi.retValValid = 2
+                                isPriceFound = True
+                                pi.unasPriceSpecial = 1
+                                # pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                                pi.unasPriceCurrency  = i18nPrice[0]
+                                pi.unasPriceArea  = i18nPrice[1]
+                                pi.unasPriceCurrencyFilter  = i18nPrice[2]
+                                pi.unasPriceVat = i18nPrice[3]
+                                pi.calculatedGrossPrice = pi.value * i18nPrice[4]
+                            else:
+                                pi.SkipThisItem = 1  # Issue:0003 - joe@20250625 Multiple Price in PriceCat:18
                         #
             #else:
             #    MU.getLogger().logDebug(f"Product skipped while webDisplay=0 Code:{prod.code}")
@@ -736,7 +756,6 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
     MU.checkCacheState()
     unasResp ='OK'
     if (action == 'product'):
-        unasResp = "???"
         uts = MU.createTransactionId( UnasTransactionType.PRODUCT )
         MU.getLogger().logDebug("setProduct-TS:%d" % uts)
         if MU.isLogLevelDebug():
@@ -757,7 +776,7 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
             else:
                 MU.UnasSetProductsXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
                 MU.LastActivity = MU.UtcNow(0)
-        # return "OK"
+
     elif action == 'inventory':
         uts = MU.createTransactionId( UnasTransactionType.INVENTORY )
         MU.getLogger().logDebug("setInventory-TS:%d" % uts)

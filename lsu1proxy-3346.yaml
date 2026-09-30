@@ -30,9 +30,9 @@ unas:
   apiUrl: https://api.unas.eu/shop
   feedbackUrl: "'http://' + hostName + ':' + str(serverPort) + '/fbunas'"
   # a WewbShopban kell generalni a hozzaferesi kulcsot
-  # apiKey: 11538c5a19ee5cec8b2b38ccf4294fd9b7d8b9f0
+  apiKey: 11538c5a19ee5cec8b2b38ccf4294fd9b7d8b9f0
   # marton.k@brill-clean.hu /Aa123456
-  apiKey: bbd1c8083514e15d3c0f5b70f9992c376bd6e152
+  # apiKey: bbd1c8083514e15d3c0f5b70f9992c376bd6e152
   # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
   webcategory:
     # id: 187458
@@ -163,6 +163,16 @@ unas:
       fallback1: -9999999
       fallback2: -9999999
       unique: EGYEDI
+      # Ez igy nem, jo! Biztosan nem SpecialPrice-kent kell felvinni - ezt majd az UNASnak kell lefejleszteni
+      currencies:
+         - [ HUF, Budapest, HUF, 27, 1             , hu ]
+         - [ EUR, Berlin  , NZD, 19, 1.076271186440, de ]
+         - [ USD, Amerika , USD, 11, 1.076271186440, us ]
+         - [ RON, Bukarest, RON, 18, 1.076271186440, ro ] 
+         - [ PLN, Varso   , PLN, 23, 1.076271186440, pl ]
+         - [ CZK, Praga   , CZK, 21, 1.076271186440, cz ]
+         - [ BGN, Szofia  , BGN, 17, 1.076271186440, bg ]
+         - [ MDL, Kisinyov, MDL, 22, 1.076271186440, md ]
       specials: 
          - [ R1, R1 ]
          - [ R2, R2 ]

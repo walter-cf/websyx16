@@ -143,14 +143,18 @@ def setConstants(cfg):
     CurrentLogLevel = MUT.LogLvl.getLevelFromStr(LOGLEVEL)
     CACHE_FORCE_RELOAD_PERIOD = cfg["unas"]["cacheForceReload"]
 
-    global PRODUCT_PRICECAT_BASE, PRODUCT_PRICECAT_FALLBACK, PRODUCT_PRICECAT_FALLBACK2, PRODUCT_BULK, PRODUCTNAME_OVERWRITE, PRODUCTCNT_CACHE_GETLIMIT
+    global PRODUCT_PRICECAT_BASE, PRODUCT_PRICECAT_FALLBACK, PRODUCT_PRICECAT_FALLBACK2, PRODUCT_BULK, PRODUCTNAME_OVERWRITE, PRODUCTCNT_CACHE_GETLIMIT,PRODUCT_PRICECAT_CURRENCIES
     # ProductPriceCat
-    PRODUCT_PRICECAT_BASE      = cfg["unas"]["product"]["pricecat"]["base"]
-    PRODUCT_PRICECAT_FALLBACK  = cfg["unas"]["product"]["pricecat"]["fallback1"]
-    PRODUCT_PRICECAT_FALLBACK2 = cfg["unas"]["product"]["pricecat"]["fallback2"]
-    PRODUCT_BULK               = cfg["unas"]["product"]["bulk"]
-    PRODUCTNAME_OVERWRITE      = cfg["unas"]["product"]["overwriteName"]
-    PRODUCTCNT_CACHE_GETLIMIT  = cfg["unas"]["product"]["getproductLimit"]
+    if (cfg["unas"]["product"]):
+        cfgItm = cfg["unas"]["product"]
+        PRODUCT_BULK               = cfgItm.get("bulk")
+        PRODUCTNAME_OVERWRITE      = cfgItm.get("overwriteName")
+        PRODUCTCNT_CACHE_GETLIMIT  = cfgItm.get("getproductLimit")
+        cfgItm = cfgItm["pricecat"]
+        PRODUCT_PRICECAT_BASE      = cfgItm.get("base")
+        PRODUCT_PRICECAT_FALLBACK  = cfgItm.get("fallback1")
+        PRODUCT_PRICECAT_FALLBACK2 = cfgItm.get("fallback2")
+        PRODUCT_PRICECAT_CURRENCIES = cfgItm.get("currencies")
 
     #global GETORDER_INTERVAL
     #GETORDER_INTERVAL = cfg["order"]["getInterval"]
