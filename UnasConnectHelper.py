@@ -80,7 +80,7 @@ def unasGetOrderBy( tag, val): # elso ID : 146194506
     xmlParam = MU.XMLTAG + '<Params><{0}>{1}</{0}></Params>'.format(tag, val)
     return doPostReq('getOrder', xmlParam)
 
-def unasGetProducts( status, limitStart, limitNum):
+def unasGetProdsLiveFull( status, limitStart, limitNum):
     if MU.IGNORE_BLOCKED_UNAS:
         return MU.PRODUCT_TESTDATA1
 

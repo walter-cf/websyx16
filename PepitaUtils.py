@@ -4,7 +4,7 @@ import lxml.objectify as objectify
 import lxml .etree as ET
 
 import MyUtils as MU
-from UnasConnectHelper import unasGetProducts
+from UnasConnectHelper import unasGetProdsLiveFull as getProds
 
 #import  xmlclazz.pepitaTypes as PT
 
@@ -48,9 +48,9 @@ def getSymbolVat(p) -> float:
 
 
 def getProdz(limitStart:int) -> list:
-    prodXml = unasGetProducts("live", limitStart, MU.Conf("pepita.productLimitNum"))
+    prodXml = getProds("live", limitStart, MU.Conf("pepita.productLimitNum"))
     prodz = xmlToProductList(prodXml)
-    return prodz
+    return [] # prodz
 
 #def findParamById( prms : list[PT.Param]) -> str:
 def findParamById( prms : list, _id : int) -> str:

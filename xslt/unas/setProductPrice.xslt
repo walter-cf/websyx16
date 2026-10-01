@@ -17,36 +17,46 @@
                 <Prices>
                 <xsl:for-each select="price">
                     <!-- xsl:if test="retValValid > 1" -->
-                            <xsl:if test="not(SkipThisItem)">
-                                <Price>
-                                    <xsl:if test="not(unasPriceSpecial)">
-                                        <Type>normal</Type>
-                                        <Net><xsl:value-of select="value"/></Net>
-                                        <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
-                                    </xsl:if><!-- test="unasPriceSpecial == 0""  -->
-                                    <xsl:if test="unasPriceSpecial">
-                                        <Type>special</Type>
-                                        <GroupName><xsl:value-of select="groupName"/></GroupName>
-                                        <Net><xsl:value-of select="value"/></Net>
-                                        <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
-                                        <Currency><xsl:value-of select="priceCurrency"/></Currency>
-                                        <Start><xsl:value-of select="offerStart"/></Start>
-                                        <End><xsl:value-of select="offerEnd"/></End>
-                                    </xsl:if><!-- test="unasPriceSpecial > 0""  -->
-                                </Price>
-                            </xsl:if> <!-- test="not(SkipThisItem)"  -->
-                    <!-- /xsl:if --><!-- test="retValValid > 1"  -->
+                    <xsl:if test="not(SkipThisItem)">
+                        <xsl:if test="not(unasPriceSpecial)">
+                        <Price>
+                            <Type>normal</Type>
+                            <Net><xsl:value-of select="value"/></Net>
+                            <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
+                        </Price>
+                        </xsl:if><!-- test="unasPriceSpecial == 0"  -->
+                        <xsl:if test="unasPriceSpecial">
+                        <Price>
+                                <Type>special</Type>
+                                <xsl:if test="groupName">
+                                    <GroupName><xsl:value-of select="groupName"/></GroupName>
+                                </xsl:if>
+                                <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
+                                <Currency><xsl:value-of select="priceCurrency"/></Currency>
+                                <xsl:if test="unasPriceCurrencyFilter">
+                                    <CurrencyFilter><xsl:value-of select="unasPriceCurrencyFilter"/></CurrencyFilter>                                            
+                                </xsl:if>
+                                <!-- 
+                                <Start><xsl:value-of select="offerStart"/></Start>
+                                <End><xsl:value-of select="offerEnd"/></End>
+                                -->
+                        </Price>
+                        </xsl:if><!-- test="unasPriceSpecial == 1"  -->
+                        <xsl:if test="unasPriceArea">
+                        <Price>
+                                <Type>special</Type>
+                                <xsl:if test="groupName">
+                                    <GroupName><xsl:value-of select="groupName"/></GroupName>
+                                </xsl:if>
+                                <Gross><xsl:value-of select="calculatedGrossPrice"/></Gross>
+                                <Currency><xsl:value-of select="priceCurrency"/></Currency>
+                                <AreaName><xsl:value-of select="unasPriceArea"/></AreaName>
+                                <CurrencyFilter><xsl:value-of select="unasPriceCurrencyFilter"/></CurrencyFilter>                                            
+                        </Price>
+                        </xsl:if><!-- test="unasPriceArea > 0""  -->
+                    </xsl:if> <!-- test="not(SkipThisItem)"  -->
                 </xsl:for-each>
                 </Prices>
-                <xsl:if test="$SymbolIdIsNull > 0">
-                    <Params>
-                        <Param>
-                            <Type>num</Type>
-                            <Name>symbolId</Name>
-                            <Value><xsl:value-of select="product" /></Value>
-                        </Param>
-                    </Params>
-                </xsl:if>
             </Product>
         </xsl:if>
         </xsl:if>

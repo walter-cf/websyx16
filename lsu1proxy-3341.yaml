@@ -9,7 +9,7 @@ mail:
   server: 192.168.10.6
   sender: web6proxy-alert@ledsound.hu
   # unas3-operator@ledsound.hu # web6proxy-operator@ledsound.hu
-  operator: joelenovo@nepextel.hu
+  operator: unas3-operator@ledsound.hu
   systemId: TEST
   firstLine: TESZT rendszer uzenet - figyelmen kivul hagyhato.
 #
@@ -166,6 +166,7 @@ unas:
       fallback2: -9999999
       # Elavult a fenti, szerintem nincs ra hivatkozas
       unique: EGYEDI
+      currencies: [ HUF, EUR, USD, RON, PLN, CZK, BGN, MDL ]
       specials: 
          - [ R1, R1 ]
          - [ R2, R2 ]

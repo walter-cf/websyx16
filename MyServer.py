@@ -49,7 +49,7 @@ def logrotate(fn:str):
           maxIdx = maxIdx if idx < maxIdx else idx
     os.rename(fn , f'./{LOGDIR}/{fn[:-4]}-{1+maxIdx}.log')
 
-class MyServer(BaseHTTPRequestHandler):
+class   MyServer(BaseHTTPRequestHandler):
   
   def do_GET(self): # the do_GET method is inherited from BaseHTTPRequestHandler
     global GBL_ErrorMessages
@@ -112,7 +112,7 @@ class MyServer(BaseHTTPRequestHandler):
         elif (pPath[1] == "batch"): # Ki kellene innen torolni - csak a Batch hivhassa?
           if pPath[2] == "orderStatusUnas":
             uts = MU.createTransactionId( UnasTransactionType.ORDERSTATUS )
-            prc = next((x["orderStatus"] for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'orderStatus', x))), {})
+            prc = next((x["orderStatus"] for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'orderStatus', x))), {}) # type: ignore
             MB.orderStatusUnasProxy(prc)
 
             retData = "OK"
@@ -124,15 +124,15 @@ class MyServer(BaseHTTPRequestHandler):
             retData = "OK"
           elif pPath[2] == "xmlfiles-rotate":
             uts = MU.createTransactionId( UnasTransactionType.XMLROTATE )
-            prc = next((x for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'xmlrotate', x))), {}) or {}
+            prc = next((x for x in  MU.BATCH_PROCESSES if   list(filter(lambda key: key == 'xmlrotate', x))), {}) or {} # type: ignore
             MU.batchMethodWrapper('xmlrotate', methodName='archiveXmlFiles' )
             retData = "OK"
           elif pPath[2] == "createProductXml":
             createPepitaProductXml()
             retData = "OK"
           elif (pPath[2] == "pepita-loadfiles"):
-            MU.loadPepitaOrdersHanging(False)
-            retData = str(MU.putPepitaOrderIntoCache().values())
+            pepitaCache = MU.loadPepitaOrdersHanging(False)
+            retData = str(pepitaCache.values())
           elif pPath[2] == "dummy":
             retData = "OK"
           else:
@@ -141,7 +141,7 @@ class MyServer(BaseHTTPRequestHandler):
           retData = 'NoData'
           try:
             resp = MU.doMySql(pPath[2:], ())
-            retData = ','.join(resp or [])
+            retData = ','.join(resp or []) # type: ignore
             retData = "%s" % ('[]' if retData is None else "[" + retData + "]")
             self.send_response(200)
           except Exception as e:
@@ -321,7 +321,9 @@ class MyServer(BaseHTTPRequestHandler):
               htmlResponseMessage = 'No POST DATA!?'
             elif 'xmldata' == list(parsedFields.keys())[0]: # type: ignore
               xmlData = parsedFields['xmldata'][0]
-              htmlResponseMessage = PPU.doUnasRequest(pPath[2], xmlData, 17, errors=GBL_ErrorMessages)
+              htmlResponseMessage = PPU.doUnasRequest(pPath[2], xmlData, 17, errors=GBL_ErrorMessages) or 'OK'
+              if htmlResponseMessage != 'OK':
+                htmlResponseCode = 500
             else:
               cFld = list(parsedFields.keys())[0] # type: ignore
               xmlData = parsedFields[cFld][0]
@@ -575,7 +577,6 @@ def startBatchThread():
       print('BATCH-Server started (inline)')
     except Exception as x:
       MU.getLogger().logger.info('BATCH Server closing:', x)
-
 
 def getGlobalLogLevel():
   if MU.LOGLEVEL[0].upper() == 'I':

@@ -796,7 +796,7 @@ def doUnasGetRequest(path, errors, qry={}) -> str:
     elif actionPath == 'products':
         uts = MU.createTransactionId( UTSTYPE.PRODUCTS )
         MU.getLogger().logger.debug("getProducts-TS:%d" , uts)
-        xmlResp = UCH.unasGetProducts( '1' , 1, 0 )
+        xmlResp = UCH.unasGetProdsLiveFull( '1' , 1, 0 )
         unasresp =  doUnasActionRequest(xmlResp, 'products','Product')
     elif actionPath.startswith('prodby'):
         uts = MU.createTransactionId( UTSTYPE.PRODBY )
