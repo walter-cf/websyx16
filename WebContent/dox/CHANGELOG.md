@@ -1,4 +1,38 @@
-## web6Proxy - valtozaslista joe @ 2026.08.25
+## web6Proxy - valtozaslista joe @ 2026.10.06
+
+### - 2026.10.06
+*add i18n prices - valurtakezeles - veglegesites* 
+eliminate R4/R% autocalculated values, brutto/netto corrections
+
+### - 2026.09.30
+*code cleaning*
+*add i18n prices - valurtakezeles*
+
+### - 2026.09.23
+*add upload to UNAS: SupplierOrder-Quantity*
+
+
+### - 2026.09.19
+*import Pepita API cllas into main tree*
+*add sourceSystem ID for errorEmail- subject*
+
+
+### - 2026.09.15
+**optional ALPHA release**
+*add CustomerOffer*
+*add SupplierStatus*
+*add OrderStatus by Symbol!*
+
+### - 2026.09.01
+*xml Classes  - tech. implementation (beginner)*
+*Pepita - termek feltoltes (continues)*
+*Pepita - megrendelek letoltese (continues)*
+*Python 13 forced type strict*
+
+Markdown Reader for FF/Chrome/Edge [MD-Viewer](https://addons.mozilla.org/en-US/firefox/addon/markdown-viewer-webext/) 
+
+Megjegyzeseim a SpecialPrices devhez: [Comments4Dev16](http://syxproxy.lan:3342/ffmd/dox/CommentsDev4dev16.md)
+
 
 ### - 2026.08.20
 *add - Pepita XML push service*  
@@ -21,39 +55,39 @@ logging. to MU.getLogger
 GIT Merge Test into Master
 
 ### - 2026.01.06
-Issue: 0004: SetProduct STATE confused - Ha UNASban mar letezett, de inaktiv es symbol aktivalja - akkor ez nem tortent meg
+Issue: 0004: SetProduct STATE confused - Ha UNASban mar letezett, de inaktiv es symbol aktivalja - akkor ez nem tortent meg 
 Solution: PostProcessorUnas: 67-72 2025 Jjun 25-en kikommentezzewtt reszt helyreallitottam
 
 ### - 2025.06.25
-Issue: 0003: SetPrice - joe@20250625 Multiple Price in PriceCat:18 ( EUR and HUF also exists)
+Issue: 0003: SetPrice - joe@20250625 Multiple Price in PriceCat:18 ( EUR and HUF also exists) 
 USER Error - but handled :: prefer HUF
 
 ### - 2025.06.23
-Issue: 0002: getOrder - Duplicate customer 0 errorhandlling failed
+Issue: 0002: getOrder - Duplicate customer 0 errorhandlling failed 
 ```
 Context:: client:192.168.10.4, action:getOrder -+- TS:1750546863011, tsTime:2025.06.22 01:01:03, tsType:ORDERS
 
 Object of type IntElement is not JSON serializable
 
-Exception:<class 'TypeError'> / Object of type IntElement is not JSON serializable
-Traceback (most recent call last):
-  File "/opt/websyx/GetProcessor.py", line 106, in transformGetRequestObject
-    MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc
-    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
-  File "/opt/websyx/MyUtils.py", line 549, in putCustomerIntoCache
-    raise MUT.MyProgramFlowErrorException( _m, MUT.ProxyErrCode.E40 )
-MyUtilsTypes.MyProgramFlowErrorException: 40 -> [putCustomerIntoCache]:Duplicate item:{ "unasId":None, "symbolId":None, "lastmod":(1750545662)[2025.06.22 00:41:02], "code":"UCU-269184499",
-+"email":"rendeles@lovemobile.hu", "taxNumber":"12676981-2-41", "state":"nonRegged" } :*-*: { "unasId":None, "symbolId":None, "lastmod":(1750545662)[2025.06.22 00:41:02], "code":"UCU-269192964",
-+"email":"procurement@irodaszerellato.hu", "taxNumber":"12372137-2-41", "state":"nonRegged" }
+Exception:<class 'TypeError'> / Object of type IntElement is not JSON serializable 
+Traceback (most recent call last): 
+  File "/opt/websyx/GetProcessor.py", line 106, in transformGetRequestObject 
+    MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc 
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^ 
+  File "/opt/websyx/MyUtils.py", line 549, in putCustomerIntoCache 
+    raise MUT.MyProgramFlowErrorException( _m, MUT.ProxyErrCode.E40 ) 
+MyUtilsTypes.MyProgramFlowErrorException: 40 -> [putCustomerIntoCache]:Duplicate item:{ "unasId":None, "symbolId":None, "lastmod":(1750545662)[2025.06.22 00:41:02],  "code":"UCU-269184499", 
++"email":"rendeles@lovemobile.hu", "taxNumber":"12676981-2-41", "state":"nonRegged" } :*-*: { "unasId":None, "symbolId":None, "lastmod":(1750545662)[2025.06.22 00:41:02],  "code":"UCU-269192964", 
++"email":"procurement@irodaszerellato.hu", "taxNumber":"12372137-2-41", "state":"nonRegged" } 
 ```
 MyUtilTypes:239 -> simans str -re konvertaltam !!! HACK !!! Kesobb megnezem
 
 ### - 2025.06.17
- - Issue-0001: setCustomer Failed!  TrId:1750148875047(first) - 1750151038047(last)
+ - Issue-0001: setCustomer Failed!  TrId:1750148875047(first) - 1750151038047(last) 
    getCustomerFrom Cache - bad code - changeId: 6bf46c9d2b1e6610b25ad3a4e40376aa9758c613
 
 ### - 2025.05.31
-- log/xmlfiles rotate & archive /  add batch-func
+- log/xmlfiles rotate & archive /  add batch-func 
 - xmlfiles - ProductPrice.UNAS - save: missed (3dbd207710ae96827f1955d4a2764b3549dbd8a7)
 - DOX:webSocks: add new api entry (d51df661e67778aab914e0f950a6a8eacd570e13)
 - Remove unused Py files (27d3c02da933537a2d778b523324a233c3e8d78b)

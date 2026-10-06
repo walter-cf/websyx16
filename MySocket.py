@@ -53,7 +53,7 @@ class MyControlWebServer(BaseHTTPRequestHandler):
                 htmlResponseMessage = f'<html><head><meta charset="UTF-8"></head><body>{_doc}</body></html>'
             elif 'ffmd' == pPath[1]:
                 # contentType = 'text/x-markdown'
-                contentType = 'text/markdown'
+                contentType = 'text/x-markdown'
                 _doc = MPC.doWebPageFile(pPath[2:], queryParams, binaryRead=False )
                 htmlResponseMessage = bytes( _doc, 'cp1252', errors='replace') 
             elif 'js' == pPath[1]:
@@ -100,7 +100,7 @@ class MyControlWebServer(BaseHTTPRequestHandler):
             htmlResponseCode = 400
         #        
         self.send_response(htmlResponseCode)
-        self.send_header("Content-type", contentType or "text/plain" )
+        self.send_header("Content-Type", contentType or "text/plain" )
         self.end_headers()
         if htmlResponseMessage is not None:
             respBytes = htmlResponseMessage if isinstance(htmlResponseMessage, bytes) else bytes(str(htmlResponseMessage),'utf-8')

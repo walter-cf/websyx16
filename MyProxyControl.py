@@ -7,7 +7,7 @@ import UnasCustomerCache as UCC
 import UnasOrderCache as UOC
 import UnasProductCache as UPC
 
-from lxml import objectify
+import lxml.objectify as objectify
 
 BASEDIR = 'WebContent'
 
