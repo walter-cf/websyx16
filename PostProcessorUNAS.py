@@ -29,12 +29,13 @@ def isCustomerTypeChecked(cust):
     return cust.customerstatus == 1 and cust.supplierstatus == 0 and cust.code.text.startswith(MU.CUSTOMER_CODE_PREFIXES["default"])
 
 def checkXmlTypeByRootTag(xsltFilename:str, xmlTag:str):
+        expected ='-'
         match (xsltFilename):
             case "ProductQuantity": expected = 'ProductQuantities'
             case "OrderStatus": expected = 'CustomerOrderStatuses'
             case "ProductQuantit2": expected = 'ProductQuantities'
             case _:
-                MyProgramFlowErrorException(f'checkXmlTypeByRootTag - Unhandled xslt:{xsltFilename}', ProxyErrCode.E44)
+                MyProgramFlowErrorException(f'checkXmlTypeByRootTag - Unhandled xslt:{xsltFilename}', ProxyErrCode.E44_CODEERROR)
 
         if xmlTag != expected:
             raise MyProgramFlowErrorException(f'Hibas xmlRequest! Action:{xsltFilename}, xmlRoot:{xmlTag}', ProxyErrCode.E43_BADXML)
@@ -852,13 +853,13 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         postData = postData.replace('&amp;#', '&#')
         xmlReq_0 = preProcessUnasPostRequest(action, postData)
         xmlReq = prepareUnasReply(xmlReq_0, "Customer")
-        if len((xmlReq or '').trim()) > 0:
+        if len((xmlReq or '').strip()) > 0:
             # xmlReq = xmlReq.replace('<?xml version="1.0"?>', '')            
             if (not MU.CUSTOMER_BULK) or (pathParam3 == 'direct'):
                 xmlResp = UCH.unasCustomer_Direct(xmlReq)
                 unasResp = postProcessUnasPostRequest(action, xmlResp)
             else:
-                MU.UnasSetCustomersXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
+                MU.UnasSetCustomersXmlPart += (xmlReq or '').replace('<?xml version="1.0"?>', '')
                 MU.getLogger().logDebug("LEN xml:%i, tot:%s", len( xmlReq or ''), len( MU.UnasSetCustomersXmlPart  or ''))
                 MU.LastActivity = MU.UtcNow(0)
     elif action == 'pricerule':
@@ -913,7 +914,6 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         if xmlReq != None:            # Lehet NEM OK-val kellene visszaterni?
             xmlReq = xmlReq.replace('<?xml version="1.0" encoding="utf8"?>', '')            
             #xmlReq = xmlReq.replace('<?xml version="1.0"?>', '')            
-            unasResp = postProcessUnasPostRequest(action, xmlResp)
             if (not MU.PRODUCT_BULK) or (pathParam3 == 'direct'):
                 xmlResp = UCH.unasOrder_Direct(xmlReq)
                 unasResp = postProcessUnasPostRequest(action, xmlResp)
@@ -1055,8 +1055,13 @@ def getErrorTextProduct(action, xmlResp):
             status = prod.find('Status').text
             action = prod.find('Action')
             if status.lower() ==  'ok':
-                MU.UnasProductList[productSku].lastmod = MU.UtcNow()
-                MU.getLogger().logInfo( "%s-ok:%s", 'NoneAction' if action is None else action.text, productSku)
+                if productSku in MU.UnasProductList:
+                    MU.UnasProductList[productSku].lastmod = MU.UtcNow()
+                else:
+                    symbolId = int(FBU.getField('select "Id" from "Product" where "Code" = ?', (productSku, )) or '0')
+                    MU.UnasProductList[productSku] = UPC(0, productSku, symbolId, 0.0, 27, UPC.ProductState_LIVE)
+                    MU.UnasProductList[productSku].lastmod = MU.UtcNow()
+                    MU.getLogger().logError( "%s-ok:%s BUT Missing from UPCache", 'NoneAction' if action is None else action.text, productSku)
             else:
                 errMsg = prod.find('Error').text
                 GBL_ErrorMessages.append(errMsg)
