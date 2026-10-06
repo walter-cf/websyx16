@@ -167,14 +167,14 @@ unas:
       # Elavult a fenti, szerintem nincs ra hivatkozas
       unique: EGYEDI
       currencies:
-         - [ HUF, Budapest, HUF, 27, 1             , hu ]
-         - [ EUR, Berlin  , NZD, 19, 1.076271186440, de ]
-         - [ USD, Amerika , USD, 11, 1.076271186440, us ]
-         - [ RON, Bukarest, RON, 18, 1.076271186440, ro ] 
-         - [ PLN, Varso   , PLN, 23, 1.076271186440, pl ]
-         - [ CZK, Praga   , CZK, 21, 1.076271186440, cz ]
-         - [ BGN, Szofia  , BGN, 17, 1.076271186440, bg ]
-         - [ MDL, Kisinyov, MDL, 22, 1.076271186440, md ]
+         - [ HUF, Budapest, HUF, 27, 1, hu ]
+         - [ EUR, Berlin  , NZD, 19, 1, de ]
+         - [ USD, Amerika , USD, 11, 1, us ]
+         - [ RON, Bukarest, RON, 18, 1, ro ] 
+         - [ PLN, Varso   , PLN, 23, 1, pl ]
+         - [ CZK, Praga   , CZK, 21, 1, cz ]
+         - [ BGN, Szofia  , BGN, 17, 1, bg ]
+         - [ MDL, Kisinyov, MDL, 22, 1, md ]
       specials: 
          - [ R1, R1 ]
          - [ R2, R2 ]
