@@ -33,7 +33,7 @@ def checkXmlTypeByRootTag(xsltFilename:str, xmlTag:str):
         match (xsltFilename):
             case "ProductQuantity": expected = 'ProductQuantities'
             case "OrderStatus": expected = 'CustomerOrderStatuses'
-            case "ProductQuantit2": expected = 'ProductQuantities'
+            case "ProductPrice": expected = 'ProductPrices'
             case _:
                 MyProgramFlowErrorException(f'checkXmlTypeByRootTag - Unhandled xslt:{xsltFilename}', ProxyErrCode.E44_CODEERROR)
 
@@ -109,52 +109,53 @@ def transformUnasRequestObject(root, xsltFilename):
         for prod in root.getchildren():
             #if prod.webdisplay == 1:
             isPriceFound = False
-            if "ObjectifiedElement" in str(type(prod)): # azt hiszem, a pepita prod-okol tudott jonni StringElement
-                upc = None if not hasattr(prod,'productcode') else MU.UnasProductList.get(str(prod.productcode))
-                if upc == None: # UNAS-bol hianyzik
-                    MU.getLogger().logWarn("Skipped - UNASban nem letezo termek CODE/Sku: " + str(prod.productcode))
-                    prod.SkipThisItem = '1'
-                else:  # UNAS-ban azonositottam SKU alapjan es LIVE
-                    prod.unasProductId = upc.unasId
-                    prod.symbolIdIsNull = 1 if upc.symbolId == 0 else 0
-                    # 20250529@joe prod.retValProduct = 0
-                    #isPriceFound = False
-                    #foundCat = -99999
-                    for pi in prod.price:
-                        # 20250529@joe prod.retValProduct = 1
-                        specialPriceCat = next(( x[1] for x in MU.Conf('unas.product.pricecat.specials') if x[0] == pi.pricecategoryName.text), None) # pyright: ignore[reportOptionalIterable]
-                        if pi.pricecategory == MU.PRODUCT_PRICECAT_BASE and pi.priceCurrency == 'HUF':
-                            pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+            #if "ObjectifiedElement" in str(type(prod)): # azt hiszem, a pepita prod-okol tudott jonni StringElement
+            checkXmlTypeByRootTag(xsltFilename, root.tag) # Exception if failed
+            upc = None if not hasattr(prod,'productcode') else MU.UnasProductList.get(str(prod.productcode))
+            if upc == None: # UNAS-bol hianyzik
+                MU.getLogger().logWarn("Skipped - UNASban nem letezo termek CODE/Sku: " + str(prod.productcode))
+                prod.SkipThisItem = '1'
+            else:  # UNAS-ban azonositottam SKU alapjan es LIVE
+                prod.unasProductId = upc.unasId
+                prod.symbolIdIsNull = 1 if upc.symbolId == 0 else 0
+                # 20250529@joe prod.retValProduct = 0
+                #isPriceFound = False
+                #foundCat = -99999
+                for pi in prod.price:
+                    # 20250529@joe prod.retValProduct = 1
+                    specialPriceCat = None if pi.priceCurrency != 'HUF' else next(( x[1] for x in MU.Conf('unas.product.pricecat.specials') if x[0] == pi.pricecategoryName.text), None) # pyright: ignore[reportOptionalIterable]
+                    if pi.pricecategory == MU.PRODUCT_PRICECAT_BASE and pi.priceCurrency == 'HUF':
+                        pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                        pi.retValValid = 2
+                        isPriceFound = True
+                    elif pi.pricecategory == MU.PRODUCT_PRICECAT_UNIQUE:
+                        raise MyProgramFlowErrorException("Nem lekezelt EGYEDI ProductPrice", ProxyErrCode.UNKNOWN)
+                    elif specialPriceCat:
+                        pi.unasPriceSpecial = 1
+                        pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                        pi.groupName  = pi.pricecategoryName.text
+                        pi.offerStart = pi.validfrom.text.replace('-', '.')
+                        pi.offerEnd   = MU.EPOCH_ENDDATE
+                        pi.retValValid = 2
+                        isPriceFound = True
+                        MU.checkUnasCustomerGroup(pi.groupName)
+                    else:
+                        i18nPrice = i18nBasePrice(pi)
+                        #if prod.productcode == 'PT-6445' and pi.priceCategory == -1:
+                        #    print(1)
+                        if i18nPrice:
                             pi.retValValid = 2
                             isPriceFound = True
-                        elif pi.pricecategory == MU.PRODUCT_PRICECAT_UNIQUE:
-                            raise MyProgramFlowErrorException("Nem lekezelt EGYEDI ProductPrice", ProxyErrCode.UNKNOWN)
-                        elif specialPriceCat:
                             pi.unasPriceSpecial = 1
-                            pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
-                            pi.groupName  = pi.pricecategoryName.text
-                            pi.offerStart = pi.validfrom.text.replace('-', '.')
-                            pi.offerEnd   = MU.EPOCH_ENDDATE
-                            pi.retValValid = 2
-                            isPriceFound = True
-                            MU.checkUnasCustomerGroup(pi.groupName)
+                            # pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
+                            pi.unasPriceCurrency  = i18nPrice[0]
+                            pi.unasPriceArea  = i18nPrice[1]
+                            pi.unasPriceCurrencyFilter  = i18nPrice[2]
+                            pi.unasPriceVat = i18nPrice[3]
+                            pi.calculatedGrossPrice = pi.value * i18nPrice[4]
                         else:
-                            i18nPrice = i18nBasePrice(pi)
-                            #if prod.productcode == 'PT-6445' and pi.priceCategory == -1:
-                            #    print(1)
-                            if i18nPrice:
-                                pi.retValValid = 2
-                                isPriceFound = True
-                                pi.unasPriceSpecial = 1
-                                # pi.calculatedGrossPrice = pi.value * ( 1.27 if upc.vat > 27 or upc.vat < 0 else (100 + upc.vat) / 100 )
-                                pi.unasPriceCurrency  = i18nPrice[0]
-                                pi.unasPriceArea  = i18nPrice[1]
-                                pi.unasPriceCurrencyFilter  = i18nPrice[2]
-                                pi.unasPriceVat = i18nPrice[3]
-                                pi.calculatedGrossPrice = pi.value * i18nPrice[4]
-                            else:
-                                pi.SkipThisItem = 1  # Issue:0003 - joe@20250625 Multiple Price in PriceCat:18
-                        #
+                            pi.SkipThisItem = 1  # Issue:0003 - joe@20250625 Multiple Price in PriceCat:18
+                    #
             #else:
             #    MU.getLogger().logDebug(f"Product skipped while webDisplay=0 Code:{prod.code}")
             if next((False for x in prod.findall('price') if x.find('SkipThisItem') is None ), True):
