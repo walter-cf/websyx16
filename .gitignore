@@ -124,22 +124,26 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
-
-xmlfiles
+# joe`s
+xmlfiles/*
+logz/*
+logz-z/*
 *log
 *.txt
-syxProxy.log*
+nogit
+*.nogit
+web6proxy-*.yaml
+xmlfiles-z
+*Old.py
+.xsd*
+T?
+pepita/orders/*
+pepita/orders-s/*
+pepita/orders-z/*
+pepita/pckg-labels/*
+# ???
 e.xml
 custs-183.xml
 xslt/unas/NotUsed*
-*.nogit
-web6proxy-*.yaml
-logz*
-xmlfiles-z
-*Old.py
-nogit
-.xsd*
 web6xml
-T?
-pepita
 A1.git
