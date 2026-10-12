@@ -1639,20 +1639,20 @@ def createStatEntryERR(retCode:int, response:str):
 unasContext = MUT.UnasContext()
 def getUnasContext() -> MUT.UnasContext: 
     global unasContext
+    if unasContext is None:
+        loadUnasProxyContext()
     return unasContext
 
 def loadUnasProxyContext():
     sql = 'SELECT * FROM proxy_context'
     ctxRow = mySqlIntance.getRow(sql) or {}
-    ctx = getUnasContext()
+    ctx = MUT.UnasContext()
     ctx.lastGetCustomer = 0 if ctxRow['lastGetCustomer'] is None else ctxRow['lastGetCustomer'] # type: ignore
     ctx.lastGetOrder    = 0 if ctxRow['lastGetOrder'   ] is None else ctxRow['lastGetOrder'   ] # type: ignore
     ctx.lastSetCustomer = 0 if ctxRow['lastSetCustomer'] is None else ctxRow['lastSetCustomer'] # type: ignore
     ctx.lastSetProduct  = 0 if ctxRow['lastSetProduct' ] is None else ctxRow['lastSetProduct' ] # type: ignore
 
 def loadUnasBatchContext():
-    sql = 'SELECT * FROM proxy_context'
-    ctxRow = mySqlIntance.getRow(sql) or {}
     ctx = getUnasContext()
     ctx.lastUnasOrderStatus = 0 if len(ctxRow) == 0 else ctxRow['lastUnasOrderStatus'] # type: ignore
 
@@ -1769,7 +1769,7 @@ mySqlIntance = MySqlWrapper()
 def mySqlCheckConnection() -> bool :
     try:
         conn = mySqlIntance.getConn()
-        res = doMySql('select 1')
+        res = doMySql('select 1') or []
         return len(res)>0 or False
     except:
         conn = mySqlIntance.getConn()
@@ -2207,7 +2207,7 @@ def mkUniqueGroupName(custId:int) -> str:
 
 def createShadowOffer(offer:CustomerOffer) -> bool:
     # id:int, voucher_number:str, name:str, valid_from:str, valid_to:str
-    offerRow = doMySql("select id, unas_id from customer_offers where id = %s", (offer.id,) )
+    offerRow = doMySql("select id, unas_id from customer_offers where id = %s", (offer.id,) ) or []
     retval = False # offerId is None
     if len(offerRow) == 0:
         retval = True
@@ -2334,7 +2334,7 @@ def setSpecialPrices(cust, ucc: UCC.UnasCustomerCache, cg:str|None):
             # Create fallbackProductPriceCategories if customercategory in PRODUCT_PRICECAT_SPECIALS
             specials_ = [ x[1] for x in Conf('unas.product.pricecat.specials') or [] ]
             for special in specials_:
-                specProds = doMySql("select * from customer_offer_details where price_category_name = %s", (special,))
+                specProds = doMySql("select * from customer_offer_details where price_category_name = %s", (special,)) or []
                 for prod in specProds:
                     sku = getSkuBySymbolId(  prod['product'])  # type: ignore
                     upc = next((x for x in  UnasProductList.values() if x.sku == sku), None )

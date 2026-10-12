@@ -6,6 +6,15 @@ from datetime import datetime
 @dataclass
 class Id:
     id: int = 0
+    def __init__(self, sid:int):
+        self.id = sid
+
+    @staticmethod
+    def addXmlElement(parent, tagName, tagValue):
+        if tagValue is not None:
+            elem = ET.SubElement(parent, tagName)
+            elem.text = str(tagValue)
+            parent.append(elem)
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Id':
@@ -36,7 +45,9 @@ class Id:
 @dataclass
 class Code:
     code: str|None = None
-
+    def __init__(self, sku:str):
+        self.code = sku
+    
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Code':
         """Create Code instance from XML element."""
@@ -96,6 +107,8 @@ class Webdisplay:
 @dataclass
 class Webname:
     webname: str|None = None
+    def __init__(self, prm:str):
+        self.webname = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Webname':
@@ -126,6 +139,8 @@ class Webname:
 @dataclass
 class Webdescription:
     webdescription: str|None = None
+    def __init__(self, prm:str):
+        self.webdescription = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Webdescription':
@@ -156,6 +171,8 @@ class Webdescription:
 @dataclass
 class Webmetadescription:
     webmetadescription: str|None = None
+    def __init__(self, prm:str):
+        self.webmetadescription = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Webmetadescription':
@@ -186,6 +203,8 @@ class Webmetadescription:
 @dataclass
 class Weburl:
     weburl: str|None = None
+    def __init__(self, prm:str):
+        self.weburl = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Weburl':
@@ -216,6 +235,8 @@ class Weburl:
 @dataclass
 class Webkeywords:
     webkeywords: str|None = None
+    def __init__(self, prm:str):
+        self.webkeywords = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Webkeywords':
@@ -309,6 +330,7 @@ class Product:
     code: Optional['Code'] = None
     webdisplay: Optional['Webdisplay'] = None
     webname: Optional['Webname'] = None
+    name: Optional[str] = None
     webdescription: Optional['Webdescription'] = None
     webmetadescription: Optional['Webmetadescription'] = None
     weburl: Optional['Weburl'] = None
@@ -329,7 +351,8 @@ class Product:
             weburl=cls._parse_weburl(element),
             webkeywords=cls._parse_webkeywords(element),
             feedbackurl=cls._parse_feedbackurl(element),
-            errorurl=cls._parse_errorurl(element)
+            errorurl=cls._parse_errorurl(element),
+            name= None if element.name is None else element.name.text
         )
     
     def to_element(self) -> ET.Element:
@@ -345,7 +368,9 @@ class Product:
         self._serialize_webkeywords(element)
         self._serialize_feedbackurl(element)
         self._serialize_errorurl(element)
+        self.addXmlElement('name', self.name)
         return element
+    
     @staticmethod
     def _parse_id(element: ET.Element) -> Optional['Id']:
         """Parse id from XML element."""

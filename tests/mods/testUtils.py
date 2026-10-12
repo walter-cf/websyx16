@@ -30,7 +30,7 @@ def unasApiWrapper(action:str, xml:str) -> str:
     resp = unasFreeXml(action, xml)
     return resp
 
-def unasApiSetProdict(xml:str) -> str:
+def unasApiSetProduct(xml:str) -> str:
     resp = unasProduct_Direct(xml)
     return resp
 

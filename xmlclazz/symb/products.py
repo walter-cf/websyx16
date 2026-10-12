@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 class Product:
     id: int = 0  # XML element: id
     code: str|None = None  # XML element: code
+    name: str|None = None  # XML element: name
     webdisplay: int = 0  # XML element: webdisplay
     webname: str|None = None  # XML element: webname
     webdescription: str|None = None  # XML element: webdescription
@@ -27,6 +28,9 @@ class Product:
         code_elem = xml_element.find('code')
         if code_elem is not None:
             instance.code = code_elem.text
+        nm_elem = xml_element.find('name')
+        if nm_elem is not None:
+            instance.name = nm_elem.text
         webdisplay_elem = xml_element.find('webdisplay')
         if webdisplay_elem is not None:
             instance.webdisplay = int(webdisplay_elem.text or 0)

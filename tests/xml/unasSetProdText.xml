@@ -1,0 +1,10 @@
+<Product>
+    <Action>modify</Action>
+    <Sku>%s</Sku>
+    <Lang>%s</Lang>
+    <Name>%s</Name>
+    <Description>
+        <Short>%s</Short>
+        <Long>%s</Long>
+    </Description>
+</Product>
