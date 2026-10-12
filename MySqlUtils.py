@@ -1,11 +1,26 @@
 import json
 
-# import mysql as mySQL
+#import mysql as mySQL
 import mysql.connector
+import mysql.connector.cursor
 
 import MyUtils as MU
 from MyUtilsTypes import AlertMailType, AlertMailTypeEncoder
 
+# Source - https://stackoverflow.com/a/22853435
+# Posted by panofish, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-10-08, License - CC BY-SA 3.0
+#'''
+class MySQLCursorDict(mysql.connector.cursor.MySQLCursor):
+    def _row_to_python(self, rowdata, desc=None):
+        row = super(MySQLCursorDict, self)._row_to_python(rowdata, desc)
+        if row:
+            return dict(zip(self.column_names, row))
+        return None
+
+#db = mysql.connector.connect(user='root', database='test')
+#cursor = db.cursor(cursor_class=MySQLCursorDict)
+#'''
 
 class MySqlWrapper():
     MyDB = None
@@ -41,6 +56,7 @@ class MySqlWrapper():
                 password = MU.MYSQL_PASSWORD,
                 database = MU.MYSQL_DB,
                 auth_plugin='mysql_native_password'
+                # , cursorclass=mysql.connector.cursor.MySQLCursorDict
         )
         return self.MyDB
     
@@ -48,10 +64,17 @@ class MySqlWrapper():
         try:
             if self.MyDB is None:
                 self.MyDB = self.getConn(True)
-            return self.MyDB.cursor(buffered=True, dictionary=True)
+                # cnx = mysql.connector.connect(database='dfdd')
+                # cursor = cnx.cursor(buffered=True, cursor_class=MySQLCursorDict)
+            #return self.MyDB.cursor(buffered=True, dictionary=True)
+            #cursor = self.MyDB.cursor(buffered=True)
+            #cursor = self.MyDB.cursor(buffered=True, cursor_class=MySQLCursorDict)
+            return self.MyDB.cursor(dictionary=True)
         except mysql.connector.errors.OperationalError:
             self.MyDB = self.getConn(True)
-            return self.MyDB.cursor(buffered=True, dictionary=True)
+            #return self.MyDB.cursor(buffered=True, dictionary=True)
+            return self.MyDB.cursor(buffered=True, cursor_class=mysql.connector.cursor.MySQLCursorDict)
+
 
     def doSql(self, sql, params = () ):
         crsr = self.getCursor()
