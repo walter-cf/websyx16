@@ -88,6 +88,9 @@ def transformGetRequestObject(root, action, xmlPart):
                             oid=prod.Id, otyp=ProxyObjectType.UNASPRODUCT), level = logging.ERROR, eDescr=sys.exc_info())
             finally:
                 pass
+    elif action == 'ProductText' or action == 'ProductTextBy' :
+             for prod in root.getchildren():
+                 print(prod)
     elif action == 'Order' or action == 'OrderBy' :
         for ord in root.getchildren():
             try:
@@ -494,6 +497,10 @@ def preProcessUnasGetResponse(xml, action):
         pass
     elif action == 'products':
         pass
+    elif action == 'productstext':
+        pass
+    elif action == 'producttextby':
+        pass
     elif action == 'prodbyid':
         pass
     elif action == 'customers':
@@ -511,6 +518,10 @@ def postProcessUnasGetResponse(xml, action):
     if action == 'orders':
         pass
     elif action == 'products':
+        pass
+    elif action == 'productstext':
+        pass
+    elif action == 'producttextby':
         pass
     elif action == 'prodbyid':
         pass
@@ -793,6 +804,16 @@ def doUnasGetRequest(path, errors, qry={}) -> str:
         MU.getLogger().logger.debug("getOrderBy-TS:%d" , uts)
         xmlResp = UCH.unasGetOrderBy( path[3], path[4])
         unasresp = doUnasActionRequest(xmlResp, 'orders', 'Order', 'OrderBy')
+    elif actionPath == 'productstext':
+        uts = MU.createTransactionId( UTSTYPE.PRODUCTS )
+        MU.getLogger().logger.debug("getProducts-TS:%d" , uts)
+        xmlResp = UCH.unasGetProdsLiveFull( '1' , 1, 0 )
+        unasresp =  doUnasActionRequest(xmlResp, actionPath,'ProductText')
+    elif actionPath == 'producttextby':
+        uts = MU.createTransactionId( UTSTYPE.PRODBY )
+        MU.getLogger().logger.debug("getProduct BY-TS:%d Item:%s, val:%s", uts, path[3], path[4] )
+        xmlResp = UCH.unasGetProductByAzon( path[3], path[4], path[5] or 'hu')
+        unasresp = doUnasActionRequest(xmlResp, actionPath,'ProductTextBy')
     elif actionPath == 'products':
         uts = MU.createTransactionId( UTSTYPE.PRODUCTS )
         MU.getLogger().logger.debug("getProducts-TS:%d" , uts)

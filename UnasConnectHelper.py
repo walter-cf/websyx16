@@ -80,7 +80,7 @@ def unasGetOrderBy( tag, val): # elso ID : 146194506
     xmlParam = MU.XMLTAG + '<Params><{0}>{1}</{0}></Params>'.format(tag, val)
     return doPostReq('getOrder', xmlParam)
 
-def unasGetProdsLiveFull( status, limitStart, limitNum):
+def unasGetProdsLiveFull( status, limitStart, limitNum, lang='hu'):
     if MU.IGNORE_BLOCKED_UNAS:
         return MU.PRODUCT_TESTDATA1
 
@@ -88,7 +88,7 @@ def unasGetProdsLiveFull( status, limitStart, limitNum):
     dateStr  = '<TimeStart>' + str(MU.UtcNow(MU.GETPRODUCT_INTERVAL)) +'</TimeStart>'  # 1 ora
     limit = "<LimitNum>{0}</LimitNum><LimitStart>{1}</LimitStart>".format(limitNum, limitStart)
     #
-    xmlParam = MU.XMLTAG + '<Params><State>live</State><ContentType>full</ContentType>' + limit + dateStr + '</Params>'
+    xmlParam = f'{MU.XMLTAG}<Params><State>live</State><Lang>{lang}</Lang><ContentType>full</ContentType>{limit}{dateStr}</Params>'
     ##  xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><LimitNum>3</LimitNum><ContentType>full</ContentType></Params>'
     # lmn = "<LimitStart>{0}</LimitStart>".format(limitStart) if limitStart >=0 else "<xxx></xxx>"
     # lms = "<LimitNum>{0}</LimitNum>".format(limitNum) if limitNum >=0 else "<yyyy></yyyy>"
@@ -96,8 +96,8 @@ def unasGetProdsLiveFull( status, limitStart, limitNum):
     # xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><Id>702433156</Id><ContentType>full</ContentType></Params>'
     return doPostReq('getProduct', xmlParam)
 
-def unasGetProductByAzon(xmlItem, xmlValue):
-    xmlParam = MU.XMLTAG + '<Params><{0}>{1}</{0}></Params>'.format(xmlItem, xmlValue)
+def unasGetProductByAzon(xmlItem, xmlValue, lang='hu'):
+    xmlParam = MU.XMLTAG + '<Params><{0}>{1}</{0}><Lang>{2}</Lang></Params>'.format(xmlItem, xmlValue, lang)
     return doPostReq('getProduct', xmlParam)
 
 def unasGetStorage(tag = None, val = None):
@@ -127,7 +127,7 @@ def unasGetCustomerById(unasId:int):
     xmlParam = f'<?xml version="1.0" encoding="UTF-8" ?><Params><ContentType>full</ContentType><Id>{unasId}</Id></Params>'
     return doPostReq('getCustomer', xmlParam)
 
-def unasGetActiveProducts( limitNum, limitStart ):
+def unasGetActiveProducts( limitNum, limitStart, lang='hu' ):
     if MU.UnasProductWebCategoryId is None:
         xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><Name>%s</Name><ContentType>minimal</ContentType></Params>' % MU.UnasProductWebCategoryName
         responseText =  doPostReq('getCategory', xmlParam)
@@ -145,7 +145,7 @@ def unasGetActiveProducts( limitNum, limitStart ):
         limitStartTag = '' if limitStart < 1 else '<LimitStart>%d</LimitStart>' % (1+limitStart)
         limitTag = '<LimitNum>%d</LimitNum>%s' % (limitNum, limitStartTag)
 
-    xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><State>live</State><ContentType>full</ContentType>%s</Params>' % limitTag
+    xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><State>live</State><ContentType>full</ContentType><Lang>%s</Lang>%s</Params>' % (limitTag, lang)
     responseText =  doPostReq('getProduct', xmlParam)
 
     xml = bytes(bytearray(responseText, encoding="utf-8"))
@@ -222,7 +222,7 @@ def callProxyControlPost(action, xmlParam):
     x = requests.post("%s:%d/unas/proxycontrol/%s" % (MU.hostName, MU.serverPort, action), data=xmlParam.encode('utf-8'))
     return x.text
 
-def doPostReq(action, xmlParam):
+def doPostReq(action, xmlParam) -> str:
     MU.checkCommError()
     token = UnasAuth.doAuth()
     MU.createStatEntry(action, xmlParam)

@@ -5,6 +5,9 @@ proxy:
   hostName: syxproxy.lan
   serverPort: 3341
 
+secrets:
+  deepl: 9183b874-d880-406f-904d-66fab48d20d6:fx
+
 mail:
   server: 192.168.10.6
   sender: web6proxy-alert@ledsound.hu
@@ -41,6 +44,10 @@ unas:
   # technikai, nekem kellett, Amikor mexaladt a prg es kitiltottam magamat, akkor default ertekeket adtam vissza magamnak az UNAS hivasokkor(HA ez TRUE)
   ignoreBlockedClient: false # szerinem elavult, ki kellenne szednem
   cacheForceReload: 10000 # force cahce reload after this period
+  #
+  web:
+    i18nenabled: True
+    langs: [ ru, en, de , ro , cs , sk , sl , bg ]
   #
   # Comm stat:
   commstat:
