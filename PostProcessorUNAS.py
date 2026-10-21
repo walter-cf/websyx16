@@ -34,6 +34,7 @@ def checkXmlTypeByRootTag(xsltFilename:str, xmlTag:str):
             case "ProductQuantity": expected = 'ProductQuantities'
             case "OrderStatus": expected = 'CustomerOrderStatuses'
             case "ProductPrice": expected = 'ProductPrices'
+            case "ProductText": expected = 'Products'
             case _:
                 MyProgramFlowErrorException(f'checkXmlTypeByRootTag - Unhandled xslt:{xsltFilename}', ProxyErrCode.E44_CODEERROR)
 
@@ -48,6 +49,27 @@ def i18nBasePrice(pi) -> str|None:
     return None
 
 #TRANSFORMERS
+def productTextTransformer(prod, symbolProduct, fromLang:str='hu'):
+    for lang in MU.Conf('unas.web.langs') or []:
+        print(lang, prod)
+        # add new tag
+        pt = None if fromLang == lang else MU.createTranslator(fr=fromLang, to=lang)
+        tupleIdx =0
+        lLangTag = ET.SubElement(prod, 'lLang')
+        ET.SubElement(lLangTag, 'Sku')._setText(prod.code.text)
+        ET.SubElement(lLangTag, 'Lang')._setText(lang)
+        for fld in MU.Conf('unas.web.productfields') or ['Name']:
+            # translate field text and add text
+            fVal = symbolProduct[tupleIdx]
+            if fVal:
+                txtValue = symbolProduct[tupleIdx] if pt is None else MU.translateText(pt, symbolProduct[tupleIdx])
+                # txtValue = f'xx {fld} L:{lang} V:{symbolProduct[tupleIdx]}'
+                fldTag = ET.SubElement(lLangTag, fld)
+                fldTag._setText(txtValue)
+                print(txtValue, tupleIdx, fldTag)
+            tupleIdx += 1
+    return prod
+
 def transformUnasRequestObject(root, xsltFilename):
     if   xsltFilename == 'Product':
         for prod in root.getchildren():
@@ -102,9 +124,41 @@ def transformUnasRequestObject(root, xsltFilename):
                 prod.unasActionWebCategory = None if MU.UnasProductWebCategoryId is None else MU.UnasProductWebCategoryId
                 prod.unasActionWebCategoryName = None if MU.UnasProductWebCategoryName is None else MU.UnasProductWebCategoryName
                 prod.unasExtendedAttributes = 1 if MU.PRODUCT_EXTATTRIBS else None
+                # I18N
+                _pl = prod.find('productlangs')
+                if MU.Conf('unas.product.i18n') and _pl:
+                    for productLangz in _pl.getchildren():
+                        if 'en' == productLangz.lang.text.lower():
+                            symbolProduct = ('en', productLangz.name, productLangz.description
+                                             , productLangz.webname, productLangz.webdescription
+                                             , productLangz.webmetadescription, productLangz.weburl,productLangz.webkeywords)
+                            prod = productTextTransformer(prod, symbolProduct, 'en')
             else:
                 MU.getLogger().logDebug(f"Product skipped while webDisplay=0 Code:{prod.code}")
                 prod.SkipThisItem = '1'
+    elif xsltFilename == 'ProductText':
+
+        # TEST llll
+        MU.UnasProductList = MU.collectProdItems(UCH.getProds('Sku','PT-6381').replace(MU.XMLTAG, '')[2:])
+        # TEST llll
+
+        checkXmlTypeByRootTag(xsltFilename, root.tag) # Exception if failed
+        for prod in root.getchildren():
+            # upc = None if not hasattr(prod,'productcode') else MU.UnasProductList.get(str(prod.productcode))
+            upc = MU.UnasProductList.get(str(prod.code))
+            if upc == None: # UNAS-bol hianyzik
+                # error ???? raise MyProgramFlowErrorException()
+                MU.getLogger().logError(f'POST::ProductText: missing Product from Cache! Sku:{prod.code}')
+            else:
+                # process Product i18n Texts
+                # get Symbol Names
+                fbCols = ','.join( [ f'"{x}"' for x in MU.Conf('unas.web.productfields') or ['Name'] ] )
+                symbolProduct = FBU.getRow(f'select {fbCols} from "Product" where "Code" = ?', (prod.code,) )
+                # Prod create new array tag
+                # prod = productTextTransformer(prod, symbolProduct)
+                productTextTransformer(prod, symbolProduct,'hu')
+                print(ET.tostring(prod))
+
     elif xsltFilename == 'ProductPrice':
         for prod in root.getchildren():
             #if prod.webdisplay == 1:
@@ -722,7 +776,7 @@ def prepareUnasReply_TEST(xmlReq, xsltFilename):
     return None
 
 def preProcessUnasPostRequest(action, xml):
-    if action == 'product':
+    if action == 'product' or action == 'producttext':
         pass
     elif action == 'inventory':
         pass
@@ -791,6 +845,93 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
                 MU.UnasSetProductsXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
                 MU.LastActivity = MU.UtcNow(0)
 
+    elif action == 'producttext':
+        uts = MU.createTransactionId( UnasTransactionType.PRODUCT )
+        MU.getLogger().logDebug("setProduct-TS:%d" % uts)
+        xmlReq = preProcessUnasPostRequest(action, postData)
+        if xmlReq.count('<?xml version="1.0"') > 1:
+            _m=f"Multiple xml tag in product request! TS:{MU.getTS()}"
+            MU.getLogger().logError(_m)
+            MU.getLogger().logError(postData)
+            raise MyProgramFlowErrorException(_m, ProxyErrCode.E41)
+        xmlReq = prepareUnasReply(xmlReq, "ProductText" )
+        # Ha nem csinaltam UNAS requestet vmilyen feltetel teljesulese miatt!
+        if xmlReq != None:            # Lehet NEM OK-val kellene visszaterni?
+            if (not MU.PRODUCT_BULK) or (pathParam3 == 'direct'):
+                xmlResp = UCH.unasProduct_Direct(xmlReq)
+                unasResp = postProcessUnasPostRequest(action, xmlResp)
+            else:
+                MU.UnasSetProductsXmlPart += xmlReq.replace('<?xml version="1.0"?>', '')
+                MU.LastActivity = MU.UtcNow(0)
+    elif action == 'producttranslate':
+        # Translate UNAS-hu-texts by SKU to-LANG (if lang == all then toAllLangs)
+        print(postData, pathParam3)
+        langs = MU.Conf('unas.web.langs')  if postData is None else postData.split(':')
+        xmlResp = UCH.unasGetProductByAzon( 'Sku', pathParam3, 'hu')
+        print(xmlResp)
+        #prod = MU.unasProductFromXml(xmlResp.replace(MU.XMLTAG, ''))
+        prods = MU.unasProductS(xmlResp.replace(MU.XMLTAG, ''))
+        pXmlReq = ''
+        for lang in langs or []:
+            pt = MU.createTranslator('hu', to=lang)
+            for p in prods:
+                txtTag = ''
+                # + Unit, AlterUnit, ManufacturerUrl, SefUrl, Images[names], Variants[names], Datas.Data, AdditionalDatas.AdditionalData, Params
+                for fld in MU.Conf('unas.web.textfields') or ['name', 'description', 'meta']:
+                    fromText = getattr(p, fld)
+                    if fromText:
+                        print(p.sku, p.name, fromText)
+                        #
+                        if fld == 'name':
+                            value = MU.translateText(pt, fromText)
+                            print(p.sku, p.name, value)
+                            txtTag += f'<Name><[!CDATA[{value}]]></Name>'
+                        elif fld == 'description':
+                            _mTag = ''
+                            # isHtml TAG ???
+                            if p.description is not None:
+                                _mV = MU.translateText(pt, p.description.short)
+                                if _mV:
+                                    _mTag += f'<Short><[!CDATA[{_mV}]]></Short>' # ShortIsHtml 
+                                # isHtml TAG ???
+                                _mV = MU.translateText(pt, p.description.long)
+                                if _mV:
+                                    _mTag += f'<Long><[!CDATA[{_mV}]]></Long>' # LongIsHtml 
+                                # Keywords
+                            if len(_mTag)>0:
+                                txtTag += f'<Description>{_mTag}</Description>'
+                        elif fld == 'meta':
+                            _mTag = ''
+                            if p.meta is not None:
+                            # Keywords
+                                _mV = MU.translateText(pt, p.meta.keywords)
+                                if _mV:
+                                    _mTag += f'<Keywords><[!CDATA[{_mV}]]></Keywords>'
+                                # Keywords
+                                _mV = MU.translateText(pt, p.meta.description)
+                                if _mV:
+                                    _mTag += f'<Description><[!CDATA[{_mV}]]></Description>'
+                                # Keywords
+                                _mV = MU.translateText(pt, p.meta.title)
+                                if _mV:
+                                    _mTag += f'<Title><[!CDATA[{_mV}]]></Title>'
+                                # Keywords
+                                _mV = MU.translateText(pt, p.meta.robots)
+                                if _mV:
+                                    _mTag += f'<Robots><[!CDATA[{_mV}]]></Robots>'
+                            if len(_mTag)>0:
+                                txtTag += f'<Meta>{_mTag}</Meta>'
+                if len(txtTag) > 0:
+                    pXmlReq += f'<Product><Action>modify</Action><Sku>{p.sku}<Sku><Lang>{lang}</Lang>{txtTag}</Product>'
+        # Az egesz fenti szarsagot XSLT-zni kellene!
+        if pXmlReq:
+            xmlResp = UCH.unasProduct_Direct(pXmlReq)
+            print (xmlResp)
+            unasResp = postProcessUnasPostRequest(action, xmlResp)
+        #
+    elif action == 'producttextall':
+        # Product-Cache - get Texts from UNAS??? translate to all LANG
+        pass
     elif action == 'inventory':
         uts = MU.createTransactionId( UnasTransactionType.INVENTORY )
         MU.getLogger().logDebug("setInventory-TS:%d" % uts)
@@ -1109,7 +1250,7 @@ def postProcessUnasPostRequest(action, xmlResp) -> str|None:
     # valszeg adatbazisba kellene irni a visszajovo adatokat, vagy , hogyan a fenebe rendeljem ossze maskeppen az ID-ket?
     MU.getLogger().logInfo("UNAS-Set-postprocess: {0}, TS: {1}".format(action, MU.getTS()))
     MU.getLogger().logDebug("UNAS-Set-response: {0}".format(xmlResp))
-    if (action == 'product'):
+    if (action in [ 'product', 'producttext' ]):
         root=ET.fromstring(bytes(xmlResp, 'utf-8'), None)
         MU.getLogger().logDebug(root.tag)
         return getErrorTextProduct(action, xmlResp)

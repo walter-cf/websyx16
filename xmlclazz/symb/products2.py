@@ -9,18 +9,11 @@ class Id:
     def __init__(self, sid:int):
         self.id = sid
 
-    @staticmethod
-    def addXmlElement(parent, tagName, tagValue):
-        if tagValue is not None:
-            elem = ET.SubElement(parent, tagName)
-            elem.text = str(tagValue)
-            parent.append(elem)
-
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Id':
         """Create Id instance from XML element."""
         return cls(
-            id=cls._parse_id(element)
+            sid=cls._parse_id(element)
         )
     
     def to_element(self) -> ET.Element:
@@ -45,14 +38,14 @@ class Id:
 @dataclass
 class Code:
     code: str|None = None
-    def __init__(self, sku:str):
+    def __init__(self, sku:str|None=None):
         self.code = sku
     
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Code':
         """Create Code instance from XML element."""
         return cls(
-            code=cls._parse_code(element)
+            sku=cls._parse_code(element)
         )
     
     def to_element(self) -> ET.Element:
@@ -107,14 +100,14 @@ class Webdisplay:
 @dataclass
 class Webname:
     webname: str|None = None
-    def __init__(self, prm:str):
+    def __init__(self, prm:str|None=None):
         self.webname = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Webname':
         """Create Webname instance from XML element."""
         return cls(
-            webname=cls._parse_webname(element)
+            prm=cls._parse_webname(element)
         )
     
     def to_element(self) -> ET.Element:
@@ -139,14 +132,14 @@ class Webname:
 @dataclass
 class Webdescription:
     webdescription: str|None = None
-    def __init__(self, prm:str):
+    def __init__(self, prm:str|None=None):
         self.webdescription = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Webdescription':
         """Create Webdescription instance from XML element."""
         return cls(
-            webdescription=cls._parse_webdescription(element)
+            prm=cls._parse_webdescription(element)
         )
     
     def to_element(self) -> ET.Element:
@@ -171,14 +164,14 @@ class Webdescription:
 @dataclass
 class Webmetadescription:
     webmetadescription: str|None = None
-    def __init__(self, prm:str):
+    def __init__(self, prm:str|None=None):
         self.webmetadescription = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Webmetadescription':
         """Create Webmetadescription instance from XML element."""
         return cls(
-            webmetadescription=cls._parse_webmetadescription(element)
+            prm=cls._parse_webmetadescription(element)
         )
     
     def to_element(self) -> ET.Element:
@@ -203,14 +196,14 @@ class Webmetadescription:
 @dataclass
 class Weburl:
     weburl: str|None = None
-    def __init__(self, prm:str):
+    def __init__(self, prm:str|None=None):
         self.weburl = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Weburl':
         """Create Weburl instance from XML element."""
         return cls(
-            weburl=cls._parse_weburl(element)
+            prm=cls._parse_weburl(element)
         )
     
     def to_element(self) -> ET.Element:
@@ -235,14 +228,14 @@ class Weburl:
 @dataclass
 class Webkeywords:
     webkeywords: str|None = None
-    def __init__(self, prm:str):
+    def __init__(self, prm:str|None=None):
         self.webkeywords = prm
 
     @classmethod
     def from_element(cls, element: ET.Element) -> 'Webkeywords':
         """Create Webkeywords instance from XML element."""
         return cls(
-            webkeywords=cls._parse_webkeywords(element)
+            prm=cls._parse_webkeywords(element)
         )
     
     def to_element(self) -> ET.Element:
@@ -352,9 +345,16 @@ class Product:
             webkeywords=cls._parse_webkeywords(element),
             feedbackurl=cls._parse_feedbackurl(element),
             errorurl=cls._parse_errorurl(element),
-            name= None if element.name is None else element.name.text
+            name= None if element.find('name') is None else element.findtext('name')
         )
-    
+
+    @staticmethod
+    def addXmlElement(parent, tagName, tagValue):
+        if tagValue is not None:
+            elem = ET.SubElement(parent, tagName)
+            elem.text = str(tagValue)
+            parent.append(elem)
+
     def to_element(self) -> ET.Element:
         """Convert Product instance to XML element."""
         element = ET.Element('Product')
@@ -368,7 +368,7 @@ class Product:
         self._serialize_webkeywords(element)
         self._serialize_feedbackurl(element)
         self._serialize_errorurl(element)
-        self.addXmlElement('name', self.name)
+        self.addXmlElement(element, 'name', self.name)
         return element
     
     @staticmethod

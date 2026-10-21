@@ -8,7 +8,7 @@ import traceback as SysTB
 import typing
 from datetime import datetime, timezone
 from time import time
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import xmltodict
 import yaml
@@ -42,6 +42,7 @@ from xmlclazz.customerOffer import CustomerOffer, CustomerOfferDetail
 from xmlclazz.customerResponse import CustomerResponseCostumer, CustomerResponse
 from xmlclazz.productResponse import ProductResponse
 from xmlclazz.unasCustomer import UnasCustomer, UnasCustomers
+from xmlclazz.unasProduct3 import UnasProduct
 
 
 CONFIG_FILE = None
@@ -2431,3 +2432,25 @@ def sendQuantity(prod):
         pass
     else:
         pass
+
+
+def unasProductS(xml:str) -> List[UnasProduct]:
+    prods = []
+    root = ET.fromstring(xml)
+    for p in root.getchildren():
+        prods.append(UnasProduct.from_xml(p))
+    return prods
+
+def unasProductFromXml(xml:str) -> UnasProduct:
+    prod = ET.fromstring(xml)
+    return UnasProduct.from_xml(prod)
+
+from I18nDeepL import ProductText as PROD
+def createTranslator(fr:str, to:str):
+    return PROD(fromLang=fr, toLang=to)
+
+def translateText(pt:PROD, txt:str|None) -> str|None:
+    return None if txt is None else pt.translateText(txt)
+
+#def translateT(trx, txt:str) -> str:
+#    return PROD.translateText(trx, txt)

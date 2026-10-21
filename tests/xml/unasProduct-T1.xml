@@ -1,0 +1,205 @@
+<Product>
+    <Action>modify</Action>
+    <State>live</State> 
+    <Id>200000</Id>
+    <Sku>Cikkszam2</Sku>
+    <SkuNew>Cikkszam2</SkuNew>
+    <History>
+        <Event>
+            <Action>modify</Action>
+            <Time>1348483571</Time>
+            <Sku>Cikkszam2</Sku>
+            <SkuOld>Cikkszam2_old</SkuOld>
+        </Event>
+    </History> 
+    <Statuses>
+        <Status>
+            <Type>plus</Type>
+            <Id>2</Id>
+            <Name><![CDATA[Külső raktáron]]></Name>
+            <Value>0</Value>
+        </Status>
+    </Statuses>
+    <NoList>0</NoList>
+    <Inquire>0</Inquire>
+    <CustDiscountDisable>0</CustDiscountDisable>
+    <Explicit>0</Explicit>
+    <Export>
+        <Status>1</Status>
+        <Forbidden>
+            <Format>preisvergleich.de</Format>
+            <Format>argep.hu</Format>
+        </Forbidden>
+    </Export>
+    <PublicInterval>
+        <Start>2019.01.01 0:00</Start>
+        <End>2020.12.31 23:59</End>
+    </PublicInterval>
+    <Name><![CDATA[Termék név 2]]></Name>
+    <Unit><![CDATA[csomag]]></Unit>
+    <MinimumQty>1</MinimumQty> 
+    <MaximumQty>5</MaximumQty>
+    <AlertQty>5</AlertQty>
+    <UnitStep><![CDATA[2]]></UnitStep>
+    <AlterUnit>
+        <Qty>10</Qty>
+        <Unit><![CDATA[db]]></Unit>
+    </AlterUnit>
+    <Weight>1</Weight>
+    <Point>10</Point>
+    <BuyableWithPoint>yes</BuyableWithPoint>
+    <Description>
+        <Short><![CDATA[rövid leírás]]></Short>
+        <Long><![CDATA[ez már hosszabb]]></Long>
+    </Description>
+    <Prices>
+        <Vat>27%</Vat>
+        <Price>
+            <Type>sale</Type>
+            <Start>2015.01.01</Start>
+            <End></End>
+            <Group>100</Group>
+            <GroupName><![CDATA[Törzsvásárló]]></GroupName>
+            <AreaName><![CDATA[Belföld]]></AreaName>
+            <SaleNet>629.9212</SaleNet>
+            <SaleGross>800</SaleGross>
+            <SaleStart>2017.01.01</SaleStart>
+            <SaleEnd>2017.12.31</SaleEnd>
+            <CurrencyFilter>€</CurrencyFilter>
+            <Net>629.9212</Net>
+            <Gross>800</Gross>
+            <Currency>$</Currency>
+        </Price>
+    </Prices>
+    <Categories>
+        <Category>
+            <Type>base</Type>
+            <Id>369560</Id>
+            <Name><![CDATA[Főcsoport1|Alcsoport1]]></Name>
+        </Category>
+    </Categories>
+    <Url><![CDATA[http://teszt.unas.hu/Cikkszam1]]></Url>
+    <SefUrl><![CDATA[Cikkszam1]]></SefUrl> 
+    <Images> 
+        <DefaultFilename><![CDATA[termekkep]]></DefaultFilename> 
+        <DefaultAlt><![CDATA[termeknev]]></DefaultAlt> 
+        <OG>2</OG> 
+        <Version>20200101</Version> 
+        <Image> 
+            <Type>base</Type> 
+            <SefUrl><![CDATA[http://teszt.unas.hu/img/elso.jpg]]></SefUrl> 
+            <Filename><![CDATA[fokepnev]]></Filename> 
+            <Alt><![CDATA[fokepalt]]></Alt>
+        </Image>
+    </Images>
+    <Variants> 
+        <Variant> 
+            <Name><![CDATA[Szín]]></Name> 
+            <Values> 
+                <Value> 
+                    <Name><![CDATA[Kék]]></Name> 
+                </Value>
+                <Value> 
+                    <Name><![CDATA[Piros]]></Name>
+                    <ExtraPrice>100</ExtraPrice> 
+                </Value>
+            </Values>
+        </Variant>
+    </Variants>
+    <Datas> 
+        <Data> 
+            <Id>2</Id>
+            <Name><![CDATA[Szállítási Határidő]]></Name>
+            <Value><![CDATA[Egy hét]]></Value>
+        </Data>
+    </Datas>
+    <Params> 
+        <Param> 
+            <Id>1001</Id> 
+            <Type>text</Type> 
+            <Name><![CDATA[Paraméter 1]]></Name> 
+            <Group><![CDATA[Csoport 1]]></Group> 
+            <Value><![CDATA[Környakú]]></Value> 
+            <Before><![CDATA[akármi]]></Before> 
+            <After><![CDATA[db]]></After> 
+        </Param>
+    </Params>
+    <AdditionalDatas> 
+        <AdditionalData> 
+            <Id>1</Id> 
+            <Title><![CDATA[Első lapfül címe]]></Title> 
+            <Content><![CDATA[Első lapfül tartalma]]></Content> 
+        </AdditionalData>
+    </AdditionalDatas>
+    <QtyDiscount> 
+        <Step> 
+            <Limit> 
+                <Lower>0</Lower> 
+                <Upper>10</Upper> 
+            </Limit>
+            <Discount>0%</Discount> 
+        </Step>
+    </QtyDiscount>
+    <AdditionalProducts> 
+        <AdditionalProduct> 
+            <Id>70828162</Id> 
+            <Sku>Cikkszam1</Sku> 
+            <Name><![CDATA[Termék név 1]]></Name> 
+        </AdditionalProduct>
+    </AdditionalProducts>
+    <SimilarProducts> 
+        <SimilarProduct> 
+            <Id>85478568</Id> 
+            <Sku>Cikkszam5</Sku> 
+            <Name><![CDATA[Termék név 5]]></Name> 
+        </SimilarProduct>
+    </SimilarProducts>
+    <Stocks> 
+        <Status> 
+            <Active>1</Active> 
+            <Empty>1</Empty> 
+            <Variant>1</Variant> 
+        </Status>
+        <Stock> 
+            <Variants> 
+                <Variant><![CDATA[Kék]]></Variant> 
+                <Variant><![CDATA[S]]></Variant> 
+            </Variants>
+            <Qty>10</Qty> 
+        </Stock>
+    </Stocks>
+    <OnlineContent> 
+        <Url><![CDATA[http://teszt.hu/akarmi.pdf]]></Url> 
+        <Limit>no</Limit> 
+        <Filename>akarmi_mas.pdf</Filename> 
+    </OnlineContent>
+    <PlusServices> 
+        <PlusService> 
+            <Id><![CDATA[2789]]></Id> 
+            <Name><![CDATA[szolgáltatás neve]]></Name> 
+        </PlusService>
+    </PlusServices>
+    <Types> 
+        <Type>child</Type> 
+        <Parent>Cikkszam1</Parent> 
+        <Display>0</Display> 
+        <Order>1</Order> 
+    </Types>
+    <PackageProduct>no</PackageProduct> 
+    <PackageComponents> 
+        <Component> 
+            <Sku>Cikkszam2</Sku> 
+            <Qty>1</Qty> 
+        </Component>
+    </PackageComponents>
+    <Meta>  
+        <Keywords><![CDATA[szuper jó, olcsó]]></Keywords> 
+        <Description><![CDATA[erre alkalmas]]></Description> 
+        <Title><![CDATA[címben ez is szerepel]]></Title> 
+    </Meta>
+    <AutomaticMeta>  
+        <Keywords><![CDATA[általános termék meta keyword]]></Keywords> 
+        <Description><![CDATA[általános termék meta description]]></Description> 
+        <Title><![CDATA[általános termék meta title]]></Title> 
+    </AutomaticMeta>
+</Product>	

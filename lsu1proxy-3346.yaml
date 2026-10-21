@@ -38,8 +38,11 @@ unas:
   # apiKey: bbd1c8083514e15d3c0f5b70f9992c376bd6e152
   # A symbolbol unasba feltoltendo termekek UNAS.kategoria.Id-je. (gondolom, ezt kesobb meg egyeztetni kell)
   web:
-    i18nenabled: True
-    langs: [ ru, en, de , ro , cs , sk , sl , bg ]
+    i18n: True
+    #langs: [ ru, en, de , ro , cs , sk , sl , bg ]
+    langs: [ ro, en, de ]
+    productfields: [ Name, Comment, WebName, WebDescription, WebMetaDescription, WebUrl, WebKeywords ]
+    # textfields: [name, comment,  webname, webdescription]  Nincs kidolgozva!
   #
   webcategory:
     # id: 187458
@@ -165,6 +168,8 @@ unas:
     getproductLimit: 200 # a 6000 tetel lekerdezese egyszerre sok lett, dartabolni kell
     bulk: False
     overwriteName: False
+    # Kulon i18n a setProduct-nal nezem. a masikat SystemWide-usage nek gondoltam, bar valszeg nem lesz ra szukseg
+    i18n: True
     pricecat:
       # Symbol arkategoria ID. Ha tobb van, akkor ezeket - sorrendben - elonyben reszesiti; egyebkent a listaban az utolso ar lesz(vagy lehet, az elso)
       base: 18
@@ -173,14 +178,14 @@ unas:
       unique: EGYEDI
       # Ez igy nem, jo! Biztosan nem SpecialPrice-kent kell felvinni - ezt majd az UNASnak kell lefejleszteni
       currencies:
-         - [ HUF, Budapest, HUF, 27, 1             , hu ]
-         - [ EUR, Berlin  , NZD, 19, 1.076271186440, de ]
-         - [ USD, Amerika , USD, 11, 1.076271186440, us ]
-         - [ RON, Bukarest, RON, 18, 1.076271186440, ro ] 
-         - [ PLN, Varso   , PLN, 23, 1.076271186440, pl ]
-         - [ CZK, Praga   , CZK, 21, 1.076271186440, cz ]
-         - [ BGN, Szofia  , BGN, 17, 1.076271186440, bg ]
-         - [ MDL, Kisinyov, MDL, 22, 1.076271186440, md ]
+         - [ HUF, Budapest, HUF, 27, 1, hu ]
+         - [ EUR, Berlin  , NZD, 19, 1, de ]
+         - [ USD, Amerika , USD, 11, 1, us ]
+         - [ RON, Bukarest, RON, 18, 1, ro ] 
+         - [ PLN, Varso   , PLN, 23, 1, pl ]
+         - [ CZK, Praga   , CZK, 21, 1, cz ]
+         - [ BGN, Szofia  , BGN, 17, 1, bg ]
+         - [ MDL, Kisinyov, MDL, 22, 1, md ]
       specials: 
          - [ R1, R1 ]
          - [ R2, R2 ]

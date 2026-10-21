@@ -317,6 +317,8 @@ class   MyServer(BaseHTTPRequestHandler):
               htmlResponseMessage = PPU.doUnasRequest(pPath[2],postParams[1:] , errors=GBL_ErrorMessages )
             elif postParams.startswith('<?xml '):
               htmlResponseMessage = PPU.doUnasRequest(pPath[2],postParams, None if len(pPath) < 4 else pPath[3], errors=GBL_ErrorMessages)
+            elif postParams.startswith('DirectParam='):
+              htmlResponseMessage = PPU.doUnasRequest(pPath[2],postParams[len('DirectParam='):], None if len(pPath) < 4 else pPath[3], errors=[])
             elif len(parsedFields) == 0:
               htmlResponseMessage = 'No POST DATA!?'
             elif 'xmldata' == list(parsedFields.keys())[0]: # type: ignore

@@ -167,6 +167,28 @@
                 </xsl:if>
             -->
         </Product>
+        <xsl:for-each select="lLang">
+        <Product>
+            <Action>modify</Action>
+            <Sku><xsl:value-of select="Sku" /></Sku>
+            <Lang><xsl:value-of select="Lang" /></Lang>
+            <Name><xsl:value-of select="Name" /></Name>
+            <!--  Felteteles ADD -->
+            <!-- + Unit, AlterUnit, ManufacturerUrl, SefUrl, Images[names], Variants[names], Datas.Data, AdditionalDatas.AdditionalData, Params -->
+            <!-- 
+            <xsl:if test="Description">
+            </xsl:if>
+            <xsl:if test="Meta">
+            </xsl:if>
+            <xsl:if test="lData">
+            </xsl:if>
+            <xsl:if test="lAltData">
+            </xsl:if>
+            <xsl:if test="lParams">
+            </xsl:if>
+            -->
+        </Product>
+        </xsl:for-each> <!-- s e l e c t= "lLang" -->
     </xsl:if> <!-- Webdisplay is 1? = not(SkipThisItem) -->
     </xsl:for-each>
     </xsl:template>

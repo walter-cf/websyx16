@@ -48,6 +48,8 @@ unas:
   web:
     i18nenabled: True
     langs: [ ru, en, de , ro , cs , sk , sl , bg ]
+    productfields: [name, comment,  webname, webdescription]
+    # textfields: [name, comment,  webname, webdescription]  Nincs kidolgozva!
   #
   # Comm stat:
   commstat:

@@ -78,6 +78,8 @@ class UnasTransactionType(IntEnum):
     ORDERSTATUS = 27
     LOGROTATE = 28
     XMLROTATE = 29
+    PRODTEXT = 30
+    PRODTEXTBY = 31
     #
     # Post
     PRODUCT = 41

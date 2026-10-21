@@ -1,3 +1,5 @@
+import requests
+
 import MyUtils as MU
 #import lxml.etree as ET
 from GetProcessor import doUnasGetRequest
@@ -33,6 +35,10 @@ def unasApiWrapper(action:str, xml:str) -> str:
 def unasApiSetProduct(xml:str) -> str:
     resp = unasProduct_Direct(xml)
     return resp
+
+def xml2product(xml:str):
+    prod = MU.unasProductFromXml(xml)
+    return prod
 
 class MyServerConnector():
     serverPort = 3346

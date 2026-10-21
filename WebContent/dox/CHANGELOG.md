@@ -1,5 +1,8 @@
 ## web6Proxy - valtozaslista joe @ 2026.10.06
 
+### - 2026.10.16
+MySQL add lastLangOp to proxy_context
+
 ### - 2026.10.06
 *add i18n prices - valurtakezeles - veglegesites*  
 eliminate R4/R5 autocalculated values,  
@@ -7,7 +10,7 @@ brutto/netto corrections
 
 ### - 2026.09.30
 *code cleaning*  
-*add i18n prices - valurtakezeles*
+*add i18n prices - valutakezeles*
 
 ### - 2026.09.23
 *add upload to UNAS: SupplierOrder-Quantity*
