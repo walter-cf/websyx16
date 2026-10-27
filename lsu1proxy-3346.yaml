@@ -4,6 +4,7 @@ proxy:
   # a kulso interface-re jobb tenni. nem szereti a 0.0.0.0 -s cimet - igy viszont nem hallgat a localhoston!
   hostName: syxproxy.lan
   serverPort: 3346
+  apptype: DEVEL
 
 secrets:
   deepl: 9183b874-d880-406f-904d-66fab48d20d6:fx
@@ -100,25 +101,31 @@ unas:
 
     # Order params - statuses
     status:
-        new:      6540041 # Feldolgozasra var
-        accepted: 6540046 # Visszaigazolva
-        prepared: 6540051 # Keszletezes alatt
-        shipping: 6540056 # NU.? 
-        closed:   6540061 # Lezarva
-        returned: 0       # NU. in UNAS (yet)
+        new:      6567381 # Feldolgozasra var
+        accepted: 6567386 # Visszaigazolva
+        prepared: 6567391 # Keszletezes alatt
+        shipping: 6567396 # NU.? 
+        closed:   6567401 # Lezarva
+        returned: 6611996 # NU. in UNAS (yet)
         cancel:   0       # NU. in UNAS (yet)
   
     statusNameOrId: "name"
-    statusNames:
-        - [ "Új rendelés", 'joe-New' ]
-        - [ "Szedhető"   , 'joe-Szedhető' ]
-        - [ "Számlázható", 'joe-Számlázható' ]
-        - [ "Back Order" , 'joe-Visszáru' ]
+    statusNames:    # [ symbolName, unasName, unasId, symbolId ]
+        - [ "noSymbol"   , 'Feldolgozásra vár'   , 6567381 , 0 ]
+        - [ "noSymbol"   , 'Visszaigazolva'      , 6567386 , 0 ]
+        - [ "noSymbol"   , 'Készletezés alatt'   , 6567391 , 0 ]
+        - [ "noSymbol"   , 'Kiszállítás'         , 6567396 , 0 ]
+        - [ "Új rendelés", 'joe-New'             , 6611991 , 1 ]
+        - [ "Szedhető"   , 'joe-Szedhető'        , 6611986 , 2 ]
+        - [ "Számlázható", 'joe-Számlázható'     , 6611191 , 3 ]
+        - [ "Back Order" , 'joe-Visszáru'        , 6611996 , 4 ]
+        - [ "Closed"     , 'Megrendelés lezárva' , 6567401 , 0 ]
     statusIds:
         - [ 1, 6611991 ]
         - [ 2, 6611986 ]
         - [ 3, 6611191 ]
         - [ 4, 6611996 ]
+    storekey: 76172
     autoAcknowledge: False
     flow:
       getUnregistered: False
@@ -217,12 +224,12 @@ mysql:
   dbUser: w6pusr
   dbPass: w6p-Abc+123
 
-# firebird:
-#   dbRoot: /opt/firebird/data/joeHome
-#   dbFile: default.database
-#   dbHost: localhost
-#   dbUser: SYSDBA
-#   dbPass: Bertalan11
+#firebird:
+#  dbRoot: /opt/firebird/data/joeHome
+#  dbFile: default.database
+#  dbHost: localhost
+#  dbUser: SYSDBA
+#  dbPass: Bertalan11
 
 firebird:
   dbRoot: "C:\\SymbolUgyvitelDB_DEV"

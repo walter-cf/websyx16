@@ -64,7 +64,12 @@ def doWebPageFile(pPath, queryParams, binaryRead = False):
         content = dox.read()
     return content
 
-   
+def doWebControlCdn(pPath, queryParams=None) -> tuple:
+    if 'web6invoice' == pPath[0]:
+        pdfData = MU.getsymbolInvoicePdfData(pPath[1],pPath[2])
+        return (pdfData,'application/pdf')
+    return ('Not found','text/text')
+
 def doWebControlQuery(pPath, queryParams):
     if 'getpacketcount' == pPath[0]:
         resp = {}

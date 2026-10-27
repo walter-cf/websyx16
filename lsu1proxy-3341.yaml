@@ -109,11 +109,17 @@ unas:
         cancel:   0       # NU. in UNAS (yet)
   
     statusNameOrId: "name"
+    # [ symbolName, unasName, unasId, symbolId ]
     statusNames:
-        - [ "Új rendelés", 'joe-New' ]
-        - [ "Szedhető"   , 'joe-Szedhető' ]
-        - [ "Számlázható", 'joe-Számlázható' ]
-        - [ "Back Order" , 'joe-Visszáru' ]
+        - [ "noSymbol"   , 'Feldolgozásra vár'   , 6567381 , 0 ]
+        - [ "noSymbol"   , 'Visszaigazolva'      , 6567386 , 0 ]
+        - [ "noSymbol"   , 'Készletezés alatt'   , 6567391 , 0 ]
+        - [ "noSymbol"   , 'Kiszállítás'         , 6567396 , 0 ]
+        - [ "Új rendelés", 'joe-New'             , 6611991 , 1 ]
+        - [ "Szedhető"   , 'joe-Szedhető'        , 6611986 , 2 ]
+        - [ "Számlázható", 'joe-Számlázható'     , 6611191 , 3 ]
+        - [ "Back Order" , 'joe-Visszáru'        , 6611996 , 4 ]
+        - [ "Closed"     , 'Megrendelés lezárva' , 6567401 , 0 ]
     statusIds:
         - [ 1, 6611991 ]
         - [ 2, 6611986 ]
@@ -223,8 +229,8 @@ mysql:
 #  dbRoot: /opt/firebird/data
 #  dbFile: default_a.database
 #  dbHost: localhost
-#  dbUser: SYSDBA
-#  dbPass: Bertalan11
+#  dbUser: SYSDBAAa123456
+
 
 firebird:
   dbRoot: "C:\\SymbolUgyvitelDB_TEST"
