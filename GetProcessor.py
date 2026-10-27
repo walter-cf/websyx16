@@ -793,7 +793,7 @@ def getMissingCustomersFromOrder(xml:str):
 
 def createUnregisteredCustomer(cust:UCC.UnasCustomerCache):
     _code = cust.code if cust.code is not None and len(cust.code.strip()) > 0 else MU.mkCustomerCode(cust)
-    customerId = FBU.createCustomerIfNotExists(0, xmlCode=_code, xmlEmail=cust.email, xmlTaxno=cust.taxNumber)
+    customerId = FBU.createCustomerIfNotExists(0, xmlCode=_code, xmlEmail=cust.email or '', xmlTaxno=cust.taxNumber)
     cust.code = _code
     return customerId
     
@@ -1266,7 +1266,7 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
             customers = MU.getUnasActiveCustomers()
             resp = 'Error?'
             for cust in customers.values():
-                if joeOnly == False or cust.email.lower().startswith('joe'):
+                if joeOnly == False or (cust.email or 'x').lower().startswith('joe'):
                     xmlArray.append(UCH.UNAS_SETSYMBOLID_XML % (cust.unasId, '','') )
             if len(xmlArray) > 0:
                 # xmlreq = doUnasActionRequest( "<Customers>%s</Customers>" % "\n".join(xmlArray), 'simpleTransform','CustNullParams')                

@@ -366,7 +366,7 @@ def getOrderInvoiceByDirectIds(invoicePdfIds:List[int]):
 def getOrderInvoicePdfList(order:str):
     orderId = getField(f'select "Id" from "CustomerOrder" where "PrimeVoucherNumber" = ?', order) or 0
 
-    custOrdDetIds = getRows(f'select "Id" from "CustomerOrderDetail" where "CustomerOrder" = ?', orderId) or [0]
+    custOrdDetIds = getRows(f'select "Id" from "CustomerOrderDetail" where "CustomerOrder" = ?', orderId) or []
     custOrdDetIdArr = [ x[0] for x in custOrdDetIds ] or [0]
     
     custOrdFulfilleds = getRows(f'select "StockOutDetail" from "CustomerOrderFulfill" where "Target" in ( {",".join(map(str,custOrdDetIdArr))})') or []
