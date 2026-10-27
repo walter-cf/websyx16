@@ -82,7 +82,7 @@ def transformGetRequestObject(root, action, xmlPart):
                     if prod.find('Name') and prod.Name.text:
                         prod.NameEncoded =  urlParse.quote(prod.Name.text)
             except Exception as e:
-                prod.SkipThisOrderItem = 1      # Try continue without  Bad Object
+                prod.SkipThisItem = 1      # Try continue without  Bad Object
                 errMsg = f"getProducts processError - Skipped : {prod.Sku}"
                 MU.errorHandler(errMsg, AlertMailType(UnasTransactionType.PRODUCTS, code=ProxyErrCode.E23,
                             oid=prod.Id, otyp=ProxyObjectType.UNASPRODUCT), level = logging.ERROR, eDescr=sys.exc_info())
@@ -151,7 +151,7 @@ def transformGetRequestObject(root, action, xmlPart):
                     for prm in prms.getchildren():
                         if 'symbolId' == prm.Name:
                             if prm.Value and 'OrderBy' != xmlPart: 
-                                    ord.SkipThisOrderItem = 1
+                                    ord.SkipThisOrderItem = 1 # symbolId has Value 
                 for prms in cust.findall('Params'):
                     for prm in prms.getchildren():
                         if 'symbolId' == prm.Name:
@@ -310,8 +310,9 @@ def transformGetRequestObject(root, action, xmlPart):
                     # cust.unasCustomerCategory = MU.UnasCustomerCategoryName
                     if ucc.symbolId <= 0: # and ucc.unasId == 0 csak akkor szeretnem belerakni az xml-be, ha meg nem letezik a symbolban
                         specCatz = MU.Conf("unas.customer.specialCategories") or []
+                        customerGroup = 'x' if cust.Group is None else  cust.Group.Name or 'x'
                         if specCatz:
-                            cust.unasCustomerCategory = next((x[0] for x in specCatz.values() if x[1] == cust.unasCustomerCategory), MU.UnasCustomerCategoryName ) # pyright: ignore[reportAttributeAccessIssue]
+                            cust.unasCustomerCategory = next((x[0] for x in specCatz if x[1] == customerGroup), MU.UnasCustomerCategoryName ) # pyright: ignore[reportAttributeAccessIssue]
 
                     if len(cust.findall('Addressess')) > 0:
                         for addr in cust.Addresses.getchildren():
