@@ -103,10 +103,41 @@ def transformGetRequestObject(root, action, xmlPart):
                 ord.symbolVouchersequenceCode = MU.SYMBOLVOUCHERSEQUENCECODE
                 ord.prefixOrderId = MU.SYMBOLORDERIDPREFIX
                 #
+                if MU.JOETESTCustomer:
+                    # check Customer
+                    if ucc is None:
+                        symbolId, customerName, customerCode = FBU.getRow('select "Id", "Name", "Code" from "Customer" where "Email" = ?', email) or [None, None, None]
+                        if symbolId is None:
+                            # insert dummyCustommer 
+                            colList = f' "CustomerStatus", "Name", "Email", "Code" '
+                            customerCode = MU.CUSTOMER_CODE_PREFIXES["pattern"] % (MU.CUSTOMER_CODE_PREFIXES["unregistered"], ord.Id) # rendeles ID, mert CustId nincs
+                            customerName = f'joEOrd-Name-{ord.Id}' if cust.Contact is None else cust.Contact.Name or f'joEOrd-NoContact-{ord.Id}'
+                            symbolId = FBU.insSql("Customer", colList, "?, ?, ?, ?", ( 0, customerName, email, customerCode))
+                        ucc = UCC.UnasCustomerCache(cust.find('Id') or 0, emil=email, code=customerCode,sid=symbolId, state=MU.CACHESTATE_new)
+                    # check ProductItems
+                    for _p in ord.Items.getchildren():
+                        # check product exists in symbol and productCache
+                        upc = MU.UnasProductList.get(_p.Sku)
+                        newProdId,prodName  = FBU.getRow('select "Id", "Name" from "Product" where "Code" = ?', _p.Sku or '-qwer:')
+                        print (prodName)
+                        if upc is None:
+                            newProdId = -1
+                            if prodName is None:
+                                MU.getLogger().logError(f'Order product Item missing from symbol (while TESTING?): Sku{_p.Sku}')
+                                colList = f' "Name", "Code" '
+                                prodName = f'joE-{_p.Sku}'
+                                newProdId = FBU.insSql("Product", colList, "?, ?", ( f"{prodName}", _p.Sku or f'noSku-{prodName}'))
+                            upc = UPC.UnasProductCache(_p.Id, _p.Sku, sid=newProdId)
+                    # Commit, mert 
+                    #FBU.getFbConn().commit()
+                # JOETest-endz 
                 if ucc is None or len(cust.findall('Id')) == 0: # ucc == None:
                     cust.CustSymbolCode = MU.CUSTOMER_CODE_PREFIXES["pattern"] % (MU.CUSTOMER_CODE_PREFIXES["unregistered"], ord.Id) # rendeles ID, mert CustId nincs
-                    ucc = UCC.UnasCustomerCache(None, email, custTaxNo, cust.CustSymbolCode, None, 'nonRegged' ) # type: ignore
-                    MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc
+                    if ucc is None:
+                        ucc = UCC.UnasCustomerCache(ord.Id, email, custTaxNo, cust.CustSymbolCode, None, 'nonRegged' ) # type: ignore
+                        MU.putCustomerIntoCache(ucc)   # MU.UnasCustomerList[ucc.custAzon] = ucc
+                    else:
+                        ucc.code = cust.CustSymbolCode
                     # end try
                 else: #  TODO !!!!!  Ezzel vigyaznom kellene !!!!! UCO vs UCU nincs rendesen atgondolva!
                     cust.CustSymbolCode = MU.CUSTOMER_CODE_PREFIXES["pattern"] % (MU.CUSTOMER_CODE_PREFIXES["default"], ord.Customer.Id) if ucc.code is None else ucc.code
@@ -129,7 +160,7 @@ def transformGetRequestObject(root, action, xmlPart):
                 transport, payment = transformOrderOptions(ord.Shipping.Name, ord.Payment.Name) # Transform UNAS-name to Symbol-Name
                 ord.Shipping.Name = transport
                 if payment.startswith('specialFunction'):
-                    paymentName, paymentDays = getPaymentSpecial( payment[len('specialFunction'):], xmlCustSymbolId, cust.Id )
+                    paymentName, paymentDays = getPaymentSpecial( payment[len('specialFunction'):], xmlCustSymbolId, 0 if cust.find('Id') is None else cust.find('Id'))
                     ord.paymentMethodName      = paymentName
                     ord.paymentMethodTolerance = paymentDays
                 else:
@@ -139,7 +170,7 @@ def transformGetRequestObject(root, action, xmlPart):
                 if len(cust.findall('Addresses')) > 0:
                     for addr in cust.Addresses.getchildren():
                         MU.trimAddressAttributes(addr)
-                MU.getLogger().logger.info("trfGet-Ord:%s (%s)", ord.Id, email )
+                MU.getLogger().logger.info("trfGet-Ord:%s (%s)", ord.Key, email )
                 # Item processing
                 if len(ord.findall('Items'))>0:
                     for itm in ord.Items.getchildren():
@@ -278,7 +309,7 @@ def transformGetRequestObject(root, action, xmlPart):
                     # joe@20260820
                     # cust.unasCustomerCategory = MU.UnasCustomerCategoryName
                     if ucc.symbolId <= 0: # and ucc.unasId == 0 csak akkor szeretnem belerakni az xml-be, ha meg nem letezik a symbolban
-                        specCatz = MU.Conf("customer.specialCategories") or []
+                        specCatz = MU.Conf("unas.customer.specialCategories") or []
                         if specCatz:
                             cust.unasCustomerCategory = next((x[0] for x in specCatz.values() if x[1] == cust.unasCustomerCategory), MU.UnasCustomerCategoryName ) # pyright: ignore[reportAttributeAccessIssue]
 
@@ -701,7 +732,7 @@ def doUnasFeedback(pathArray, path, queryParams):
             # _subj = f"UNAS-feedBack error:({pathArray[-1]}) / {queryParams.get('orderkey') if  queryParams.get('orderkey') else queryParams.get('code')}"
             MU.errorHandler(_msg, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E15), level=logging.ERROR)
             # Clean DUMMY CustomerAddress rex
-            FBU.deleteDummyCArex(unasId)
+            FBU.deleteDummyCArex(unasId, commit=True)
 
         except MyProgramFlowErrorException as pfe:
             MU.getLogger().logger.error("MyProgramFlowErrorException : ", str(pfe), " / ignored")
@@ -1169,7 +1200,7 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
     elif "order" == unit:
         if "getByCustCode" == id:
             rows = FBU.getOrdersByCustomerCode('UCO%' if len(path) < 6 else path[5])
-            return "{}" # custRowsToJson(rows)
+            return '' if rows is None else json.dumps(rows)
         elif "deleteByUCO" == id:
             FBU.delOrdersCustomerCode('UCO%' if len(path) < 6 else path[5])
             return "OK"
@@ -1186,6 +1217,10 @@ def doProxyControl(path, unit, id, queryParams = {}) -> str:
                 resp = UCH.unasOrder_Direct(xmlReq)
                 MU.checkCacheState(typ=ProxyObjectType.ORDER)
                 return resp
+        elif "loadcache" == id:
+            xmlResp = UCH.unasGetActiveOrders()
+            orders = MU.collectOrderItems(xmlResp)
+            return MU.unasXmltoJSON( xmlResp )
         elif "getnew" == id:
             return UCH.unasGetOrderNew()
         elif "getnewjs" == id:
