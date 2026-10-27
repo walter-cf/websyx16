@@ -21,12 +21,12 @@ def buildCustAzonById_NU( id ):
 class UnasCustomerCache:
     unasId: int
     symbolId: int
-    code: str
+    code: str|None
     #custAzon: str
     customerGroup: str | None = None
     # priceCategory: str | None    
     specialCustomerCategory: str | None = None
-    email: str
+    email: str|None
     taxNumber: str
     state: str
     lastmod: int
@@ -34,7 +34,7 @@ class UnasCustomerCache:
     unasAddrObj = List[CustomerAddress]
     unasAddrXml = List[_Element]
 
-    def __init__(self, unasid:int=None, emil:str=None, taxNo:str=None, code:str=None, sid:int = 0 # type: ignore
+    def __init__(self, unasid:int=None, emil:str|None=None, taxNo:str=None, code:str|None=None, sid:int = 0 # type: ignore
                  , state:str = 'live', authed: bool = False
                  , cg:str = None, priceCat:str = None                            ): # type: ignore
         self.unasId = unasid
