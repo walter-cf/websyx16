@@ -2480,4 +2480,4 @@ def createOrderInvoicePdfUrlList(voucher:str) -> List[str]:
 def getsymbolInvoicePdfData(uid:str, salt:str) -> str:
     pdfId = mySqlIntance.getField(f"select pdf_id from  shadow_invoice_pdf where salt='{salt}' and uid='{uid}'")
     pdfData = FBU.getField('select "Data" from "StockOutPdfData" where "Id" = ?', pdfId)
-    return pdfData.read()
+    return None if pdfData is None else pdfData.read()  # type: ignore BlobField
