@@ -90,7 +90,8 @@ def insSql(table:str, colList:str='', valuePart:str = '',  param = None ) -> int
         cur.execute(sql, [param])
     #
     newId = cur.fetchone()
-    CON.commit()  # type: ignore /// a getCursor beallitotta, ha nulla volt a con!!! LOGIKATLAN es CSUNYA!!!
+    # TODO Ebbol meg baj lehet! At kellene neznem az osszes insSql-t, van-e Tranzakcio nelkuli hivas!
+    # CON.commit()  # type: ignore /// a getCursor beallitotta, ha nulla volt a con!!! LOGIKATLAN es CSUNYA!!!
     return newId[0] if len(newId) > 0 else 0
 
 def execSql(sql:str,  param = None, comitted=False ):
@@ -112,12 +113,12 @@ def execSql(sql:str,  param = None, comitted=False ):
 def prepStatement(sql, cur):
     return cur.prep(sql)
 
-def execSql_OLD( sql, paramList = (), con = CON ):
-    cur = getFbCursor(con)
-    stmt = cur.prep(sql)
-    cur.executemany(stmt, paramList)
-    con.commit() # type: ignore
-    return cur
+# def execSql_OLD( sql, paramList = (), con = CON ):
+#     cur = getFbCursor(con)
+#     stmt = cur.prep(sql)
+#     cur.executemany(stmt, paramList)
+#     con.commit() # type: ignore
+#     return cur
 
 def getField( sql, param = None, cursor = None ):
     row = getRow( sql, param , cursor )
@@ -142,6 +143,59 @@ def getRow( sql, param = None, cursor = None ):
         MU.errorHandler(err, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E19), level = logging.ERROR, eDescr=sys.exc_info())
         raise MyProgramFlowErrorException(err)
 
+def getRows( sql, param = None, cursor = None ):
+    cur = getFbCursor() if cursor is None else cursor
+    try:
+        # comment: 
+        # end try
+        if param is None:
+            cur.execute(sql)
+        elif "<class 'tuple'>" == str(type (param)):
+            cur.execute(sql, param)
+        elif "<class 'list'>" == str(type (param)):
+            cur.execute(sql, param)
+        else:
+            cur.execute(sql, [param])
+        return cur.fetchall()
+    except Exception as e:
+        err = f"DB-Err; sql:{sql},\r\nprms:{param}\r\nX:{e}"
+        MU.errorHandler(err, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E19), level = logging.ERROR, eDescr=sys.exc_info())
+        raise MyProgramFlowErrorException(err)
+
+def getBlobs( sql, idList, cursor = None ):
+    cur = getFbCursor() if cursor is None else cursor
+    try:
+        blobDataArr = []
+        _sql = sql % ','.join(map(str, idList))
+        cur.execute(_sql)
+        for row in cur.fetchall():
+                data = row[0].read()
+                blobDataArr.append(data)
+        return blobDataArr
+    except Exception as e:
+        err = f"DB-Err; sql:{sql},\r\nprms:{idList}\r\nX:{e}"
+        MU.errorHandler(err, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E19), level = logging.ERROR, eDescr=sys.exc_info())
+        raise MyProgramFlowErrorException(err)
+
+#def getBlob( sql, param = None, cursor = None ):
+#    cur = getFbCursor() if cursor is None else cursor
+#    try:
+#        # comment: 
+#        # end try
+#        if param is None:
+#            cur.execute(sql)
+#        elif "<class 'tuple'>" == str(type (param)):
+#            cur.execute(sql, param)
+#        elif "<class 'list'>" == str(type (param)):
+#            cur.execute(sql, param)
+#        else:
+#            cur.execute(sql, [param])
+#        return cur.fetchall()
+#    except Exception as e:
+#        err = f"DB-Err; sql:{sql},\r\nprms:{param}\r\nX:{e}"
+#        MU.errorHandler(err, AlertMailType(UnasTransactionType.UNKNOWN_MAX, code=ProxyErrCode.E19), level = logging.ERROR, eDescr=sys.exc_info())
+#        raise MyProgramFlowErrorException(err)
+#
 #####################################################
 # Specials
 #####################################################
@@ -178,28 +232,30 @@ def getModifiedOrders(sqlCols, interval, unasOrdType):
     #         res = addCustAddr(custId, unasId, dbLen  + i + 1 )
     #         if MU.isLogLevelDebug():
     #           print("ID:%i" % res)
-    
-def correctCustAddreRecordCount(custId, unasId, cntAddr):
-    result = doSql('select count(*) from "CustomerAddress" where "Customer" = ? ', custId)
-    dbLen = result.fetchone()[0]
-    if ( dbLen > cntAddr):
-        doSql( 'delete from "CustomerAddress" where "Customer" = %i order by "Id" DESC rows %i' % (custId, dbLen - cntAddr) )
-    elif (dbLen < cntAddr):
-        for i in range(cntAddr - dbLen ):
-            res = addCustAddr(custId, unasId, dbLen  + i + 1 )
-            if MU.isLogLevelDebug():
-              print("ID:%i" % res)
-    pass # es Most ???
 
-def addCust(unasId, custCode):
-    custName = custCode
-    try:
-        result = insSql('Customer', ' "Code", "Name" ', ' ?, ? ', (  custCode, custName ))
-        return result
-    except Exception as e:
-        MU.getLogger().logError("DatabaseError :%s", e.args)
-        print(e.args)
-        return -1 
+# Nincs ra hivatkozas?
+# def correctCustAddreRecordCount(custId, unasId, cntAddr):
+#     result = doSql('select count(*) from "CustomerAddress" where "Customer" = ? ', custId)
+#     dbLen = result.fetchone()[0]
+#     if ( dbLen > cntAddr):
+#         doSql( 'delete from "CustomerAddress" where "Customer" = %i order by "Id" DESC rows %i' % (custId, dbLen - cntAddr) )
+#     elif (dbLen < cntAddr):
+#         for i in range(cntAddr - dbLen ):
+#             res = addCustAddr(custId, unasId, dbLen  + i + 1 )
+#             if MU.isLogLevelDebug():
+#               print("ID:%i" % res)
+#     pass # es Most ???
+
+# Nincs ra hivatkozas?
+# def addCust(unasId, custCode):
+#     custName = custCode
+#     try:
+#         result = insSql('Customer', ' "Code", "Name" ', ' ?, ? ', (  custCode, custName ))
+#         return result
+#     except Exception as e:
+#         MU.getLogger().logError("DatabaseError :%s", e.args)
+#         print(e.args)
+#         return -1 
 
 def addCustAddr(custSymbolId, unasId, addressIdx,
                      name:str    = None, # type: ignore
@@ -264,7 +320,7 @@ def getCustomerAddresses( sqlWhere, prm ) -> List: # type: ignore
 
 def reassignCA( id:int, newCustomerId:int ):
     cur = doSql('update "CustomerAddress" set "Customer" = ? where "Id" = ?', (newCustomerId, id ))
-    CON.commit() # type: ignore
+    # CON.commit() # type: ignore
     cur.close()
 
 def deleteCAbyId( id:int ):
@@ -275,10 +331,10 @@ def undeleteCAbyId( id:int ):
     
 def setDeletedAddrById(id:int, deleted:int=1):
     cur = doSql('update "CustomerAddress" set "Deleted" = ? where "Id" = ? ', (deleted, id ))
-    CON.commit() # type: ignore
+    #CON.commit() # type: ignore
     cur.close()
     
-def delCustomerById(id : int, commit:bool = True, cur = None):
+def delCustomerById(id : int, commit:bool = False, cur = None):
     if id > 0:
         cur = doSql('delete from "CustomerAddress" where "Customer" = ? ', (id, ), cursor = cur )
         cur = doSql('delete from "Customer" where "Id" = ? ', (id, ), cursor = cur )
@@ -289,8 +345,73 @@ def delCustomerById(id : int, commit:bool = True, cur = None):
     else:
         return cur
 
+def getOrderXXXX_DirectId(invoicePdfId:int):
+    sql = ' (select "Id" from "CustomerOfferDetail" where "CustomerOrder" = ?)'
+    rows = getRows(sql, (invoicePdfId,))
+    return rows
+
+def getOrderInvoicePdfIds(orderKey:str):
+    return []
+
+def getOrderInvoiceByDirectIds(invoicePdfIds:List[int]):
+    sql = 'select "Data" from "StockOutPdfData" where "Id" in (%s)'
+    rows = getBlobs(sql, invoicePdfIds)
+#    for row in rows:
+#        with row[0].open() as blob_reader:        
+#            data = blob_reader.read()  # Read the entire BLOB
+#            # Process the data as needed
+#            print(data)
+    return rows
+
+def getOrderInvoicePdfList(order:str):
+    orderId = getField(f'select "Id" from "CustomerOrder" where "PrimeVoucherNumber" = ?', order) or 0
+
+    custOrdDetIds = getRows(f'select "Id" from "CustomerOrderDetail" where "CustomerOrder" = ?', orderId) or [0]
+    custOrdDetIdArr = [ x[0] for x in custOrdDetIds ] or [0]
+    
+    custOrdFulfilleds = getRows(f'select "StockOutDetail" from "CustomerOrderFulfill" where "Target" in ( {",".join(map(str,custOrdDetIdArr))})') or []
+    custOrdFulfilledArr = [ x[0] for x in custOrdFulfilleds ] or [0]
+
+    stockOuts = getRows(f'select "StockOut" from "StockOutDetail" where "Id" in ({",".join(map(str,custOrdFulfilledArr))})') or []
+    stockOutArr = [ x[0] for x in stockOuts ] or [0]
+
+    stockOutPdfDatas = getRows(f'select "StockOutPdfData" from "StockOutPdf" where "StockOut" in  ({",".join(map(str,stockOutArr))})') or []
+    return [ x[0] for x in stockOutPdfDatas ]
+
+
+def getOrderInvoiceByOrderId(orderId:int):
+    custOrdDetIds = getRows(f'select "Id" from "CustomerOrderDetail" where "CustomerOrder" = ?', orderId) or []
+    custOrdDetIdArr = [ x[0] for x in custOrdDetIds ] or [0]
+    
+    custOrdFulfilleds = getRows(f'select "StockOutDetail" from "CustomerOrderFulfill" where "Target" in ( {",".join(map(str,custOrdDetIdArr))})') or []
+    custOrdFulfilledArr = [ x[0] for x in custOrdFulfilleds ] or [0]
+
+    stockOutDets = getRows(f'select "StockOut" from "StockOutDetail" where "Id" in ({",".join(map(str,custOrdFulfilledArr))})') or []
+    stockOutDetArr = [ x[0] for x in stockOutDets ] or [0]
+
+    stockOuts = getRows(f'select "Target" from "StockOut" where "Id" in ({",".join(map(str,stockOutDetArr))})') or []
+    stockOutArr = [ x[0] for x in stockOuts ] or [0]
+
+    stockOutPdfs = getRows(f'select * from "StockOutPdf" where "StockOut" in  ({",".join(map(str,stockOutArr))})') or []
+    stockOutPdfArr = [ x[0] for x in stockOutPdfs ] or [0]
+
+    stockOutPdfDatas = getRows(f'select * from "StockOutPdfData" where "StockOut" in ({",".join(map(str,stockOutPdfArr))})') or []
+    return [ [ x[0] for x in stockOutPdfDatas ] ]
+
+def getOrderInvoiceByVoucher(invoicePdfId:int):
+    sql = 'select "Data" from "StockOutPdfData" where "Id" = ?'
+    rows = getRows(sql, (invoicePdfId,))
+    return rows
+
+def getOrderInvoiceByPrimeVoucher(invoicePdfId:int):
+    sql = 'select "Data" from "StockOutPdfData" where "Id" = ?'
+    rows = getRows(sql, (invoicePdfId,))
+    return rows
+
 def getOrdersByCustomerCode(code : str = "UCO%"):
-    pass
+    sql = 'select "Id", "VoucherNumber", "PrimeVoucherNumber" from "CustomerOrder" where "Customer" in (select "Id" from "Customer" where "Code" like ?)'
+    rows = getRows(sql, (code,))
+    return rows
 
 def delOrdersCustomerCode(code : str = "UCO%"):
     pass
@@ -298,29 +419,32 @@ def delOrdersCustomerCode(code : str = "UCO%"):
 def delCustomerByUCO(code : str = "UCO%"):
     cur = doSql('delete from "CustomerAddress" where "Customer" in (select "Id" from "Customer" where "Code" LIKE ?)', (code, ) )
     cur = doSql('delete from "Customer" where "Code" LIKE ?', (code, ), cursor = cur )
-    CON.commit() # type: ignore
+    CON.commit() # type: ignore ! ProxyControl, jogos az immediate commit
     cur.close()
 
-def delCustAddrById(id : int):
-    cur = doSql('delete from "CustomerAddress" where "Id" = ? ', id )
-    CON.commit() # type: ignore
-    cur.close()
+# Not Used?
+#def delCustAddrById(id : int):
+#    cur = doSql('delete from "CustomerAddress" where "Id" = ? ', id )
+#    CON.commit() # type: ignore
+#    cur.close()
 
-def deleteDummyCArex(unasId:int = 0, custId:int = -2):
+def deleteDummyCArex(unasId:int = 0, custId:int = -2, commit = False):
     _caCode = MU.CUSTOMER_CODE_PREFIXES["patternAddr"] % ( MU.CUSTOMER_CODE_PREFIXES["address"],  unasId, 0)
     _caCode = _caCode[:-1] + '%'
     cur = doSql('delete from "CustomerAddress" where "Customer" = ? ' + ( '' if _caCode is None else ' and "Code" like ' + ("'%s'" % _caCode)), custId )
-    CON.commit() # type: ignore
+    if commit:
+        CON.commit() # type: ignore
     cur.close()
-    
-def updateCustomerCode(symbolId, symbolCode):
-    cur = doSql( 'update "Customer" set "Code" = ? where "Id" = ?', (symbolCode, symbolId ))
-    CON.commit() # type: ignore
-    cur.close()
+
+# Not Used?    
+# def updateCustomerCode(symbolId, symbolCode):
+#     cur = doSql( 'update "Customer" set "Code" = ? where "Id" = ?', (symbolCode, symbolId ))
+#     CON.commit() # type: ignore
+#     cur.close()
 
 def updateSymbolCode(symbolId, symbolCode, tableName, codeColumn = 'Code'):
     cur = doSql( 'update "%s" set "%s" = ? where "Id" = %i' % (tableName, codeColumn, symbolId), symbolCode)
-    CON.commit() # type: ignore
+    CON.commit() # type: ignore !az azonnali commit - jogos - doUnasFeedback-bol jon, nem szabadna, h szukseg legyen ra!
     cur.close()
 
 def updateSymbolCodeIfChanged(symbolId, symbolCode, tableName, codeColumn = 'Code'):
@@ -331,12 +455,12 @@ def updateSymbolCodeIfChanged(symbolId, symbolCode, tableName, codeColumn = 'Cod
 
 def updateOrderStatus(symbolId, status:int = 1):
     cur = doSql( 'update "CustomerOrder" set "CustomerOrderStatus" = ? where "Id" = ?',  (status, symbolId ))
-    CON.commit() # type: ignore
+    CON.commit() # type: ignore !az azonnali commit - jogos - doUnasFeedback-bol jon, nem szabadna, h szukseg legyen ra!
     cur.close()
 
 def updateProductName(symbolId, prodName): # Name Varchar(100)
     cur = doSql( 'update "Product" set "Name" = ? where "Id" = ?', ( prodName[:100], symbolId ))
-    CON.commit() # type: ignore
+    CON.commit() # type: ignore !az azonnali commit - jogos - doUnasFeedback-bol jon, nem szabadna, h szukseg legyen ra!
     cur.close()
 
 # 
@@ -465,7 +589,7 @@ def insertDummyCustomer():
     rex = cur.fetchone()
     if rex is None or len(rex) < 1:
         cur = doSql('insert into "Customer" ("Id", "Code", "Name") values(-2, ?, ? )', ("UCU-Dummy-rek", "Dummy rex"))
-        CON.commit() # type: ignore
+        #CON.commit() # type: ignore
 
 def testDbConnect():
     cur = doSql( 'select count(*) from "Customer"')
