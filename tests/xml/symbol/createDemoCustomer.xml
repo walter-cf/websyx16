@@ -1,1 +1,81 @@
-<!-- customer 1 for generic tests , customer 2 for offers -->
+<?xml version="1.0" encoding="utf-8"?>
+<CustomersUp xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Customer>
+    <id>9999999</id>
+    <code>UCO</code>
+    <customerstatus>1</customerstatus>
+    <supplierstatus>0</supplierstatus>
+    <name>Entertainment Trading A/S</name>
+    <searchname />
+    <customercategory>B2B Export / DK</customercategory>
+    <currency>EUR</currency>
+    <invoicecountry>Denmark</invoicecountry>
+    <invoiceregion />
+    <invoicezip>9400</invoicezip>
+    <invoicecity>NØRRESUNDBY</invoicecity>
+    <invoicestreet>Loftbrovej</invoicestreet>
+    <invoicehousenumber>28-30</invoicehousenumber>
+    <mailcountry />
+    <mailregion />
+    <mailname />
+    <mailzip />
+    <mailcity />
+    <mailstreet />
+    <mailhousenumber />
+    <paymentmethod>Átutalás</paymentmethod>
+    <paymentmethodtoleranceday />
+    <pricecategory>-1</pricecategory>
+    <pricecategoryname>Lista ár (bruttó)</pricecategoryname>
+    <discountpercent>0</discountpercent>
+    <taxnumber />
+    <eutaxnumber>DK26457602</eutaxnumber>
+    <bankaccount />
+    <bankaccountiban />
+    <bankname />
+    <bankswiftcode />
+    <contactname />
+    <phone />
+    <fax />
+    <sms />
+    <email>unittest@ledsound.hu</email>
+    <webusername />
+    <webpassword />
+    <iscompany>1</iscompany>
+    <eumembership>1</eumembership>
+    <description />
+    <deleted>0</deleted>
+    <strexa />
+    <strexb />
+    <strexc />
+    <strexd />
+    <dateexa />
+    <dateexb />
+    <numexa />
+    <numexb />
+    <numexc />
+    <boolexa>0</boolexa>
+    <boolexb>0</boolexb>
+    <customeraddresses>
+      <customeraddress>
+        <preferred>0</preferred>
+        <id>240</id>
+        <code />
+        <name>Entertainment Trading A/S</name>
+        <country>Denmark</country>
+        <region />
+        <zip>9400</zip>
+        <city>NØRRESUNDBY</city>
+        <street>Loftbrovej</street>
+        <housenumber>28-30</housenumber>
+        <contactname />
+        <phone />
+        <fax />
+        <email />
+        <iscompany>0</iscompany>
+        <companytaxnumber />
+        <description />
+        <deleted>0</deleted>
+      </customeraddress>
+    </customeraddresses>
+  </Customer>
+</CustomersUp>

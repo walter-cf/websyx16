@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CustomerOrderStatuses xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <CustomerOrder>
+    <Id>3633</Id>
+    <VoucherNumber>REW2026/00430</VoucherNumber>
+    <PrimeVoucherNumber>H24-76172-100001</PrimeVoucherNumber>
+    <VoucherSequenceCode>B2B</VoucherSequenceCode>
+    <CustomerOrderStatus>1</CustomerOrderStatus>
+    <CustomerOrderStatusName>Új rendelés</CustomerOrderStatusName>
+  </CustomerOrder>
+  <CustomerOrder>
+    <Id>3634</Id>
+    <VoucherNumber>REW2026/00431</VoucherNumber>
+    <PrimeVoucherNumber>H24-76172-100002</PrimeVoucherNumber>
+    <VoucherSequenceCode>B2B</VoucherSequenceCode>
+    <CustomerOrderStatus>1</CustomerOrderStatus>
+    <CustomerOrderStatusName>Új rendelés</CustomerOrderStatusName>
+  </CustomerOrder>
+  <CustomerOrder>
+    <Id>3635</Id>
+    <VoucherNumber>REW2026/00432</VoucherNumber>
+    <PrimeVoucherNumber>H24-76172-100003</PrimeVoucherNumber>
+    <VoucherSequenceCode>B2B</VoucherSequenceCode>
+    <CustomerOrderStatus>1</CustomerOrderStatus>
+    <CustomerOrderStatusName>Új rendelés</CustomerOrderStatusName>
+  </CustomerOrder>
+</CustomerOrderStatuses>

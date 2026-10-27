@@ -1,0 +1,2110 @@
+from dataclasses import dataclass, field
+from typing import List, Optional, Union
+import xml.etree.ElementTree as ET
+from datetime import datetime
+
+@dataclass
+class Id:
+    id: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Id':
+        """Create Id instance from XML element."""
+        return cls(
+            id=cls._parse_id(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Id instance to XML element."""
+        element = ET.Element('Id')
+        self._serialize_id(element)
+        return element
+    @staticmethod
+    def _parse_id(element: ET.Element) -> float:
+        """Parse Id from XML element."""
+        elem = element.find('Id')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_id(self, parent: ET.Element) -> None:
+        """Serialize id to XML element."""
+        if self.id is not None:
+            elem = ET.SubElement(parent, 'Id')
+            elem.text = str(self.id)
+
+
+@dataclass
+class Email:
+    email: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Email':
+        """Create Email instance from XML element."""
+        return cls(
+            email=cls._parse_email(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Email instance to XML element."""
+        element = ET.Element('Email')
+        self._serialize_email(element)
+        return element
+    @staticmethod
+    def _parse_email(element: ET.Element) -> str:
+        """Parse Email from XML element."""
+        elem = element.find('Email')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_email(self, parent: ET.Element) -> None:
+        """Serialize email to XML element."""
+        if self.email is not None:
+            elem = ET.SubElement(parent, 'Email')
+            elem.text = str(self.email)
+
+
+@dataclass
+class Username:
+    username: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Username':
+        """Create Username instance from XML element."""
+        return cls(
+            username=cls._parse_username(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Username instance to XML element."""
+        element = ET.Element('Username')
+        self._serialize_username(element)
+        return element
+    @staticmethod
+    def _parse_username(element: ET.Element) -> str:
+        """Parse Username from XML element."""
+        elem = element.find('Username')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_username(self, parent: ET.Element) -> None:
+        """Serialize username to XML element."""
+        if self.username is not None:
+            elem = ET.SubElement(parent, 'Username')
+            elem.text = str(self.username)
+
+
+@dataclass
+class Name:
+    name: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Name':
+        """Create Name instance from XML element."""
+        return cls(
+            name=cls._parse_name(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Name instance to XML element."""
+        element = ET.Element('Name')
+        self._serialize_name(element)
+        return element
+    @staticmethod
+    def _parse_name(element: ET.Element) -> str:
+        """Parse Name from XML element."""
+        elem = element.find('Name')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_name(self, parent: ET.Element) -> None:
+        """Serialize name to XML element."""
+        if self.name is not None:
+            elem = ET.SubElement(parent, 'Name')
+            elem.text = str(self.name)
+
+
+@dataclass
+class Phone:
+    phone: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Phone':
+        """Create Phone instance from XML element."""
+        return cls(
+            phone=cls._parse_phone(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Phone instance to XML element."""
+        element = ET.Element('Phone')
+        self._serialize_phone(element)
+        return element
+    @staticmethod
+    def _parse_phone(element: ET.Element) -> float:
+        """Parse Phone from XML element."""
+        elem = element.find('Phone')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_phone(self, parent: ET.Element) -> None:
+        """Serialize phone to XML element."""
+        if self.phone is not None:
+            elem = ET.SubElement(parent, 'Phone')
+            elem.text = str(self.phone)
+
+
+@dataclass
+class Mobile:
+    mobile: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Mobile':
+        """Create Mobile instance from XML element."""
+        return cls(
+            mobile=cls._parse_mobile(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Mobile instance to XML element."""
+        element = ET.Element('Mobile')
+        self._serialize_mobile(element)
+        return element
+    @staticmethod
+    def _parse_mobile(element: ET.Element) -> float:
+        """Parse Mobile from XML element."""
+        elem = element.find('Mobile')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_mobile(self, parent: ET.Element) -> None:
+        """Serialize mobile to XML element."""
+        if self.mobile is not None:
+            elem = ET.SubElement(parent, 'Mobile')
+            elem.text = str(self.mobile)
+
+
+@dataclass
+class Lang:
+    lang: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Lang':
+        """Create Lang instance from XML element."""
+        return cls(
+            lang=cls._parse_lang(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Lang instance to XML element."""
+        element = ET.Element('Lang')
+        self._serialize_lang(element)
+        return element
+    @staticmethod
+    def _parse_lang(element: ET.Element) -> str:
+        """Parse Lang from XML element."""
+        elem = element.find('Lang')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_lang(self, parent: ET.Element) -> None:
+        """Serialize lang to XML element."""
+        if self.lang is not None:
+            elem = ET.SubElement(parent, 'Lang')
+            elem.text = str(self.lang)
+
+
+@dataclass
+class Contact:
+    name: Optional['Name'] = None
+    phone: Optional['Phone'] = None
+    mobile: Optional['Mobile'] = None
+    lang: Optional['Lang'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Contact':
+        """Create Contact instance from XML element."""
+        return cls(
+            name=cls._parse_name(element),
+            phone=cls._parse_phone(element),
+            mobile=cls._parse_mobile(element),
+            lang=cls._parse_lang(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Contact instance to XML element."""
+        element = ET.Element('Contact')
+        self._serialize_name(element)
+        self._serialize_phone(element)
+        self._serialize_mobile(element)
+        self._serialize_lang(element)
+        return element
+    @staticmethod
+    def _parse_name(element: ET.Element) -> Optional['Name']:
+        """Parse Name from XML element."""
+        child = element.find('Name')
+        if child is not None:
+            return Name.from_element(child)
+        return None
+    @staticmethod
+    def _parse_phone(element: ET.Element) -> Optional['Phone']:
+        """Parse Phone from XML element."""
+        child = element.find('Phone')
+        if child is not None:
+            return Phone.from_element(child)
+        return None
+    @staticmethod
+    def _parse_mobile(element: ET.Element) -> Optional['Mobile']:
+        """Parse Mobile from XML element."""
+        child = element.find('Mobile')
+        if child is not None:
+            return Mobile.from_element(child)
+        return None
+    @staticmethod
+    def _parse_lang(element: ET.Element) -> Optional['Lang']:
+        """Parse Lang from XML element."""
+        child = element.find('Lang')
+        if child is not None:
+            return Lang.from_element(child)
+        return None
+    def _serialize_name(self, parent: ET.Element) -> None:
+        """Serialize name to XML element."""
+        if self.name is not None:
+            parent.append(self.name.to_element())
+    def _serialize_phone(self, parent: ET.Element) -> None:
+        """Serialize phone to XML element."""
+        if self.phone is not None:
+            parent.append(self.phone.to_element())
+    def _serialize_mobile(self, parent: ET.Element) -> None:
+        """Serialize mobile to XML element."""
+        if self.mobile is not None:
+            parent.append(self.mobile.to_element())
+    def _serialize_lang(self, parent: ET.Element) -> None:
+        """Serialize lang to XML element."""
+        if self.lang is not None:
+            parent.append(self.lang.to_element())
+
+
+@dataclass
+class Name:
+    name: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Name':
+        """Create Name instance from XML element."""
+        return cls(
+            name=cls._parse_name(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Name instance to XML element."""
+        element = ET.Element('Name')
+        self._serialize_name(element)
+        return element
+    @staticmethod
+    def _parse_name(element: ET.Element) -> str:
+        """Parse Name from XML element."""
+        elem = element.find('Name')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_name(self, parent: ET.Element) -> None:
+        """Serialize name to XML element."""
+        if self.name is not None:
+            elem = ET.SubElement(parent, 'Name')
+            elem.text = str(self.name)
+
+
+@dataclass
+class Zip:
+    z_i_p: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Zip':
+        """Create Zip instance from XML element."""
+        return cls(
+            z_i_p=cls._parse_z_i_p(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Zip instance to XML element."""
+        element = ET.Element('ZIP')
+        self._serialize_z_i_p(element)
+        return element
+    @staticmethod
+    def _parse_z_i_p(element: ET.Element) -> float:
+        """Parse ZIP from XML element."""
+        elem = element.find('ZIP')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_z_i_p(self, parent: ET.Element) -> None:
+        """Serialize z_i_p to XML element."""
+        if self.z_i_p is not None:
+            elem = ET.SubElement(parent, 'ZIP')
+            elem.text = str(self.z_i_p)
+
+
+@dataclass
+class City:
+    city: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'City':
+        """Create City instance from XML element."""
+        return cls(
+            city=cls._parse_city(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert City instance to XML element."""
+        element = ET.Element('City')
+        self._serialize_city(element)
+        return element
+    @staticmethod
+    def _parse_city(element: ET.Element) -> str:
+        """Parse City from XML element."""
+        elem = element.find('City')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_city(self, parent: ET.Element) -> None:
+        """Serialize city to XML element."""
+        if self.city is not None:
+            elem = ET.SubElement(parent, 'City')
+            elem.text = str(self.city)
+
+
+@dataclass
+class Street:
+    street: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Street':
+        """Create Street instance from XML element."""
+        return cls(
+            street=cls._parse_street(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Street instance to XML element."""
+        element = ET.Element('Street')
+        self._serialize_street(element)
+        return element
+    @staticmethod
+    def _parse_street(element: ET.Element) -> str:
+        """Parse Street from XML element."""
+        elem = element.find('Street')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_street(self, parent: ET.Element) -> None:
+        """Serialize street to XML element."""
+        if self.street is not None:
+            elem = ET.SubElement(parent, 'Street')
+            elem.text = str(self.street)
+
+
+@dataclass
+class Streetname:
+    street_name: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Streetname':
+        """Create Streetname instance from XML element."""
+        return cls(
+            street_name=cls._parse_street_name(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Streetname instance to XML element."""
+        element = ET.Element('StreetName')
+        self._serialize_street_name(element)
+        return element
+    @staticmethod
+    def _parse_street_name(element: ET.Element) -> str:
+        """Parse StreetName from XML element."""
+        elem = element.find('StreetName')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_street_name(self, parent: ET.Element) -> None:
+        """Serialize street_name to XML element."""
+        if self.street_name is not None:
+            elem = ET.SubElement(parent, 'StreetName')
+            elem.text = str(self.street_name)
+
+
+@dataclass
+class Streetnumber:
+    street_number: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Streetnumber':
+        """Create Streetnumber instance from XML element."""
+        return cls(
+            street_number=cls._parse_street_number(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Streetnumber instance to XML element."""
+        element = ET.Element('StreetNumber')
+        self._serialize_street_number(element)
+        return element
+    @staticmethod
+    def _parse_street_number(element: ET.Element) -> float:
+        """Parse StreetNumber from XML element."""
+        elem = element.find('StreetNumber')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_street_number(self, parent: ET.Element) -> None:
+        """Serialize street_number to XML element."""
+        if self.street_number is not None:
+            elem = ET.SubElement(parent, 'StreetNumber')
+            elem.text = str(self.street_number)
+
+
+@dataclass
+class County:
+    # No properties found
+    pass
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'County':
+        """Create County instance from XML element."""
+        return cls()
+    
+    def to_element(self) -> ET.Element:
+        """Convert County instance to XML element."""
+        element = ET.Element('County')
+        return element
+
+
+@dataclass
+class Country:
+    country: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Country':
+        """Create Country instance from XML element."""
+        return cls(
+            country=cls._parse_country(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Country instance to XML element."""
+        element = ET.Element('Country')
+        self._serialize_country(element)
+        return element
+    @staticmethod
+    def _parse_country(element: ET.Element) -> str:
+        """Parse Country from XML element."""
+        elem = element.find('Country')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_country(self, parent: ET.Element) -> None:
+        """Serialize country to XML element."""
+        if self.country is not None:
+            elem = ET.SubElement(parent, 'Country')
+            elem.text = str(self.country)
+
+
+@dataclass
+class Countrycode:
+    country_code: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Countrycode':
+        """Create Countrycode instance from XML element."""
+        return cls(
+            country_code=cls._parse_country_code(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Countrycode instance to XML element."""
+        element = ET.Element('CountryCode')
+        self._serialize_country_code(element)
+        return element
+    @staticmethod
+    def _parse_country_code(element: ET.Element) -> str:
+        """Parse CountryCode from XML element."""
+        elem = element.find('CountryCode')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_country_code(self, parent: ET.Element) -> None:
+        """Serialize country_code to XML element."""
+        if self.country_code is not None:
+            elem = ET.SubElement(parent, 'CountryCode')
+            elem.text = str(self.country_code)
+
+
+@dataclass
+class Taxnumber:
+    tax_number: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Taxnumber':
+        """Create Taxnumber instance from XML element."""
+        return cls(
+            tax_number=cls._parse_tax_number(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Taxnumber instance to XML element."""
+        element = ET.Element('TaxNumber')
+        self._serialize_tax_number(element)
+        return element
+    @staticmethod
+    def _parse_tax_number(element: ET.Element) -> str:
+        """Parse TaxNumber from XML element."""
+        elem = element.find('TaxNumber')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_tax_number(self, parent: ET.Element) -> None:
+        """Serialize tax_number to XML element."""
+        if self.tax_number is not None:
+            elem = ET.SubElement(parent, 'TaxNumber')
+            elem.text = str(self.tax_number)
+
+
+@dataclass
+class Eutaxnumber:
+    # No properties found
+    pass
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Eutaxnumber':
+        """Create Eutaxnumber instance from XML element."""
+        return cls()
+    
+    def to_element(self) -> ET.Element:
+        """Convert Eutaxnumber instance to XML element."""
+        element = ET.Element('EUTaxNumber')
+        return element
+
+
+@dataclass
+class Taxfree:
+    tax_free: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Taxfree':
+        """Create Taxfree instance from XML element."""
+        return cls(
+            tax_free=cls._parse_tax_free(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Taxfree instance to XML element."""
+        element = ET.Element('TaxFree')
+        self._serialize_tax_free(element)
+        return element
+    @staticmethod
+    def _parse_tax_free(element: ET.Element) -> str:
+        """Parse TaxFree from XML element."""
+        elem = element.find('TaxFree')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_tax_free(self, parent: ET.Element) -> None:
+        """Serialize tax_free to XML element."""
+        if self.tax_free is not None:
+            elem = ET.SubElement(parent, 'TaxFree')
+            elem.text = str(self.tax_free)
+
+
+@dataclass
+class Invoice:
+    name: Optional['Name'] = None
+    z_i_p: Optional['Zip'] = None
+    city: Optional['City'] = None
+    street: Optional['Street'] = None
+    street_name: Optional['Streetname'] = None
+    street_number: Optional['Streetnumber'] = None
+    county: Optional['County'] = None
+    country: Optional['Country'] = None
+    country_code: Optional['Countrycode'] = None
+    tax_number: Optional['Taxnumber'] = None
+    e_u_tax_number: Optional['Eutaxnumber'] = None
+    tax_free: Optional['Taxfree'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Invoice':
+        """Create Invoice instance from XML element."""
+        return cls(
+            name=cls._parse_name(element),
+            z_i_p=cls._parse_z_i_p(element),
+            city=cls._parse_city(element),
+            street=cls._parse_street(element),
+            street_name=cls._parse_street_name(element),
+            street_number=cls._parse_street_number(element),
+            county=cls._parse_county(element),
+            country=cls._parse_country(element),
+            country_code=cls._parse_country_code(element),
+            tax_number=cls._parse_tax_number(element),
+            e_u_tax_number=cls._parse_e_u_tax_number(element),
+            tax_free=cls._parse_tax_free(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Invoice instance to XML element."""
+        element = ET.Element('Invoice')
+        self._serialize_name(element)
+        self._serialize_z_i_p(element)
+        self._serialize_city(element)
+        self._serialize_street(element)
+        self._serialize_street_name(element)
+        self._serialize_street_number(element)
+        self._serialize_county(element)
+        self._serialize_country(element)
+        self._serialize_country_code(element)
+        self._serialize_tax_number(element)
+        self._serialize_e_u_tax_number(element)
+        self._serialize_tax_free(element)
+        return element
+    @staticmethod
+    def _parse_name(element: ET.Element) -> Optional['Name']:
+        """Parse Name from XML element."""
+        child = element.find('Name')
+        if child is not None:
+            return Name.from_element(child)
+        return None
+    @staticmethod
+    def _parse_z_i_p(element: ET.Element) -> Optional['Zip']:
+        """Parse ZIP from XML element."""
+        child = element.find('ZIP')
+        if child is not None:
+            return Zip.from_element(child)
+        return None
+    @staticmethod
+    def _parse_city(element: ET.Element) -> Optional['City']:
+        """Parse City from XML element."""
+        child = element.find('City')
+        if child is not None:
+            return City.from_element(child)
+        return None
+    @staticmethod
+    def _parse_street(element: ET.Element) -> Optional['Street']:
+        """Parse Street from XML element."""
+        child = element.find('Street')
+        if child is not None:
+            return Street.from_element(child)
+        return None
+    @staticmethod
+    def _parse_street_name(element: ET.Element) -> Optional['Streetname']:
+        """Parse StreetName from XML element."""
+        child = element.find('StreetName')
+        if child is not None:
+            return Streetname.from_element(child)
+        return None
+    @staticmethod
+    def _parse_street_number(element: ET.Element) -> Optional['Streetnumber']:
+        """Parse StreetNumber from XML element."""
+        child = element.find('StreetNumber')
+        if child is not None:
+            return Streetnumber.from_element(child)
+        return None
+    @staticmethod
+    def _parse_county(element: ET.Element) -> Optional['County']:
+        """Parse County from XML element."""
+        child = element.find('County')
+        if child is not None:
+            return County.from_element(child)
+        return None
+    @staticmethod
+    def _parse_country(element: ET.Element) -> Optional['Country']:
+        """Parse Country from XML element."""
+        child = element.find('Country')
+        if child is not None:
+            return Country.from_element(child)
+        return None
+    @staticmethod
+    def _parse_country_code(element: ET.Element) -> Optional['Countrycode']:
+        """Parse CountryCode from XML element."""
+        child = element.find('CountryCode')
+        if child is not None:
+            return Countrycode.from_element(child)
+        return None
+    @staticmethod
+    def _parse_tax_number(element: ET.Element) -> Optional['Taxnumber']:
+        """Parse TaxNumber from XML element."""
+        child = element.find('TaxNumber')
+        if child is not None:
+            return Taxnumber.from_element(child)
+        return None
+    @staticmethod
+    def _parse_e_u_tax_number(element: ET.Element) -> Optional['Eutaxnumber']:
+        """Parse EUTaxNumber from XML element."""
+        child = element.find('EUTaxNumber')
+        if child is not None:
+            return Eutaxnumber.from_element(child)
+        return None
+    @staticmethod
+    def _parse_tax_free(element: ET.Element) -> Optional['Taxfree']:
+        """Parse TaxFree from XML element."""
+        child = element.find('TaxFree')
+        if child is not None:
+            return Taxfree.from_element(child)
+        return None
+    def _serialize_name(self, parent: ET.Element) -> None:
+        """Serialize name to XML element."""
+        if self.name is not None:
+            parent.append(self.name.to_element())
+    def _serialize_z_i_p(self, parent: ET.Element) -> None:
+        """Serialize z_i_p to XML element."""
+        if self.z_i_p is not None:
+            parent.append(self.z_i_p.to_element())
+    def _serialize_city(self, parent: ET.Element) -> None:
+        """Serialize city to XML element."""
+        if self.city is not None:
+            parent.append(self.city.to_element())
+    def _serialize_street(self, parent: ET.Element) -> None:
+        """Serialize street to XML element."""
+        if self.street is not None:
+            parent.append(self.street.to_element())
+    def _serialize_street_name(self, parent: ET.Element) -> None:
+        """Serialize street_name to XML element."""
+        if self.street_name is not None:
+            parent.append(self.street_name.to_element())
+    def _serialize_street_number(self, parent: ET.Element) -> None:
+        """Serialize street_number to XML element."""
+        if self.street_number is not None:
+            parent.append(self.street_number.to_element())
+    def _serialize_county(self, parent: ET.Element) -> None:
+        """Serialize county to XML element."""
+        if self.county is not None:
+            parent.append(self.county.to_element())
+    def _serialize_country(self, parent: ET.Element) -> None:
+        """Serialize country to XML element."""
+        if self.country is not None:
+            parent.append(self.country.to_element())
+    def _serialize_country_code(self, parent: ET.Element) -> None:
+        """Serialize country_code to XML element."""
+        if self.country_code is not None:
+            parent.append(self.country_code.to_element())
+    def _serialize_tax_number(self, parent: ET.Element) -> None:
+        """Serialize tax_number to XML element."""
+        if self.tax_number is not None:
+            parent.append(self.tax_number.to_element())
+    def _serialize_e_u_tax_number(self, parent: ET.Element) -> None:
+        """Serialize e_u_tax_number to XML element."""
+        if self.e_u_tax_number is not None:
+            parent.append(self.e_u_tax_number.to_element())
+    def _serialize_tax_free(self, parent: ET.Element) -> None:
+        """Serialize tax_free to XML element."""
+        if self.tax_free is not None:
+            parent.append(self.tax_free.to_element())
+
+
+@dataclass
+class Name:
+    name: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Name':
+        """Create Name instance from XML element."""
+        return cls(
+            name=cls._parse_name(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Name instance to XML element."""
+        element = ET.Element('Name')
+        self._serialize_name(element)
+        return element
+    @staticmethod
+    def _parse_name(element: ET.Element) -> str:
+        """Parse Name from XML element."""
+        elem = element.find('Name')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_name(self, parent: ET.Element) -> None:
+        """Serialize name to XML element."""
+        if self.name is not None:
+            elem = ET.SubElement(parent, 'Name')
+            elem.text = str(self.name)
+
+
+@dataclass
+class Zip:
+    z_i_p: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Zip':
+        """Create Zip instance from XML element."""
+        return cls(
+            z_i_p=cls._parse_z_i_p(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Zip instance to XML element."""
+        element = ET.Element('ZIP')
+        self._serialize_z_i_p(element)
+        return element
+    @staticmethod
+    def _parse_z_i_p(element: ET.Element) -> float:
+        """Parse ZIP from XML element."""
+        elem = element.find('ZIP')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_z_i_p(self, parent: ET.Element) -> None:
+        """Serialize z_i_p to XML element."""
+        if self.z_i_p is not None:
+            elem = ET.SubElement(parent, 'ZIP')
+            elem.text = str(self.z_i_p)
+
+
+@dataclass
+class City:
+    city: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'City':
+        """Create City instance from XML element."""
+        return cls(
+            city=cls._parse_city(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert City instance to XML element."""
+        element = ET.Element('City')
+        self._serialize_city(element)
+        return element
+    @staticmethod
+    def _parse_city(element: ET.Element) -> str:
+        """Parse City from XML element."""
+        elem = element.find('City')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_city(self, parent: ET.Element) -> None:
+        """Serialize city to XML element."""
+        if self.city is not None:
+            elem = ET.SubElement(parent, 'City')
+            elem.text = str(self.city)
+
+
+@dataclass
+class Street:
+    street: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Street':
+        """Create Street instance from XML element."""
+        return cls(
+            street=cls._parse_street(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Street instance to XML element."""
+        element = ET.Element('Street')
+        self._serialize_street(element)
+        return element
+    @staticmethod
+    def _parse_street(element: ET.Element) -> str:
+        """Parse Street from XML element."""
+        elem = element.find('Street')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_street(self, parent: ET.Element) -> None:
+        """Serialize street to XML element."""
+        if self.street is not None:
+            elem = ET.SubElement(parent, 'Street')
+            elem.text = str(self.street)
+
+
+@dataclass
+class Streetname:
+    street_name: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Streetname':
+        """Create Streetname instance from XML element."""
+        return cls(
+            street_name=cls._parse_street_name(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Streetname instance to XML element."""
+        element = ET.Element('StreetName')
+        self._serialize_street_name(element)
+        return element
+    @staticmethod
+    def _parse_street_name(element: ET.Element) -> str:
+        """Parse StreetName from XML element."""
+        elem = element.find('StreetName')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_street_name(self, parent: ET.Element) -> None:
+        """Serialize street_name to XML element."""
+        if self.street_name is not None:
+            elem = ET.SubElement(parent, 'StreetName')
+            elem.text = str(self.street_name)
+
+
+@dataclass
+class Streetnumber:
+    street_number: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Streetnumber':
+        """Create Streetnumber instance from XML element."""
+        return cls(
+            street_number=cls._parse_street_number(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Streetnumber instance to XML element."""
+        element = ET.Element('StreetNumber')
+        self._serialize_street_number(element)
+        return element
+    @staticmethod
+    def _parse_street_number(element: ET.Element) -> float:
+        """Parse StreetNumber from XML element."""
+        elem = element.find('StreetNumber')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_street_number(self, parent: ET.Element) -> None:
+        """Serialize street_number to XML element."""
+        if self.street_number is not None:
+            elem = ET.SubElement(parent, 'StreetNumber')
+            elem.text = str(self.street_number)
+
+
+@dataclass
+class County:
+    # No properties found
+    pass
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'County':
+        """Create County instance from XML element."""
+        return cls()
+    
+    def to_element(self) -> ET.Element:
+        """Convert County instance to XML element."""
+        element = ET.Element('County')
+        return element
+
+
+@dataclass
+class Country:
+    country: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Country':
+        """Create Country instance from XML element."""
+        return cls(
+            country=cls._parse_country(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Country instance to XML element."""
+        element = ET.Element('Country')
+        self._serialize_country(element)
+        return element
+    @staticmethod
+    def _parse_country(element: ET.Element) -> str:
+        """Parse Country from XML element."""
+        elem = element.find('Country')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_country(self, parent: ET.Element) -> None:
+        """Serialize country to XML element."""
+        if self.country is not None:
+            elem = ET.SubElement(parent, 'Country')
+            elem.text = str(self.country)
+
+
+@dataclass
+class Countrycode:
+    country_code: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Countrycode':
+        """Create Countrycode instance from XML element."""
+        return cls(
+            country_code=cls._parse_country_code(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Countrycode instance to XML element."""
+        element = ET.Element('CountryCode')
+        self._serialize_country_code(element)
+        return element
+    @staticmethod
+    def _parse_country_code(element: ET.Element) -> str:
+        """Parse CountryCode from XML element."""
+        elem = element.find('CountryCode')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_country_code(self, parent: ET.Element) -> None:
+        """Serialize country_code to XML element."""
+        if self.country_code is not None:
+            elem = ET.SubElement(parent, 'CountryCode')
+            elem.text = str(self.country_code)
+
+
+@dataclass
+class Shipping:
+    name: Optional['Name'] = None
+    z_i_p: Optional['Zip'] = None
+    city: Optional['City'] = None
+    street: Optional['Street'] = None
+    street_name: Optional['Streetname'] = None
+    street_number: Optional['Streetnumber'] = None
+    county: Optional['County'] = None
+    country: Optional['Country'] = None
+    country_code: Optional['Countrycode'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Shipping':
+        """Create Shipping instance from XML element."""
+        return cls(
+            name=cls._parse_name(element),
+            z_i_p=cls._parse_z_i_p(element),
+            city=cls._parse_city(element),
+            street=cls._parse_street(element),
+            street_name=cls._parse_street_name(element),
+            street_number=cls._parse_street_number(element),
+            county=cls._parse_county(element),
+            country=cls._parse_country(element),
+            country_code=cls._parse_country_code(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Shipping instance to XML element."""
+        element = ET.Element('Shipping')
+        self._serialize_name(element)
+        self._serialize_z_i_p(element)
+        self._serialize_city(element)
+        self._serialize_street(element)
+        self._serialize_street_name(element)
+        self._serialize_street_number(element)
+        self._serialize_county(element)
+        self._serialize_country(element)
+        self._serialize_country_code(element)
+        return element
+    @staticmethod
+    def _parse_name(element: ET.Element) -> Optional['Name']:
+        """Parse Name from XML element."""
+        child = element.find('Name')
+        if child is not None:
+            return Name.from_element(child)
+        return None
+    @staticmethod
+    def _parse_z_i_p(element: ET.Element) -> Optional['Zip']:
+        """Parse ZIP from XML element."""
+        child = element.find('ZIP')
+        if child is not None:
+            return Zip.from_element(child)
+        return None
+    @staticmethod
+    def _parse_city(element: ET.Element) -> Optional['City']:
+        """Parse City from XML element."""
+        child = element.find('City')
+        if child is not None:
+            return City.from_element(child)
+        return None
+    @staticmethod
+    def _parse_street(element: ET.Element) -> Optional['Street']:
+        """Parse Street from XML element."""
+        child = element.find('Street')
+        if child is not None:
+            return Street.from_element(child)
+        return None
+    @staticmethod
+    def _parse_street_name(element: ET.Element) -> Optional['Streetname']:
+        """Parse StreetName from XML element."""
+        child = element.find('StreetName')
+        if child is not None:
+            return Streetname.from_element(child)
+        return None
+    @staticmethod
+    def _parse_street_number(element: ET.Element) -> Optional['Streetnumber']:
+        """Parse StreetNumber from XML element."""
+        child = element.find('StreetNumber')
+        if child is not None:
+            return Streetnumber.from_element(child)
+        return None
+    @staticmethod
+    def _parse_county(element: ET.Element) -> Optional['County']:
+        """Parse County from XML element."""
+        child = element.find('County')
+        if child is not None:
+            return County.from_element(child)
+        return None
+    @staticmethod
+    def _parse_country(element: ET.Element) -> Optional['Country']:
+        """Parse Country from XML element."""
+        child = element.find('Country')
+        if child is not None:
+            return Country.from_element(child)
+        return None
+    @staticmethod
+    def _parse_country_code(element: ET.Element) -> Optional['Countrycode']:
+        """Parse CountryCode from XML element."""
+        child = element.find('CountryCode')
+        if child is not None:
+            return Countrycode.from_element(child)
+        return None
+    def _serialize_name(self, parent: ET.Element) -> None:
+        """Serialize name to XML element."""
+        if self.name is not None:
+            parent.append(self.name.to_element())
+    def _serialize_z_i_p(self, parent: ET.Element) -> None:
+        """Serialize z_i_p to XML element."""
+        if self.z_i_p is not None:
+            parent.append(self.z_i_p.to_element())
+    def _serialize_city(self, parent: ET.Element) -> None:
+        """Serialize city to XML element."""
+        if self.city is not None:
+            parent.append(self.city.to_element())
+    def _serialize_street(self, parent: ET.Element) -> None:
+        """Serialize street to XML element."""
+        if self.street is not None:
+            parent.append(self.street.to_element())
+    def _serialize_street_name(self, parent: ET.Element) -> None:
+        """Serialize street_name to XML element."""
+        if self.street_name is not None:
+            parent.append(self.street_name.to_element())
+    def _serialize_street_number(self, parent: ET.Element) -> None:
+        """Serialize street_number to XML element."""
+        if self.street_number is not None:
+            parent.append(self.street_number.to_element())
+    def _serialize_county(self, parent: ET.Element) -> None:
+        """Serialize county to XML element."""
+        if self.county is not None:
+            parent.append(self.county.to_element())
+    def _serialize_country(self, parent: ET.Element) -> None:
+        """Serialize country to XML element."""
+        if self.country is not None:
+            parent.append(self.country.to_element())
+    def _serialize_country_code(self, parent: ET.Element) -> None:
+        """Serialize country_code to XML element."""
+        if self.country_code is not None:
+            parent.append(self.country_code.to_element())
+
+
+@dataclass
+class Addresses:
+    invoice: Optional['Invoice'] = None
+    shipping: Optional['Shipping'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Addresses':
+        """Create Addresses instance from XML element."""
+        return cls(
+            invoice=cls._parse_invoice(element),
+            shipping=cls._parse_shipping(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Addresses instance to XML element."""
+        element = ET.Element('Addresses')
+        self._serialize_invoice(element)
+        self._serialize_shipping(element)
+        return element
+    @staticmethod
+    def _parse_invoice(element: ET.Element) -> Optional['Invoice']:
+        """Parse Invoice from XML element."""
+        child = element.find('Invoice')
+        if child is not None:
+            return Invoice.from_element(child)
+        return None
+    @staticmethod
+    def _parse_shipping(element: ET.Element) -> Optional['Shipping']:
+        """Parse Shipping from XML element."""
+        child = element.find('Shipping')
+        if child is not None:
+            return Shipping.from_element(child)
+        return None
+    def _serialize_invoice(self, parent: ET.Element) -> None:
+        """Serialize invoice to XML element."""
+        if self.invoice is not None:
+            parent.append(self.invoice.to_element())
+    def _serialize_shipping(self, parent: ET.Element) -> None:
+        """Serialize shipping to XML element."""
+        if self.shipping is not None:
+            parent.append(self.shipping.to_element())
+
+
+@dataclass
+class Registration:
+    registration: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Registration':
+        """Create Registration instance from XML element."""
+        return cls(
+            registration=cls._parse_registration(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Registration instance to XML element."""
+        element = ET.Element('Registration')
+        self._serialize_registration(element)
+        return element
+    @staticmethod
+    def _parse_registration(element: ET.Element) -> str:
+        """Parse Registration from XML element."""
+        elem = element.find('Registration')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_registration(self, parent: ET.Element) -> None:
+        """Serialize registration to XML element."""
+        if self.registration is not None:
+            elem = ET.SubElement(parent, 'Registration')
+            elem.text = str(self.registration)
+
+
+@dataclass
+class Modification:
+    modification: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Modification':
+        """Create Modification instance from XML element."""
+        return cls(
+            modification=cls._parse_modification(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Modification instance to XML element."""
+        element = ET.Element('Modification')
+        self._serialize_modification(element)
+        return element
+    @staticmethod
+    def _parse_modification(element: ET.Element) -> str:
+        """Parse Modification from XML element."""
+        elem = element.find('Modification')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_modification(self, parent: ET.Element) -> None:
+        """Serialize modification to XML element."""
+        if self.modification is not None:
+            elem = ET.SubElement(parent, 'Modification')
+            elem.text = str(self.modification)
+
+
+@dataclass
+class Login:
+    login: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Login':
+        """Create Login instance from XML element."""
+        return cls(
+            login=cls._parse_login(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Login instance to XML element."""
+        element = ET.Element('Login')
+        self._serialize_login(element)
+        return element
+    @staticmethod
+    def _parse_login(element: ET.Element) -> str:
+        """Parse Login from XML element."""
+        elem = element.find('Login')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_login(self, parent: ET.Element) -> None:
+        """Serialize login to XML element."""
+        if self.login is not None:
+            elem = ET.SubElement(parent, 'Login')
+            elem.text = str(self.login)
+
+
+@dataclass
+class Dates:
+    registration: Optional['Registration'] = None
+    modification: Optional['Modification'] = None
+    login: Optional['Login'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Dates':
+        """Create Dates instance from XML element."""
+        return cls(
+            registration=cls._parse_registration(element),
+            modification=cls._parse_modification(element),
+            login=cls._parse_login(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Dates instance to XML element."""
+        element = ET.Element('Dates')
+        self._serialize_registration(element)
+        self._serialize_modification(element)
+        self._serialize_login(element)
+        return element
+    @staticmethod
+    def _parse_registration(element: ET.Element) -> Optional['Registration']:
+        """Parse Registration from XML element."""
+        child = element.find('Registration')
+        if child is not None:
+            return Registration.from_element(child)
+        return None
+    @staticmethod
+    def _parse_modification(element: ET.Element) -> Optional['Modification']:
+        """Parse Modification from XML element."""
+        child = element.find('Modification')
+        if child is not None:
+            return Modification.from_element(child)
+        return None
+    @staticmethod
+    def _parse_login(element: ET.Element) -> Optional['Login']:
+        """Parse Login from XML element."""
+        child = element.find('Login')
+        if child is not None:
+            return Login.from_element(child)
+        return None
+    def _serialize_registration(self, parent: ET.Element) -> None:
+        """Serialize registration to XML element."""
+        if self.registration is not None:
+            parent.append(self.registration.to_element())
+    def _serialize_modification(self, parent: ET.Element) -> None:
+        """Serialize modification to XML element."""
+        if self.modification is not None:
+            parent.append(self.modification.to_element())
+    def _serialize_login(self, parent: ET.Element) -> None:
+        """Serialize login to XML element."""
+        if self.login is not None:
+            parent.append(self.login.to_element())
+
+
+@dataclass
+class Id:
+    id: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Id':
+        """Create Id instance from XML element."""
+        return cls(
+            id=cls._parse_id(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Id instance to XML element."""
+        element = ET.Element('Id')
+        self._serialize_id(element)
+        return element
+    @staticmethod
+    def _parse_id(element: ET.Element) -> float:
+        """Parse Id from XML element."""
+        elem = element.find('Id')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_id(self, parent: ET.Element) -> None:
+        """Serialize id to XML element."""
+        if self.id is not None:
+            elem = ET.SubElement(parent, 'Id')
+            elem.text = str(self.id)
+
+
+@dataclass
+class Name:
+    name: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Name':
+        """Create Name instance from XML element."""
+        return cls(
+            name=cls._parse_name(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Name instance to XML element."""
+        element = ET.Element('Name')
+        self._serialize_name(element)
+        return element
+    @staticmethod
+    def _parse_name(element: ET.Element) -> str:
+        """Parse Name from XML element."""
+        elem = element.find('Name')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_name(self, parent: ET.Element) -> None:
+        """Serialize name to XML element."""
+        if self.name is not None:
+            elem = ET.SubElement(parent, 'Name')
+            elem.text = str(self.name)
+
+
+@dataclass
+class Group:
+    id: Optional['Id'] = None
+    name: Optional['Name'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Group':
+        """Create Group instance from XML element."""
+        return cls(
+            id=cls._parse_id(element),
+            name=cls._parse_name(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Group instance to XML element."""
+        element = ET.Element('Group')
+        self._serialize_id(element)
+        self._serialize_name(element)
+        return element
+    @staticmethod
+    def _parse_id(element: ET.Element) -> Optional['Id']:
+        """Parse Id from XML element."""
+        child = element.find('Id')
+        if child is not None:
+            return Id.from_element(child)
+        return None
+    @staticmethod
+    def _parse_name(element: ET.Element) -> Optional['Name']:
+        """Parse Name from XML element."""
+        child = element.find('Name')
+        if child is not None:
+            return Name.from_element(child)
+        return None
+    def _serialize_id(self, parent: ET.Element) -> None:
+        """Serialize id to XML element."""
+        if self.id is not None:
+            parent.append(self.id.to_element())
+    def _serialize_name(self, parent: ET.Element) -> None:
+        """Serialize name to XML element."""
+        if self.name is not None:
+            parent.append(self.name.to_element())
+
+
+@dataclass
+class Customer:
+    customer: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Customer':
+        """Create Customer instance from XML element."""
+        return cls(
+            customer=cls._parse_customer(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Customer instance to XML element."""
+        element = ET.Element('Customer')
+        self._serialize_customer(element)
+        return element
+    @staticmethod
+    def _parse_customer(element: ET.Element) -> str:
+        """Parse Customer from XML element."""
+        elem = element.find('Customer')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_customer(self, parent: ET.Element) -> None:
+        """Serialize customer to XML element."""
+        if self.customer is not None:
+            elem = ET.SubElement(parent, 'Customer')
+            elem.text = str(self.customer)
+
+
+@dataclass
+class Admin:
+    admin: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Admin':
+        """Create Admin instance from XML element."""
+        return cls(
+            admin=cls._parse_admin(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Admin instance to XML element."""
+        element = ET.Element('Admin')
+        self._serialize_admin(element)
+        return element
+    @staticmethod
+    def _parse_admin(element: ET.Element) -> str:
+        """Parse Admin from XML element."""
+        elem = element.find('Admin')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_admin(self, parent: ET.Element) -> None:
+        """Serialize admin to XML element."""
+        if self.admin is not None:
+            elem = ET.SubElement(parent, 'Admin')
+            elem.text = str(self.admin)
+
+
+@dataclass
+class Authorize:
+    customer: Optional['Customer'] = None
+    admin: Optional['Admin'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Authorize':
+        """Create Authorize instance from XML element."""
+        return cls(
+            customer=cls._parse_customer(element),
+            admin=cls._parse_admin(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Authorize instance to XML element."""
+        element = ET.Element('Authorize')
+        self._serialize_customer(element)
+        self._serialize_admin(element)
+        return element
+    @staticmethod
+    def _parse_customer(element: ET.Element) -> Optional['Customer']:
+        """Parse Customer from XML element."""
+        child = element.find('Customer')
+        if child is not None:
+            return Customer.from_element(child)
+        return None
+    @staticmethod
+    def _parse_admin(element: ET.Element) -> Optional['Admin']:
+        """Parse Admin from XML element."""
+        child = element.find('Admin')
+        if child is not None:
+            return Admin.from_element(child)
+        return None
+    def _serialize_customer(self, parent: ET.Element) -> None:
+        """Serialize customer to XML element."""
+        if self.customer is not None:
+            parent.append(self.customer.to_element())
+    def _serialize_admin(self, parent: ET.Element) -> None:
+        """Serialize admin to XML element."""
+        if self.admin is not None:
+            parent.append(self.admin.to_element())
+
+
+@dataclass
+class Total:
+    total: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Total':
+        """Create Total instance from XML element."""
+        return cls(
+            total=cls._parse_total(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Total instance to XML element."""
+        element = ET.Element('Total')
+        self._serialize_total(element)
+        return element
+    @staticmethod
+    def _parse_total(element: ET.Element) -> float:
+        """Parse Total from XML element."""
+        elem = element.find('Total')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_total(self, parent: ET.Element) -> None:
+        """Serialize total to XML element."""
+        if self.total is not None:
+            elem = ET.SubElement(parent, 'Total')
+            elem.text = str(self.total)
+
+
+@dataclass
+class Direct:
+    direct: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Direct':
+        """Create Direct instance from XML element."""
+        return cls(
+            direct=cls._parse_direct(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Direct instance to XML element."""
+        element = ET.Element('Direct')
+        self._serialize_direct(element)
+        return element
+    @staticmethod
+    def _parse_direct(element: ET.Element) -> float:
+        """Parse Direct from XML element."""
+        elem = element.find('Direct')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_direct(self, parent: ET.Element) -> None:
+        """Serialize direct to XML element."""
+        if self.direct is not None:
+            elem = ET.SubElement(parent, 'Direct')
+            elem.text = str(self.direct)
+
+
+@dataclass
+class Discount:
+    total: Optional['Total'] = None
+    direct: Optional['Direct'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Discount':
+        """Create Discount instance from XML element."""
+        return cls(
+            total=cls._parse_total(element),
+            direct=cls._parse_direct(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Discount instance to XML element."""
+        element = ET.Element('Discount')
+        self._serialize_total(element)
+        self._serialize_direct(element)
+        return element
+    @staticmethod
+    def _parse_total(element: ET.Element) -> Optional['Total']:
+        """Parse Total from XML element."""
+        child = element.find('Total')
+        if child is not None:
+            return Total.from_element(child)
+        return None
+    @staticmethod
+    def _parse_direct(element: ET.Element) -> Optional['Direct']:
+        """Parse Direct from XML element."""
+        child = element.find('Direct')
+        if child is not None:
+            return Direct.from_element(child)
+        return None
+    def _serialize_total(self, parent: ET.Element) -> None:
+        """Serialize total to XML element."""
+        if self.total is not None:
+            parent.append(self.total.to_element())
+    def _serialize_direct(self, parent: ET.Element) -> None:
+        """Serialize direct to XML element."""
+        if self.direct is not None:
+            parent.append(self.direct.to_element())
+
+
+@dataclass
+class Balance:
+    balance: float = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Balance':
+        """Create Balance instance from XML element."""
+        return cls(
+            balance=cls._parse_balance(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Balance instance to XML element."""
+        element = ET.Element('Balance')
+        self._serialize_balance(element)
+        return element
+    @staticmethod
+    def _parse_balance(element: ET.Element) -> float:
+        """Parse Balance from XML element."""
+        elem = element.find('Balance')
+        if elem is not None and elem.text:
+            return float(elem.text)
+        return None
+    def _serialize_balance(self, parent: ET.Element) -> None:
+        """Serialize balance to XML element."""
+        if self.balance is not None:
+            elem = ET.SubElement(parent, 'Balance')
+            elem.text = str(self.balance)
+
+
+@dataclass
+class Pointsaccount:
+    balance: Optional['Balance'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Pointsaccount':
+        """Create Pointsaccount instance from XML element."""
+        return cls(
+            balance=cls._parse_balance(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Pointsaccount instance to XML element."""
+        element = ET.Element('PointsAccount')
+        self._serialize_balance(element)
+        return element
+    @staticmethod
+    def _parse_balance(element: ET.Element) -> Optional['Balance']:
+        """Parse Balance from XML element."""
+        child = element.find('Balance')
+        if child is not None:
+            return Balance.from_element(child)
+        return None
+    def _serialize_balance(self, parent: ET.Element) -> None:
+        """Serialize balance to XML element."""
+        if self.balance is not None:
+            parent.append(self.balance.to_element())
+
+
+@dataclass
+class Subscribed:
+    subscribed: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Subscribed':
+        """Create Subscribed instance from XML element."""
+        return cls(
+            subscribed=cls._parse_subscribed(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Subscribed instance to XML element."""
+        element = ET.Element('Subscribed')
+        self._serialize_subscribed(element)
+        return element
+    @staticmethod
+    def _parse_subscribed(element: ET.Element) -> str:
+        """Parse Subscribed from XML element."""
+        elem = element.find('Subscribed')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_subscribed(self, parent: ET.Element) -> None:
+        """Serialize subscribed to XML element."""
+        if self.subscribed is not None:
+            elem = ET.SubElement(parent, 'Subscribed')
+            elem.text = str(self.subscribed)
+
+
+@dataclass
+class Authorized:
+    authorized: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Authorized':
+        """Create Authorized instance from XML element."""
+        return cls(
+            authorized=cls._parse_authorized(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Authorized instance to XML element."""
+        element = ET.Element('Authorized')
+        self._serialize_authorized(element)
+        return element
+    @staticmethod
+    def _parse_authorized(element: ET.Element) -> str:
+        """Parse Authorized from XML element."""
+        elem = element.find('Authorized')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_authorized(self, parent: ET.Element) -> None:
+        """Serialize authorized to XML element."""
+        if self.authorized is not None:
+            elem = ET.SubElement(parent, 'Authorized')
+            elem.text = str(self.authorized)
+
+
+@dataclass
+class Newsletter:
+    subscribed: Optional['Subscribed'] = None
+    authorized: Optional['Authorized'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Newsletter':
+        """Create Newsletter instance from XML element."""
+        return cls(
+            subscribed=cls._parse_subscribed(element),
+            authorized=cls._parse_authorized(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Newsletter instance to XML element."""
+        element = ET.Element('Newsletter')
+        self._serialize_subscribed(element)
+        self._serialize_authorized(element)
+        return element
+    @staticmethod
+    def _parse_subscribed(element: ET.Element) -> Optional['Subscribed']:
+        """Parse Subscribed from XML element."""
+        child = element.find('Subscribed')
+        if child is not None:
+            return Subscribed.from_element(child)
+        return None
+    @staticmethod
+    def _parse_authorized(element: ET.Element) -> Optional['Authorized']:
+        """Parse Authorized from XML element."""
+        child = element.find('Authorized')
+        if child is not None:
+            return Authorized.from_element(child)
+        return None
+    def _serialize_subscribed(self, parent: ET.Element) -> None:
+        """Serialize subscribed to XML element."""
+        if self.subscribed is not None:
+            parent.append(self.subscribed.to_element())
+    def _serialize_authorized(self, parent: ET.Element) -> None:
+        """Serialize authorized to XML element."""
+        if self.authorized is not None:
+            parent.append(self.authorized.to_element())
+
+
+@dataclass
+class Ip:
+    ip: str = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Ip':
+        """Create Ip instance from XML element."""
+        return cls(
+            ip=cls._parse_ip(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Ip instance to XML element."""
+        element = ET.Element('Ip')
+        self._serialize_ip(element)
+        return element
+    @staticmethod
+    def _parse_ip(element: ET.Element) -> str:
+        """Parse Ip from XML element."""
+        elem = element.find('Ip')
+        if elem is not None and elem.text:
+            return elem.text
+        return None
+    def _serialize_ip(self, parent: ET.Element) -> None:
+        """Serialize ip to XML element."""
+        if self.ip is not None:
+            elem = ET.SubElement(parent, 'Ip')
+            elem.text = str(self.ip)
+
+
+@dataclass
+class Others:
+    ip: Optional['Ip'] = None
+
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Others':
+        """Create Others instance from XML element."""
+        return cls(
+            ip=cls._parse_ip(element)
+        )
+    
+    def to_element(self) -> ET.Element:
+        """Convert Others instance to XML element."""
+        element = ET.Element('Others')
+        self._serialize_ip(element)
+        return element
+    @staticmethod
+    def _parse_ip(element: ET.Element) -> Optional['Ip']:
+        """Parse Ip from XML element."""
+        child = element.find('Ip')
+        if child is not None:
+            return Ip.from_element(child)
+        return None
+    def _serialize_ip(self, parent: ET.Element) -> None:
+        """Serialize ip to XML element."""
+        if self.ip is not None:
+            parent.append(self.ip.to_element())
+
+
+@dataclass
+class Customer:
+    id: Optional['Id'] = None
+    email: Optional['Email'] = None
+    username: Optional['Username'] = None
+    contact: Optional['Contact'] = None
+    addresses: Optional['Addresses'] = None
+    dates: Optional['Dates'] = None
+    group: Optional['Group'] = None
+    authorize: Optional['Authorize'] = None
+    discount: Optional['Discount'] = None
+    points_account: Optional['Pointsaccount'] = None
+    newsletter: Optional['Newsletter'] = None
+    others: Optional['Others'] = None
+
+    @classmethod
+    def from_xml_string(cls, xml_string: str) -> 'Customer':
+        """Parse XML string and create Customer instance."""
+        root = ET.fromstring(xml_string)
+        return cls.from_element(root)
+    
+    @classmethod
+    def from_element(cls, element: ET.Element) -> 'Customer':
+        """Create Customer instance from XML element."""
+        return cls(
+            id=cls._parse_id(element),
+            email=cls._parse_email(element),
+            username=cls._parse_username(element),
+            contact=cls._parse_contact(element),
+            addresses=cls._parse_addresses(element),
+            dates=cls._parse_dates(element),
+            group=cls._parse_group(element),
+            authorize=cls._parse_authorize(element),
+            discount=cls._parse_discount(element),
+            points_account=cls._parse_points_account(element),
+            newsletter=cls._parse_newsletter(element),
+            others=cls._parse_others(element)
+        )
+    
+    def to_xml_string(self) -> str:
+        """Convert Customer instance to XML string."""
+        root = self.to_element()
+        return ET.tostring(root, encoding='unicode', xml_declaration=True)
+    
+    def to_element(self) -> ET.Element:
+        """Convert Customer instance to XML element."""
+        element = ET.Element('Customer')
+        self._serialize_id(element)
+        self._serialize_email(element)
+        self._serialize_username(element)
+        self._serialize_contact(element)
+        self._serialize_addresses(element)
+        self._serialize_dates(element)
+        self._serialize_group(element)
+        self._serialize_authorize(element)
+        self._serialize_discount(element)
+        self._serialize_points_account(element)
+        self._serialize_newsletter(element)
+        self._serialize_others(element)
+        return element
+    @staticmethod
+    def _parse_id(element: ET.Element) -> Optional['Id']:
+        """Parse Id from XML element."""
+        child = element.find('Id')
+        if child is not None:
+            return Id.from_element(child)
+        return None
+    @staticmethod
+    def _parse_email(element: ET.Element) -> Optional['Email']:
+        """Parse Email from XML element."""
+        child = element.find('Email')
+        if child is not None:
+            return Email.from_element(child)
+        return None
+    @staticmethod
+    def _parse_username(element: ET.Element) -> Optional['Username']:
+        """Parse Username from XML element."""
+        child = element.find('Username')
+        if child is not None:
+            return Username.from_element(child)
+        return None
+    @staticmethod
+    def _parse_contact(element: ET.Element) -> Optional['Contact']:
+        """Parse Contact from XML element."""
+        child = element.find('Contact')
+        if child is not None:
+            return Contact.from_element(child)
+        return None
+    @staticmethod
+    def _parse_addresses(element: ET.Element) -> Optional['Addresses']:
+        """Parse Addresses from XML element."""
+        child = element.find('Addresses')
+        if child is not None:
+            return Addresses.from_element(child)
+        return None
+    @staticmethod
+    def _parse_dates(element: ET.Element) -> Optional['Dates']:
+        """Parse Dates from XML element."""
+        child = element.find('Dates')
+        if child is not None:
+            return Dates.from_element(child)
+        return None
+    @staticmethod
+    def _parse_group(element: ET.Element) -> Optional['Group']:
+        """Parse Group from XML element."""
+        child = element.find('Group')
+        if child is not None:
+            return Group.from_element(child)
+        return None
+    @staticmethod
+    def _parse_authorize(element: ET.Element) -> Optional['Authorize']:
+        """Parse Authorize from XML element."""
+        child = element.find('Authorize')
+        if child is not None:
+            return Authorize.from_element(child)
+        return None
+    @staticmethod
+    def _parse_discount(element: ET.Element) -> Optional['Discount']:
+        """Parse Discount from XML element."""
+        child = element.find('Discount')
+        if child is not None:
+            return Discount.from_element(child)
+        return None
+    @staticmethod
+    def _parse_points_account(element: ET.Element) -> Optional['Pointsaccount']:
+        """Parse PointsAccount from XML element."""
+        child = element.find('PointsAccount')
+        if child is not None:
+            return Pointsaccount.from_element(child)
+        return None
+    @staticmethod
+    def _parse_newsletter(element: ET.Element) -> Optional['Newsletter']:
+        """Parse Newsletter from XML element."""
+        child = element.find('Newsletter')
+        if child is not None:
+            return Newsletter.from_element(child)
+        return None
+    @staticmethod
+    def _parse_others(element: ET.Element) -> Optional['Others']:
+        """Parse Others from XML element."""
+        child = element.find('Others')
+        if child is not None:
+            return Others.from_element(child)
+        return None
+    def _serialize_id(self, parent: ET.Element) -> None:
+        """Serialize id to XML element."""
+        if self.id is not None:
+            parent.append(self.id.to_element())
+    def _serialize_email(self, parent: ET.Element) -> None:
+        """Serialize email to XML element."""
+        if self.email is not None:
+            parent.append(self.email.to_element())
+    def _serialize_username(self, parent: ET.Element) -> None:
+        """Serialize username to XML element."""
+        if self.username is not None:
+            parent.append(self.username.to_element())
+    def _serialize_contact(self, parent: ET.Element) -> None:
+        """Serialize contact to XML element."""
+        if self.contact is not None:
+            parent.append(self.contact.to_element())
+    def _serialize_addresses(self, parent: ET.Element) -> None:
+        """Serialize addresses to XML element."""
+        if self.addresses is not None:
+            parent.append(self.addresses.to_element())
+    def _serialize_dates(self, parent: ET.Element) -> None:
+        """Serialize dates to XML element."""
+        if self.dates is not None:
+            parent.append(self.dates.to_element())
+    def _serialize_group(self, parent: ET.Element) -> None:
+        """Serialize group to XML element."""
+        if self.group is not None:
+            parent.append(self.group.to_element())
+    def _serialize_authorize(self, parent: ET.Element) -> None:
+        """Serialize authorize to XML element."""
+        if self.authorize is not None:
+            parent.append(self.authorize.to_element())
+    def _serialize_discount(self, parent: ET.Element) -> None:
+        """Serialize discount to XML element."""
+        if self.discount is not None:
+            parent.append(self.discount.to_element())
+    def _serialize_points_account(self, parent: ET.Element) -> None:
+        """Serialize points_account to XML element."""
+        if self.points_account is not None:
+            parent.append(self.points_account.to_element())
+    def _serialize_newsletter(self, parent: ET.Element) -> None:
+        """Serialize newsletter to XML element."""
+        if self.newsletter is not None:
+            parent.append(self.newsletter.to_element())
+    def _serialize_others(self, parent: ET.Element) -> None:
+        """Serialize others to XML element."""
+        if self.others is not None:
+            parent.append(self.others.to_element())

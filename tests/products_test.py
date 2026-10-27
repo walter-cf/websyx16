@@ -34,6 +34,14 @@ xml2 = '''<Products>
 </Products>
 '''
 
+getAllXml = '''<?xml version="1.0" encoding="UTF-8" ?>
+<Params>
+    <StatusBase>1</StatusBase>
+    <LimitNum>50</LimitNum>
+    <LimitStart>20</LimitStart>
+    <ContentType>full</ContentType>
+</Params>'''
+
 class ProductTest(unittest.TestCase):
     PRODUCT_SKU = "PT-6445"
 

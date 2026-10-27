@@ -93,7 +93,7 @@ class Shipping:
     street: str|None = None  # XML element: Street
     street_name: str|None = None  # XML element: StreetName
     street_type: str|None = None  # XML element: StreetType
-    street_number: int|None = None  # XML element: StreetNumber
+    street_number: str|None = None  # XML element: StreetNumber
     county: str|None = None  # XML element: County
     country: str|None = None  # XML element: Country
     country_code: str|None = None  # XML element: CountryCode
@@ -121,7 +121,7 @@ class Shipping:
             instance.street_type = street_type_elem.text
         street_number_elem = xml_element.find('StreetNumber')
         if street_number_elem is not None:
-            instance.street_number = int(street_number_elem.text or 0)
+            instance.street_number = street_number_elem.text
         county_elem = xml_element.find('County')
         if county_elem is not None:
             instance.county = county_elem.text
@@ -140,7 +140,7 @@ class Invoice:
     street: str|None = None  # XML element: Street
     street_name: str|None = None  # XML element: StreetName
     street_type: str|None = None  # XML element: StreetType
-    street_number: int|None = None  # XML element: StreetNumber
+    street_number: str|None = None  # XML element: StreetNumber
     county: str|None = None  # XML element: County
     country: str|None = None  # XML element: Country
     country_code: str|None = None  # XML element: CountryCode
@@ -171,7 +171,7 @@ class Invoice:
             instance.street_type = street_type_elem.text
         street_number_elem = xml_element.find('StreetNumber')
         if street_number_elem is not None:
-            instance.street_number = int(street_number_elem.text or 0 )
+            instance.street_number = street_number_elem.text
         county_elem = xml_element.find('County')
         if county_elem is not None:
             instance.county = county_elem.text
@@ -237,6 +237,7 @@ class Addresses:
 
 @dataclass
 class UnasCustomer:
+    unasid: int = 0
     action: str|None = None  # XML element: Action
     email: str|None = None  # XML element: Email
     password_crypted: str|None = None  # XML element: PasswordCrypted
@@ -249,6 +250,9 @@ class UnasCustomer:
     @classmethod
     def from_xml(cls, xml_element: ET.Element) -> 'UnasCustomer':
         instance = cls()
+        _elem = xml_element.find('Id')
+        if (_elem is not None):
+            instance.unasid = int(_elem.text or '0')
         action_elem = xml_element.find('Action')
         if action_elem is not None:
             instance.action = action_elem.text

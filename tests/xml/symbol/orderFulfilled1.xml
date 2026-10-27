@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FulfilledCustomerOrdersByInvoice xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <CustomerOrder>
+    <Id>3633</Id>
+    <VoucherNumber>REW2026/00430</VoucherNumber>
+    <PrimeVoucherNumber>H24-76172-100001</PrimeVoucherNumber>
+    <VoucherSequenceCode>B2B</VoucherSequenceCode>
+  </CustomerOrder>
+</FulfilledCustomerOrdersByInvoice>

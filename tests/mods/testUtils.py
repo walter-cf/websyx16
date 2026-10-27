@@ -4,9 +4,10 @@ import MyUtils as MU
 #import lxml.etree as ET
 from GetProcessor import doUnasGetRequest
 from PostProcessorUNAS import doUnasRequest
+from MyProxyControl import doWebControlCdn as webControlCDN
 from xmlclazz.unasCustomer import UnasCustomer
 from xmlclazz.customerResponse import CustomerResponse
-from UnasConnectHelper import unasCustomer_Direct, unasFreeXml, unasProduct_Direct, getProds as getProductBy
+from UnasConnectHelper import unasCustomer_Direct, unasOrder_Direct, unasFreeXml, unasProduct_Direct, getProds as getProductBy, unasSetOrderStatus
 
 def getCustomerById(unasId:int) -> CustomerResponse:
     resp = doUnasGetRequest(['x','customerby','customerby','Id',f'{unasId}'],[])
@@ -18,11 +19,11 @@ def setCustomerCategoryById(cat :str, unasId:int) -> CustomerResponse:
         resp = doUnasRequest('customer', demoXml % (unasId, cat))
         return CustomerResponse.from_xml(MU.ET.fromstring(resp))
 
-def createDemoCustomer() -> CustomerResponse:
+def createDemoCustomer() -> str|None:
     with open('tests/xml/symbol/createDemoCustomer.xml', 'r', encoding='utf-8') as fil:
         demoXml = fil.read()
         resp = doUnasRequest('customer', demoXml)
-        return CustomerResponse.from_xml(MU.ET.fromstring(resp))
+        return resp
 
 def getProductBySku(sku:str) -> str:
     resp = getProductBy('Sku', sku)

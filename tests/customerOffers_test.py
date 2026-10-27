@@ -1,7 +1,6 @@
 import unittest
 
-
-class OfferTest(unittest.TestCase):
+class CustomerOfferTest(unittest.TestCase):
 
     def test_sum(self):
         pass 

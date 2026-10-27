@@ -1,7 +1,7 @@
 import unittest
 #from tests.mods.myDemoCalc import Calculations
 
-class CustomerTest(unittest.TestCase):
+class PriceRulesTest(unittest.TestCase):
 
     def test_sum(self):
         pass
