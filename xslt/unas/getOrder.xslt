@@ -11,7 +11,7 @@
             <customerorder>
                 <date><xsl:value-of select="Date" /></date>
                 <!-- <expirationdays>10</expirationdays>< ! - - Lejárat napok száma (üresen is hagyható) -->
-                <orderid><xsl:value-of select="prefixOrderId" /><xsl:value-of select="Key" /></orderid>
+                <orderid><xsl:value-of select="prefixOrderId" />-<xsl:value-of select="Key" /></orderid>
                 <currency><xsl:value-of select="Currency"/></currency><!-- Pénznem (Currency.Name) -->
                 <!-- <currencyrate>1</currencyrate> -->
                 <vouchersequencecode><xsl:value-of select="symbolVouchersequenceCode" /></vouchersequencecode>

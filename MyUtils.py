@@ -2,7 +2,7 @@ import base64
 from collections import namedtuple
 import json
 import os
-import os
+from uuid import uuid4 as UUID
 import logging
 import traceback as SysTB
 import typing
@@ -439,7 +439,7 @@ def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObje
         pass
         # TODO a lezart teteleket, ki kellene szedni a cachebol
         # Megyeztunk, hogy a cache-t a programlogika tolti, uriti polah@20250519
-        pass
+        # pass
         # TODO a lezart teteleket, ki kellene szedni a cachebol
         # Megyeztunk, hogy a cache-t a programlogika tolti, uriti polah@20250519
         ## UnasOrderList.clear()
@@ -2249,6 +2249,9 @@ def createSpecialCustomerGroups():
 def presetBaseCategory(cust, ucc:UCC.UnasCustomerCache) -> str|None:
     # YAML . customer.categoryName
     groupName = cust.find("customercategory")
+    global CUSTOMER_SPEC_CATEGORIES
+    if len(CUSTOMER_SPEC_CATEGORIES) == 1 and len(CUSTOMER_SPEC_CATEGORIES[0]) == 0:
+        CUSTOMER_SPEC_CATEGORIES = Conf("unas.customer.specialCategories") # type: ignore
     if Conf("unas.product.pricecat.unique") == cust.find("pricecategoryname"): # PriceCat - EGYEDI or 32
         #ucc = next(( x for x in CUSTOMER_SPEC_CATEGORIES if x[0] == (None if groupName is None else cust.customercategory.text)), None)
         unasCust = None if (ucc.unasId or 0) < 1 else getUnasCustomer(ucc.unasId)
@@ -2448,9 +2451,33 @@ def unasProductFromXml(xml:str) -> UnasProduct:
 from I18nDeepL import ProductText as PROD
 def createTranslator(fr:str, to:str):
     return PROD(fromLang=fr, toLang=to)
-
 def translateText(pt:PROD, txt:str|None) -> str|None:
     return None if txt is None else pt.translateText(txt)
 
 #def translateT(trx, txt:str) -> str:
 #    return PROD.translateText(trx, txt)
+
+def getInvoicePdfIdList(voucher) -> List[int]:
+    res = FBU.getOrderInvoicePdfList( voucher) or []
+    return res or []
+
+import secrets
+import string
+
+def generate_secure_random_string(length):
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+def createOrderInvoicePdfUrlList(voucher:str) -> List[str]:
+    urls = []
+    for x in getInvoicePdfIdList(voucher):
+        uid = UUID()
+        salt = generate_secure_random_string(6)
+        shadowInvoiceId = mySqlIntance.execSql(f"insert into shadow_invoice_pdf (id, uid, salt, pdf_id) values(null, '{uid}', '{salt}', {x})")
+        urls.append(f'https://cdn.ledsound.hu/web6/s/{uid}/{salt}')
+    return urls
+
+def getsymbolInvoicePdfData(uid:str, salt:str) -> str:
+    pdfId = mySqlIntance.getField(f"select pdf_id from  shadow_invoice_pdf where salt='{salt}' and uid='{uid}'")
+    pdfData = FBU.getField('select "Data" from "StockOutPdfData" where "Id" = ?', pdfId)
+    return pdfData.read()

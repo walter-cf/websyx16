@@ -96,7 +96,7 @@ class MySqlWrapper():
     def doSqlList(self):
         pass
     
-    def execSql(self, sql:str, params, commit = False):
+    def execSql(self, sql:str, params=None, commit = False):
         crsr = self.getCursor()
         if params is None:
             crsr.execute(sql)

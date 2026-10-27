@@ -244,11 +244,29 @@ def transformUnasRequestObject(root, xsltFilename):
     elif xsltFilename == 'BilledOrder':
         # <CustomerOrder> <Id>8</Id> <VoucherNumber>RECW2024/00004</VoucherNumber> <PrimeVoucherNumber>H24-75175-100004</PrimeVoucherNumber> <VoucherSequenceCode>B2C</VoucherSequenceCode> </CustomerOrder>            
         for ord in root.getchildren():
-            unasOrderKey = str(ord.PrimeVoucherNumber)[ 1 + len(MU.SYMBOLORDERIDPREFIX): ]
-            ord.PrimeVoucherNumber = unasOrderKey
+            ord.unasOrderKey = str(ord.PrimeVoucherNumber)[ 1 + len(MU.SYMBOLORDERIDPREFIX): ]
             ord.unasOrderStatus = MU.ORDER_STATUS_CLOSE # vagy 
-            ord.unasOrderStatus = 'Megrendelés lezárva'
+            ord.unasOrderStatus= 'Megrendelés lezárva'
             # xmlResp = UCH.unasSetOrderStatus( unasOrderKey, ord.unasOrderStatus, ord.Id, True, "Rendelését számláztuk, kiszállítása folyamatban van.")
+            #
+            _ordStat = next(( x for x in MU.Conf('unas.order.statusNames') if x[0] == 'Closed' ), None)
+            ord.Invoice = 'szla'
+            # A számlázás állapota. || Használható értékek || 0 Nem számlázható || 1 Számlázható || 2 Számlázva 
+            ord.Invoice.invoiceStatus = 2
+            # Ez az order allapot a szamlazase kell
+            # if 'name' == MU.Conf('unas.order.statusNameOrId'):
+            #     ord.Invoice.invoiceStatusText = 'Megrendelés lezárva' if _ordStat is None else _ordStat[1]
+            # else:
+            #     ord.Invoice.invoiceStatus = 6567401 if _ordStat is None else _ordStat[2]
+            ord.Invoice.invoiceNumber = f'H24INV-{ord.Id}'
+            pdfIdList = MU.createOrderInvoicePdfUrlList(ord.PrimeVoucherNumber) #  ord.PrimeVoucherNumber
+            ord.Invoice.invoicePdfUrl = "\r\n".join(pdfIdList)
+            print(ord)
+            print(ord.Invoice)
+            print(ord.Invoice.invoiceStatus)
+            print(ord.Invoice.invoiceNumber)
+            print(ord.Invoice.invoicePdfUrl)
+
     elif xsltFilename == 'Customer':
         for cust in root.getchildren():
             ucc:UCC.UnasCustomerCache|None = None
@@ -519,7 +537,7 @@ def transformUnasRequestObject(root, xsltFilename):
                     orderTag.customerOrderStatus = next((x[1] for x in statCfg if x[0] == orderTag.CustomerOrderStatusName),None) # type: ignore
                 else:
                     orderTag.customerOrderStatus = next((x[1] for x in statCfg if x[0] == orderTag.CustomerOrderStatus),None) # type: ignore
-                orderTag.SkipThisItem = orderTag.customerOrderStatusId is None or orderTag.customerOrderStatusName is None
+                #orderTag.SkipThisItem = orderTag.customerOrderStatus
     #
     else: # Untransformed action
         MU.getLogger().logWarn( "Untransformed action:%s", xsltFilename)
@@ -1049,6 +1067,9 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         uts = MU.createTransactionId( UnasTransactionType.CHANGED_ORDER_STATUS )
         MU.getLogger().logDebug("setProductSupplierOrder-TS:%d" % uts)
 
+        if MU.JOETESTCustomer:
+            MU.collectOrderItems(UCH.unasGetActiveOrders())
+
         postData = postData.replace('&amp;#', '&#')
         xmlReq_0 = preProcessUnasPostRequest(action, postData)
         xmlReq = prepareUnasReply(xmlReq_0, "OrderStatus" )
@@ -1069,6 +1090,7 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
             print(postData)
         xmlReq = preProcessUnasPostRequest(action, postData)
         xmlReq = prepareUnasReply(xmlReq, "ProductPriceOfferFallback")
+        xmlReq = None # Meg kell neznem, mit akartam itt csinalani!!!! valszeg nem kell semmit felkuldeni, mert azz offert direktben megcsinaltam a MyUtil-ban
         if xmlReq != None:  #n Offer-Price Fallback!
             xmlResp = UCH.unasProduct_Direct(xmlReq)
             unasResp = postProcessUnasPostRequest(action, xmlResp)
@@ -1077,6 +1099,10 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         MU.getLogger().logDebug("Order - szamlazva-TS:%d" % uts)
         if MU.isLogLevelDebug():
             print(postData)
+
+        if MU.JOETESTCustomer:
+            MU.collectOrderItems(UCH.unasGetActiveOrders())
+            
         xmlReq = preProcessUnasPostRequest(action, postData)
         xmlReq = prepareUnasReply(xmlReq, "BilledOrder")
         # Ha nem csinaltam UNAS requestet vmilyen feltetel teljesulese miatt!
@@ -1221,7 +1247,7 @@ def getErrorTextCustomer(act, xmlResp) -> str|None:
         errorMessage = None
         for cust in root.getchildren():
             # unasId = cust.find('Id').text
-            email = cust.find('Email').text
+            email = None if cust.find('Email') is None else cust.find('Email').text
             status = cust.find('Status').text
             action = None if cust.find('Action') is None else cust.find('Action').text 
             unasId = 0 if cust.find('Id') is None else int(cust.find('Id').text)
