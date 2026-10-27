@@ -39,6 +39,10 @@ class MyControlWebServer(BaseHTTPRequestHandler):
                 htmlResponseCode = 200
                 contentType = "application/json"
                 htmlResponseMessage = MPC.doWebControlQuery(pPath[2:], queryParams)
+            elif 'cdn' == pPath[1]:
+                htmlResponseCode = 200
+                htmlResponseMessage, contentType = MPC.doWebControlCdn(pPath[2:], queryParams) # pyright: ignore[reportGeneralTypeIssues]
+                # contentType = content_type or "application/pdf"
             elif 'ctrl' == pPath[1]:
                 htmlResponseCode = 200
                 htmlResponseMessage, content_type = MPC.doWebControlCommand(pPath[2:], queryParams) # pyright: ignore[reportGeneralTypeIssues]

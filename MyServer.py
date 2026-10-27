@@ -91,6 +91,7 @@ class   MyServer(BaseHTTPRequestHandler):
             fb_Conn = FBU.getFbConn()
             unasErrors = []
             retData = getProc.doUnasGetRequest(pPath , unasErrors, qry=queryParams)
+            fb_Conn.commit()
             for errItem in unasErrors:
               GBL_ErrorMessages.append(errItem)
           # TODO a communacation errort itt kezelhetnem, esetleg - mert ujrakuldom az egeszet, megjelolve a feldolgozottakat
@@ -661,6 +662,7 @@ if __name__ == "__main__":
   # TODO DB Connect TEST-eket kellene vegezni es ha nincs, akkor leallni vagy varni 5 percet 3x ujraprobalni es utana fatalExit
   localLogger.logger.info( 'Test FB connect; Customer table rowCount: %s' % FBU.testDbConnect() )
   FBU.insertDummyCustomer()
+  FBU.getFbConn().commit()
   FBU.dbClose()
 
   MU.mySqlCheckConnection()
@@ -673,7 +675,7 @@ if __name__ == "__main__":
     MU.createSpecialCustomerGroups()
 
   if MU.isLogLevelWarn():
-      _m = "Server started http://%s:%s, PID: %d" % (MU.hostName, MU.serverPort, os.getpid())
+      _m = "Server [%s] started http://%s:%s, PID: %d" % (MU.Conf('mail.systemId'), MU.hostName, MU.serverPort, os.getpid())
       print(_m)  #Server starts
       localLogger.logger.info( _m )
       SM.sendProxyMail('\r\n'.join( MSG_serverStarting ), AlertMailType( UnasTransactionType.STARTPROXY, code=ProxyErrCode.INFO), 'starting')
