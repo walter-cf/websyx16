@@ -249,23 +249,24 @@ def transformUnasRequestObject(root, xsltFilename):
             ord.unasOrderStatus= 'Megrendelés lezárva'
             # xmlResp = UCH.unasSetOrderStatus( unasOrderKey, ord.unasOrderStatus, ord.Id, True, "Rendelését számláztuk, kiszállítása folyamatban van.")
             #
-            _ordStat = next(( x for x in MU.Conf('unas.order.statusNames') if x[0] == 'Closed' ), None)
-            ord.Invoice = 'szla'
+            _ordStat = next(( x for x in MU.Conf('unas.order.statusNames') or [] if x[0] == 'Closed' ), None)
+            # ord.Invoice = 'szla'
+            ET.SubElement(ord, 'Invoice')
             # A számlázás állapota. || Használható értékek || 0 Nem számlázható || 1 Számlázható || 2 Számlázva 
-            ord.Invoice.invoiceStatus = 2
+            ord.Invoice.invoiceStatus = 2  # type: ignore
             # Ez az order allapot a szamlazase kell
             # if 'name' == MU.Conf('unas.order.statusNameOrId'):
             #     ord.Invoice.invoiceStatusText = 'Megrendelés lezárva' if _ordStat is None else _ordStat[1]
             # else:
             #     ord.Invoice.invoiceStatus = 6567401 if _ordStat is None else _ordStat[2]
-            ord.Invoice.invoiceNumber = f'H24INV-{ord.Id}'
+            ord.Invoice.invoiceNumber = f'H24INV-{ord.Id}'  # type: ignore
             pdfIdList = MU.createOrderInvoicePdfUrlList(ord.PrimeVoucherNumber) #  ord.PrimeVoucherNumber
-            ord.Invoice.invoicePdfUrl = "\r\n".join(pdfIdList)
+            ord.Invoice.invoicePdfUrl = "\r\n".join(pdfIdList)  # type: ignore
             print(ord)
             print(ord.Invoice)
-            print(ord.Invoice.invoiceStatus)
-            print(ord.Invoice.invoiceNumber)
-            print(ord.Invoice.invoicePdfUrl)
+            print(ord.Invoice.invoiceStatus)  # type: ignore
+            print(ord.Invoice.invoiceNumber)  # type: ignore
+            print(ord.Invoice.invoicePdfUrl)  # type: ignore
 
     elif xsltFilename == 'Customer':
         for cust in root.getchildren():
@@ -526,6 +527,8 @@ def transformUnasRequestObject(root, xsltFilename):
         statCfgIsNAME = 'name' == MU.Conf("unas.order.statusNameOrId" )
         statCfg = MU.Conf("unas.order.statusNames")  if statCfgIsNAME else MU.Conf("unas.order.statusIds")
         checkXmlTypeByRootTag(xsltFilename, root.tag)
+        if len(MU.UnasOrderList.values()) == 0:
+            MU.collectOrderItems(UCH.unasGetActiveOrders())
         for orderTag in root.getchildren():
             uoc:UOC|None = MU.UnasOrderList.get(str(orderTag.PrimeVoucherNumber)[pos:])
             if uoc is None:
@@ -1137,7 +1140,7 @@ def doUnasRequest(action, postData, pathParam3 = None, errors = []):
         MU.getLogger().logDebug("setProduct-TS:%d" % uts)
         return doJoetest(pathParam3, postData )
 
-    MU.getLogger().logInfo("PostReq:%s handled in:%i" , action, MU.getCurrTime() - transStarted)
+    MU.getLogger().logInfo(f"PostReq:{action} handled in:{MU.getCurrTime() - transStarted}")
     if len(GBL_ErrorMessages) > 0:
         for errItm in GBL_ErrorMessages:
             errors.append(errItm)
@@ -1202,12 +1205,12 @@ def getErrorTextOrder(action, xmlResp):
             status = prod.find('Status').text
             action = prod.find('Action')
             if status.lower() ==  'ok':
-                MU.getLogger().logInfo( "%s-ok:%s", 'NoneAction' if action is None else action.text, productSku)
+                MU.getLogger().logInfo( f"{'NoneAction' if action is None else action.text}-ok:{productSku}" )
             else:
                 errMsg = prod.find('Error').text
                 GBL_ErrorMessages.append(errMsg)
                 errorMessage = errMsg if errorMessage is None else  errorMessage + ' | ' + errMsg
-                MU.getLogger().logError( "%s-%s ERR:%s", 'NoneAction' if action is None else action.text, productSku, '-' if errMsg is None else errMsg )
+                MU.getLogger().logError( f"{'NoneAction' if action is None else action.text}-{productSku} ERR:{'-' if errMsg is None else errMsg}")
     return 'OK' if errorMessage is None else errorMessage
 
 def getErrorTextProduct(action, xmlResp):
