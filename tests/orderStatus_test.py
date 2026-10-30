@@ -29,6 +29,23 @@ class OrderStatusTest(unittest.TestCase):
             resp : List[UnasResponse] = UnasResponse.from_xmlstr_byTag(xmlResp, 'Order')
             self.assertEqual('ok', resp[0].status)
 
+    def test_Xml3(self):
+        ordKey = '76172-100001'
+        invoiceStatus = '2'
+        invoiceNumber = 'H24INV-1'
+        invoiceURL = 'https://cdn.ledsound.hu/xx/222'
+        #ordStatus = 'Megrendelés lezárva'
+        ordStatus = next((x[1] for x in MU.Conf("unas.order.statusNames") or [] if x[0] == 'Closed'), 'Megrendelés lezárva' )
+        xmlOrd = f'''<Order><Action>modify</Action><Key>{ordKey}</Key><Status><![CDATA[{ordStatus}]]></Status><Invoice>
+                <Status>{invoiceStatus}</Status>
+                <Number>{invoiceNumber}</Number>
+                <Url>{invoiceURL}</Url>
+                </Invoice></Order>'''
+        xmlResp = unasOrder_Direct(xmlOrd)
+        print (xmlResp)
+        resp = UnasResponse.from_xmlstr_byTag(xmlResp, 'Order')
+        self.assertEqual('ok', resp[0].status)
+
     def test_symbolCall(self):
         key1, status1, key2, status2, key3, status3 = ('76172-100001','Szedhető','76172-100002','Számlázható','76172-100003','Új rendelés')
         xml = xmlSymbolTest_1 % (key1, status1, key2, status2, key3, status3)
@@ -59,7 +76,7 @@ class OrderStatusTest(unittest.TestCase):
     def test_setFeldolgozando(self):
         webstoreOrderKey = MU.Conf("unas.order.storekey")
         feldolgozasraVar = MU.Conf("unas.order.status.new")
-        for ordkey in [1, 2, 3]:
+        for ordkey in [1, 2, 3, 4, 5, 6, 7]:
             xmlOrd = '<Order><Action>modify</Action><Key>%s</Key><Status>%s</Status><StatusEmail>%s</StatusEmail></Order>'''
             xmlResp = unasOrder_Direct(xmlOrd % ( f'{webstoreOrderKey}-{100000 + ordkey}', feldolgozasraVar, 'no' ))
             print (xmlResp)
@@ -145,7 +162,6 @@ xmlSymbolTest_1 = '''<?xml version="1.0" encoding="UTF-8" ?>
     </CustomerOrder>
 </CustomerOrderStatuses>
 '''
-
 
 xmlOrdSample = '''
 <Orders> 
@@ -248,8 +264,6 @@ xmlOrdSample = '''
         </Items>
     </Order>	
 </Orders>'''
-
-
 
 if __name__ == '__main__':
     unittest.main()

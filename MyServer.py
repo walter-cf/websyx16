@@ -668,11 +668,18 @@ if __name__ == "__main__":
   MU.mySqlCheckConnection()
   MU.loadUnasProxyContext()
 
-  if not MU.JOETESTCustomer:
-    MU.checkCacheState(force=True)
+  if MU.Conf('unas.use-shadow-cache'):
+    pass
+  elif not MU.JOETESTCustomer:
+    if MU.Conf('unas.use-shadow-cache'):
+      MU.loadCacheStateDB( MU.MUT.ProxyObjectType.ALL )
+    else:
+      MU.checkCacheState(force=True)
     MU.loadPepitaOrdersHanging()
     # MU.UnasOrderList.clear()
     MU.createSpecialCustomerGroups()
+
+  
 
   if MU.isLogLevelWarn():
       _m = "Server [%s] started http://%s:%s, PID: %d" % (MU.Conf('mail.systemId'), MU.hostName, MU.serverPort, os.getpid())

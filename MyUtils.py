@@ -409,6 +409,23 @@ def getUnasActiveCustomers():
     xml = bytes(bytearray(responseText, encoding="utf-8"))
     return collectCustItems(xml)
 
+
+def getUnasProductParted(limitSize:int, limitStart:int = 0, contentType='normal'):
+    global UnasProductList
+    retrivedProductCount = 1
+    while retrivedProductCount > 0:
+        retV = UCH.unasGetActiveProducts(limitSize, limitStart, contentType)
+        retrivedProductCount = -1
+        if limitSize < 5:
+            UnasProductList = collectProdItems(retV)
+        else:
+            pList = collectProdItems(retV)
+            retrivedProductCount = len(pList)
+            if retrivedProductCount > 0:
+                UnasProductList.update(pList)
+                limitStart += retrivedProductCount
+
+
 CACHE_FORCE_RELOAD_PERIOD = 10000
 def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObjectType.ALL):
     global UnasCustomerList, UnasProductList, UnasOrderList, LastCacheUpdated
@@ -419,20 +436,9 @@ def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObje
         if typ == MUT.ProxyObjectType.ALL:
             LastCacheUpdated = UtcNow()
     if force or typ == MUT.ProxyObjectType.PRODUCT:
-        retrivedProductCount = 1
         limitStart = 0
         UnasProductList.clear()
-        while retrivedProductCount > 0:
-            retV = UCH.unasGetActiveProducts(PRODUCTCNT_CACHE_GETLIMIT, limitStart)
-            retrivedProductCount = -1
-            if PRODUCTCNT_CACHE_GETLIMIT < 5:
-                UnasProductList = collectProdItems(retV)
-            else:
-                pList = collectProdItems(retV)
-                retrivedProductCount = len(pList)
-                if retrivedProductCount > 0:
-                    UnasProductList.update(pList)
-                    limitStart += retrivedProductCount
+        getUnasProductParted(PRODUCTCNT_CACHE_GETLIMIT) # limitSize=, limitStart=)
         if typ == MUT.ProxyObjectType.ALL:
             LastCacheUpdated = UtcNow()
     if force or typ == MUT.ProxyObjectType.ORDER: # Rendelesnek nem kell a minimum delay, az lehet ures
@@ -448,7 +454,26 @@ def checkCacheState(force: bool = False, typ:MUT.ProxyObjectType = MUT.ProxyObje
         ## if typ == MUT.ProxyObjectType.ALL:
         ##     LastCacheUpdated = UtcNow()
 
-
+def loadCacheStateDB(typ:MUT.ProxyObjectType = MUT.ProxyObjectType.ALL):
+    global UnasCustomerList, UnasProductList, UnasOrderList
+    if typ == MUT.ProxyObjectType.ALL or typ == MUT.ProxyObjectType.CUSTOMER:
+        customerCache = mySqlIntance.getField("select data from shadow_unascache where typ = 'CUST'")
+        UnasCustomerList = json.loads(customerCache or '[]')
+    if typ == MUT.ProxyObjectType.ALL or typ == MUT.ProxyObjectType.PRODUCT:
+        productCache  = mySqlIntance.getField("select data from shadow_unascache where typ = 'PROD'")
+        UnasProductList  = json.loads(productCache  or '[]')
+    if typ == MUT.ProxyObjectType.ALL or typ == MUT.ProxyObjectType.ORDER:
+        orderCache    = mySqlIntance.getField("select data from shadow_unascache where typ = 'ORDR'")
+        UnasOrderList    = json.loads(orderCache    or '[]')
+    
+def saveCacheStateDB(typ:MUT.ProxyObjectType = MUT.ProxyObjectType.ALL):
+    global UnasCustomerList, UnasProductList, UnasOrderList
+    if typ == MUT.ProxyObjectType.ALL or typ == MUT.ProxyObjectType.ORDER:
+        mySqlIntance.doSql("update shadow_unascache set data=%s where typ = 'ORDR'", json.dumps(UnasOrderList.values()))
+    if typ == MUT.ProxyObjectType.ALL or typ == MUT.ProxyObjectType.CUSTOMER:
+        mySqlIntance.doSql("update shadow_unascache set data=%s where typ = 'CUST'", json.dumps(UnasCustomerList.values()))
+    if typ == MUT.ProxyObjectType.ALL or typ == MUT.ProxyObjectType.PRODUCT:
+        mySqlIntance.doSql("update shadow_unascache set data=%s where typ = 'PROD'", json.dumps(UnasProductList.values()))
 
 LastSetCustomerDT:str = None # type: ignore
 LastSetProductDT:str = None # type: ignore

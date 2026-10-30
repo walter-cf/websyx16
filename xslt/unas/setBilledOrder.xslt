@@ -22,7 +22,7 @@
                   <xsl:if test="invoicePdfUrl"><Url><xsl:value-of select="invoicePdfUrl" /></Url></xsl:if>
                 </Invoice>
             </xsl:for-each> <!-- Invoice -->
-            <xsl:if test="InvoiceStorno"><!-- Not costructed YET! -->
+            <xsl:if test="InvoiceStorno"><!-- Not constructed YET! -->
                 <Storno>
                   <Number>number</Number>
                   <Url>url</Url>

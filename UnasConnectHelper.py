@@ -127,7 +127,7 @@ def unasGetCustomerById(unasId:int):
     xmlParam = f'<?xml version="1.0" encoding="UTF-8" ?><Params><ContentType>full</ContentType><Id>{unasId}</Id></Params>'
     return doPostReq('getCustomer', xmlParam)
 
-def unasGetActiveProducts( limitNum, limitStart, lang='hu' ):
+def unasGetActiveProducts( limitNum, limitStart, lang='hu', contentType:str='normal' ):
     if MU.UnasProductWebCategoryId is None:
         xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><Name>%s</Name><ContentType>minimal</ContentType></Params>' % MU.UnasProductWebCategoryName
         responseText =  doPostReq('getCategory', xmlParam)
@@ -145,7 +145,7 @@ def unasGetActiveProducts( limitNum, limitStart, lang='hu' ):
         limitStartTag = '' if limitStart < 1 else '<LimitStart>%d</LimitStart>' % (1+limitStart)
         limitTag = '<LimitNum>%d</LimitNum>%s' % (limitNum, limitStartTag)
 
-    xmlParam = '<?xml version="1.0" encoding="UTF-8" ?><Params><State>live</State><ContentType>full</ContentType><Lang>%s</Lang>%s</Params>' % (limitTag, lang)
+    xmlParam = f'<?xml version="1.0" encoding="UTF-8" ?><Params><State>live</State><ContentType>{contentType}</ContentType>%s<Lang>%s</Lang></Params>' % (limitTag, lang)
     responseText =  doPostReq('getProduct', xmlParam)
 
     xml = bytes(bytearray(responseText, encoding="utf-8"))
